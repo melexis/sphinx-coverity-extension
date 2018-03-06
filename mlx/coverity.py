@@ -18,6 +18,7 @@ from docutils.parsers.rst import directives
 from docutils.utils import get_source_line
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService, ISSUE_KIND_2_LABEL
 from setuptools_scm import get_version
+import pkg_resources
 from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
@@ -100,7 +101,7 @@ class CoverityDefectListDirective(Directive):
         if 'col' in self.options:
             item_list_node['col'] = self.options['col'].split(',')
         else:
-            item_list_node['col'] = 'CID,State,Classification,Action,Checker,Comment'.split(',')
+            item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')
 
         # Process ``graph`` option
         if 'graph' in self.options:
@@ -268,12 +269,16 @@ def process_item_nodes(app, doctree, fromdocname):
         top_node = create_top_node(node['title'])
         table = nodes.table()
         tgroup = nodes.tgroup()
-        tgroup += [nodes.colspec(colwidth=5)]
-        tgroup += nodes.thead('', create_row(node['col']))
 
-        tbody = nodes.tbody()
         for c in node['col']:
-            print(c)
+            tgroup += [nodes.colspec(colwidth=5)]
+
+        tgroup += nodes.thead('', create_row(node['col']))
+        tbody = nodes.tbody()
+
+        tgroup += tbody
+        table += tgroup
+
         count_total = 0
         count_covered = 0
 
@@ -283,42 +288,41 @@ def process_item_nodes(app, doctree, fromdocname):
                 checker=node['checker'], impact=node['impact'], kind=node['kind'], classification=node['classification'], action=node['action'], component=node['component'], cwe=node['cwe'], cid=node['cid'])
         print("%d received"% (defects['totalNumberOfRecords']))
         print("building defects table... ", end='')
+
         for defect in defects['mergedDefects']:
             row = nodes.row()
-            col = create_cell(str(defect['cid']))
 
             # go through each col and decide if it is there or we print empty
             for item_col in node['col']:
                 if 'CID' == item_col:
                     # CID is default and even if it is in disregard
-                    continue
+                    row += create_cell(str(defect['cid']))
                 elif 'Category' == item_col:
-                    col += create_cell(defect['displayCategory'])
+                    row += create_cell(defect['displayCategory'])
                 elif 'Impact' == item_col:
-                    col += create_cell(defect['displayImpact'])
+                    row += create_cell(defect['displayImpact'])
                 elif 'Issue' == item_col:
-                    col += create_cell(defect['displayIssueKind'])
+                    row += create_cell(defect['displayIssueKind'])
                 elif 'Type' == item_col:
-                    col += create_cell(defect['displayType'])
-                elif 'Comment' == item_col:
-                    col += cov_attribute_value_to_col(defect, 'Comment')
-                elif 'Classification' == item_col:
-                    col += cov_attribute_value_to_col(defect, 'Classification')
-                elif 'Action' == item_col:
-                    col += cov_attribute_value_to_col(defect, 'Action')
+                    row += create_cell(defect['displayType'])
                 elif 'Checker' == item_col:
-                    col += cov_attribute_value_to_col(defect, 'Checker')
-                elif 'State' == item_col:
-                    col += cov_attribute_value_to_col(defect, 'State')
+                    row += create_cell(defect['checkerName'])
+                elif 'Component' == item_col:
+                    row += create_cell(defect['componentName'])
+                elif 'Comment' == item_col:
+                    row += cov_attribute_value_to_col(defect, 'Comment')
+                elif 'Classification' == item_col:
+                    row += cov_attribute_value_to_col(defect, 'Classification')
+                elif 'Action' == item_col:
+                    row += cov_attribute_value_to_col(defect, 'Action')
+                elif 'Status' == item_col:
+                    row += cov_attribute_value_to_col(defect, 'DefectStatus')
                 else:
                     # generic check which if it is missing prints empty cell anyway
-                    col += cov_attribute_value_to_col(defect, item_col)
+                    row += cov_attribute_value_to_col(defect, item_col)
 
-            row += col
             tbody += row
         print("done")
-        tgroup += tbody
-        table += tgroup
         top_node += table
         node.replace_self(top_node)
 #        try:
@@ -364,7 +368,7 @@ def cov_attribute_value_to_col(defect, name):
         if attribute['attributeDefinitionId'][0] == name:
             try:
                 col = create_cell(attribute['attributeValueId'][0])
-            except AttributeError as e:
+            except (AttributeError,IndexError) as e:
                 col = create_cell(" ")
     return col
 
@@ -447,6 +451,6 @@ def setup(app):
     app.connect('builder-inited', initialize_environment)
 
     try:
-        return {'version': get_version()}
+        return {'version':'%(prog)s {version}'.format(version=pkg_resources.require('mlx.coverity')[0].version) }
     except LookupError as e:
         return {'version': 'dev'}
