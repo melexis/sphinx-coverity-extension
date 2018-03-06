@@ -1,0 +1,74 @@
+language: python
+sudo: false
+cache: pip
+env:
+  global:
+    - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
+    - SEGFAULT_SIGNALS=all
+  matrix:
+    - TOXENV=check
+matrix:
+  include:
+    - python: '2.7'
+      env:
+        - TOXENV=py27,sphinx1.3,sphinx1.4,sphinx1.5,sphinx1.6,sphinx-latest,codecov
+    - python: '3.4'
+      env:
+        - TOXENV=py34,sphinx1.3,sphinx1.4,sphinx1.5,sphinx1.6,sphinx-latest,codecov
+    - python: '3.5'
+      env:
+        - TOXENV=py35,sphinx1.3,sphinx1.4,sphinx1.5,sphinx1.6,sphinx-latest,codecov
+    - python: '3.6'
+      env:
+        - TOXENV=py36,sphinx1.3,sphinx1.4,sphinx1.5,sphinx1.6,sphinx-latest,codecov
+
+before_install:
+  - python --version
+  - uname -a
+  - lsb_release -a
+
+install:
+  - pip install tox
+  - pip install coverage
+  - pip install python-decouple
+  - virtualenv --version
+  - easy_install --version
+  - pip --version
+  - tox --version
+
+script:
+  - tox -v
+
+after_failure:
+  - more .tox/log/* | cat
+  - more .tox/*/log/* | cat
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
+
+# Deploy: disable jekyll in order to publish subfolders with leading underscores as well to pages
+before_deploy:
+  - mkdir -p example/_build/html/
+  - touch example/_build/html/.nojekyll
+deploy:
+  #  # production pypi
+  #  - provider: pypi
+  #    distributions: sdist bdist_wheel
+  #    user: CrtMori
+  #    password:
+  #        secure:
+  #    on:
+  #      branch: master
+  #      python: 3.6
+  #      tags: true
+  # publish example: build by tox, published to pages
+  - provider: pages
+    skip_cleanup: true
+    local_dir: example/_build/html/
+    github_token: $GITHUB_TOKEN
+    on:
+      branch: master
+      python: 3.6
+
