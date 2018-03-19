@@ -144,10 +144,11 @@ The plugin will then automatically replace this block with the table queried fro
 Attributes to coverity-list
 ===========================
 
-Block coverity-list takes below attributes to provide better granularity and filtering of the displayed information
+Block coverity-list takes below attributes to provide better granularity and filtering of the displayed information.
+Keep in mind all the attributes are to be encapsulated by `:`.
 
-:col:
------
+col
+---
 
 List column names of the table. They should match the columns inside Coverity. The list is comma separated without
 any spaces. Possible Keywords are (but not limited, since Coverity has option to create custom names):
@@ -161,8 +162,8 @@ any spaces. Possible Keywords are (but not limited, since Coverity has option to
     - ...
 
 
-:classification:
-----------------
+classification
+--------------
 
 Filtering by classification based on the text following the attribute. The text can be anything you desire, but the
 default list includes:
