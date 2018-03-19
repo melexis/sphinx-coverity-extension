@@ -127,5 +127,59 @@ This default configuration build into the plugin, can be overriden through the c
 Usage
 -----
 
+Inside your reStructured text file you can call a block `.. coverity-list:` which will generate the table
+with title and defined columns. For example to display CID, Classification, Action and Comment columns while
+filtering classification items with value `Bug` you should use the following snippet:
+
+.. code-block:: python
+
+    .. coverity-list:: Custom table title
+        :col: CID,Classification,Action,Comment
+        :classification: Bug
+
+
+The plugin will then automatically replace this block with the table queried from the Coverity server.
+
+
+Attributes to coverity-list
+===========================
+
+Block coverity-list takes below attributes to provide better granularity and filtering of the displayed information
+
+:col:
+-----
+
+List column names of the table. They should match the columns inside Coverity. The list is comma separated without
+any spaces. Possible Keywords are (but not limited, since Coverity has option to create custom names):
+
+    - `CID`: Coverity defect ID
+    - `Classification`: Coverity defect Classification column
+    - `Action`: Coverity defect Action information
+    - `Checker`: Coverity defect Checker
+    - `Status`: Coverity defect Triage status
+    - `Comment`: Coverity defect last Comment
+    - ...
+
+
+:classification:
+----------------
+
+Filtering by classification based on the text following the attribute. The text can be anything you desire, but the
+default list includes:
+
+    - `Unclassified`
+    - `Pending`
+    - `False Positive`
+    - `Intentional`
+    - `Bug`
+
+
+-------------
+Contributions
+-------------
+
+We welcome any contributions to this plugin. Do not be shy and open a pull request. We will try to do our best to help
+you include your contribution to our repository. Keep in mind that reporting a bug or requesting a feature is also a
+nice gesture and considered as contribution, even if you do not have development skills to implement it.
 
 
