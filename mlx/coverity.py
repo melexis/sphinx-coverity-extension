@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 '''
-Traceability plugin
+Coverity plugin
 
-Sphinx extension for restructured text that added traceable documentation items.
-See readme for more details.
+Sphinx extension for restructured text that adds Coverity reporting to documentation.
+See README.rst for more details.
 '''
 
 from __future__ import print_function
@@ -39,6 +39,20 @@ def report_warning(env, msg, docname, lineno=None):
             logger.warning(msg, location=docname)
     else:
         env.warn(docname, msg, lineno=lineno)
+
+def report_info(env, msg, nonl=False):
+    '''Convenience function for inofrmation printing
+
+    Args:
+        msg (str): Message of the warning
+        nonl (bool): True when no new line at end
+    '''
+    if sphinx_version >= '1.6.0':
+        logger = getLogger(__name__)
+        logger.info(msg, nonl=nonl)
+    else:
+        env.info(msg, nonl=nonl)
+
 # -----------------------------------------------------------------------------
 # Declare new node types (based on others):
 class CoverityDefect(nodes.General, nodes.Element):
@@ -73,7 +87,7 @@ class CoverityDefectListDirective(Directive):
     # Options
     option_spec = {'class': directives.class_option,
                    'col': directives.unchanged,
-                   'graph': directives.unchanged,
+                   'graph': directives.flag,
                    'checker': directives.unchanged,
                    'impact': directives.unchanged,
                    'kind': directives.unchanged,
@@ -222,43 +236,32 @@ def perform_consistency_check(app, doctree):
         for err in errs.iter():
             report_warning(env, err, err.get_document())
 
-def process_item_nodes(app, doctree, fromdocname):
+def process_coverity_nodes(app, doctree, fromdocname):
     """
     This function should be triggered upon ``doctree-resolved event``
 
-    Replace all ItemList nodes with a list of the collected items.
-    Augment each item with a backlink to the original location.
-
+    Obtain information from Coverity server and generate a table.
     """
     env = app.builder.env
-
-    if sphinx_version < '1.6.0':
-        try:
-            env.traceability_collection.self_test(fromdocname)
-        except CoverityException as err:
-            report_warning(env, err, fromdocname)
-        except MultipleCoverityExceptions as errs:
-            for err in errs.iter():
-                report_warning(env, err, err.get_document())
 
     # Login to Coverity and obtain stream information
     coverity_conf_service = CoverityConfigurationService(app.config.coverity_credentials['transport'],\
             app.config.coverity_credentials['hostname'], app.config.coverity_credentials['port'])
-    print("Login to Coverity server... ", end='')
+    report_info(env, 'Login to Coverity server... ', True)
     coverity_conf_service.login(app.config.coverity_credentials['username'], app.config.coverity_credentials['password'])
-    print("done")
-    print("obtaining stream information... ", end='')
+    report_info(env, 'done')
+    report_info(env, 'obtaining stream information... ', True)
     stream = coverity_conf_service.get_stream(app.config.coverity_credentials['stream'])
     if stream is None:
-        print("failed")
+        report_info(env, 'failed')
         raise ValueError('No such Coverity stream [%s] found on [%s]',\
                 app.config.coverity_credentials['stream'], coverity_conf_service.get_service_url())
-    print("done")
+    report_info(env, 'done')
 
     # Get Stream's project name
-    print("obtaining project name from stream... ", end='')
+    report_info(env, 'obtaining project name from stream... ', True)
     project_name = coverity_conf_service.get_project_name(stream)
-    print("done")
+    report_info(env, 'done')
     coverity_service = CoverityDefectService(coverity_conf_service)
     coverity_service.login(app.config.coverity_credentials['username'], app.config.coverity_credentials['password'])
 
@@ -283,11 +286,11 @@ def process_item_nodes(app, doctree, fromdocname):
         count_covered = 0
 
         # Get items from server
-        print("obtaining defects... ", end='')
+        report_info(env, 'obtaining defects... ', True)
         defects = coverity_service.get_defects(project_name, app.config.coverity_credentials['stream'],\
                 checker=node['checker'], impact=node['impact'], kind=node['kind'], classification=node['classification'], action=node['action'], component=node['component'], cwe=node['cwe'], cid=node['cid'])
-        print("%d received"% (defects['totalNumberOfRecords']))
-        print("building defects table... ", end='')
+        report_info(env, "%d received"% (defects['totalNumberOfRecords']))
+        report_info(env, "building defects table... ", True)
 
         for defect in defects['mergedDefects']:
             row = nodes.row()
@@ -322,7 +325,7 @@ def process_item_nodes(app, doctree, fromdocname):
                     row += cov_attribute_value_to_col(defect, item_col)
 
             tbody += row
-        print("done")
+        report_info(env, "done")
         top_node += table
         node.replace_self(top_node)
 #        try:
@@ -446,7 +449,7 @@ def setup(app):
 
     app.add_directive('coverity-list', CoverityDefectListDirective)
 
-    app.connect('doctree-resolved', process_item_nodes)
+    app.connect('doctree-resolved', process_coverity_nodes)
 
     app.connect('builder-inited', initialize_environment)
 
