@@ -8,8 +8,9 @@ requires = ['Sphinx>=0.6', 'docutils', 'suds', 'setuptools_scm']
 
 setup(
     name='mlx.coverity',
-    use_scm_version=True,
+#    use_scm_version=True,
     setup_requires=['setuptools_scm'],
+    version='0.0.1',
     url=project_url,
     license='GNU General Public License v3 (GPLv3)',
     author='Crt Mori',
@@ -23,7 +24,7 @@ setup(
         'Environment :: Web Environment',
         'Framework :: Sphinx :: Extension',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',
