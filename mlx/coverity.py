@@ -287,8 +287,14 @@ def process_coverity_nodes(app, doctree, fromdocname):
 
         # Get items from server
         report_info(env, 'obtaining defects... ', True)
-        defects = coverity_service.get_defects(project_name, app.config.coverity_credentials['stream'],\
-                checker=node['checker'], impact=node['impact'], kind=node['kind'], classification=node['classification'], action=node['action'], component=node['component'], cwe=node['cwe'], cid=node['cid'])
+        try:
+            defects = coverity_service.get_defects(project_name, app.config.coverity_credentials['stream'],
+                    checker=node['checker'], impact=node['impact'], kind=node['kind'],
+                    classification=node['classification'], action=node['action'], component=node['component'],
+                    cwe=node['cwe'], cid=node['cid'])
+        except URLError as e:
+            report_warning(env, 'failed with %s' % e)
+            continue
         report_info(env, "%d received"% (defects['totalNumberOfRecords']))
         report_info(env, "building defects table... ", True)
 
