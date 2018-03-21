@@ -303,48 +303,7 @@ def initialize_environment(app):
 \\makeatother'''
 
 
-def make_item_ref(app, node, fromdocname, item_id, caption=True):
-    """
-    Creates a reference node for an item, embedded in a
-    paragraph. Reference text adds also a caption if it exists.
-
-    """
-    env = app.builder.env
-    item_info = env.traceability_collection.get_item(item_id)
-
-    p_node = nodes.paragraph()
-
-    # Only create link when target item exists, warn otherwise (in html and terminal)
-    if item_info.is_placeholder():
-        docname, lineno = get_source_line(node)
-        report_warning(env, 'Traceability: cannot link to %s, item is not defined' % item_id,
-                       docname, lineno)
-        txt = nodes.Text('%s not defined, broken link' % item_id)
-        p_node.append(txt)
-    else:
-        if item_info.caption != '' and caption:
-            caption = ' : ' + item_info.caption
-        else:
-            caption = ''
-
-        newnode = nodes.reference('', '')
-        innernode = nodes.emphasis(item_id + caption, item_id + caption)
-        newnode['refdocname'] = item_info.docname
-        try:
-            newnode['refuri'] = app.builder.get_relative_uri(fromdocname,
-                                                             item_info.docname)
-            newnode['refuri'] += '#' + item_id
-        except NoUri:
-            # ignore if no URI can be determined, e.g. for LaTeX output :(
-            pass
-        newnode.append(innernode)
-        p_node += newnode
-
-    return p_node
-
-
 # Extension setup
-
 def setup(app):
     '''Extension setup'''
 
