@@ -6,6 +6,7 @@
 import re
 import csv
 import logging
+from urllib2 import URLError
 
 # For Coverity - SOAP
 from suds.client import Client
@@ -24,9 +25,10 @@ KIND_LIST = {'QUALITY', 'SECURITY', 'TEST'}
 CLASSIFICATION_LIST = {'Unclassified', 'Pending', 'False Positive', 'Intentional', 'Bug', 'Untested', 'No Test Needed'}
 
 # Coverity built in Actions
-ACTION_LIST = {'Undecided', 'Fix Required', 'Fix Submitted', 'Modeling Required', 'Ignore', 'On hold', 'For Interest Only'}
+ACTION_LIST = {'Undecided', 'Fix Required', 'Fix Submitted', 'Modeling Required', 'Ignore', 'On hold',
+               'For Interest Only'}
 
-ISSUE_KIND_2_LABEL = {'QUALITY': 'Quality', 'SECURITY': 'Security', 'Various': 'Quality/Security', 'TEST' : 'Testing'}
+ISSUE_KIND_2_LABEL = {'QUALITY': 'Quality', 'SECURITY': 'Security', 'Various': 'Quality/Security', 'TEST': 'Testing'}
 
 
 # names of Coverity Triage/Attribute fields
@@ -35,6 +37,7 @@ DEFECT_STATUS_ATTR_NAME = "DefectStatus"
 CLASSIFICATION_ATTR_NAME = "Classification"
 ACTION_ATTR_NAME = "Action"
 COMMENT_ATTR_NAME = "Comment"
+
 
 def parse_two_part_term(term, delim=','):
     '''Parse a term assuming [ [part1],[part2] ]'''
@@ -65,6 +68,7 @@ def compare_strings(str_a, str_b):
     if re.match(str_b2, str_a2, flags=re.IGNORECASE):
         return True
     return False
+
 
 class Service(object):
     '''
@@ -143,7 +147,7 @@ class CoverityConfigurationService(Service):
         try:
             self.client = Client(url)
             logging.info("Validated presence of Coverity Configuration Service [%s]", url)
-        except:
+        except URLError:
             self.client = None
             logging.critical("No such Coverity Configuration Service [%s]", url)
             raise
@@ -153,15 +157,17 @@ class CoverityConfigurationService(Service):
         super(CoverityConfigurationService, self).login(username, password)
         version = self.get_version()
         if version is None:
-            raise RuntimeError("Authentication to [%s] FAILED for [%s] account - check password" % (self.get_service_url(), username))
+            raise RuntimeError("Authentication to [%s] FAILED for [%s] account - check password"
+                               % (self.get_service_url(), username))
         else:
-            logging.info("Authentication to [%s] using [%s] account was OK - version [%s]", self.get_service_url(), username, version.externalVersion)
+            logging.info("Authentication to [%s] using [%s] account was OK - version [%s]",
+                         self.get_service_url(), username, version.externalVersion)
 
     def get_version(self):
         '''Get the version of the service, can be used as a means to validate access permissions'''
         try:
             return self.client.service.getVersion()
-        except:
+        except URLError:
             return None
 
     @staticmethod
@@ -263,12 +269,13 @@ class CoverityDefectService(Service):
         try:
             self.client = Client(url)
             logging.info("Validated presence of Coverity Defect Service [%s]", url)
-        except:
+        except URLError:
             self.client = None
             logging.critical("No such Coverity Defect Service [%s]", url)
             raise
 
-    def get_defects(self, project, stream, checker=None, impact=None, kind=None, classification=None, action=None, component=None, cwe=None, cid=None, custom=None):
+    def get_defects(self, project, stream, checker=None, impact=None, kind=None, classification=None, action=None,
+                    component=None, cwe=None, cid=None, custom=None):
         '''Get a list of defects for given stream, with some query criteria'''
         logging.info('Querying Coverity for defects in project [%s] stream [%s] ...', project, stream)
 
@@ -290,7 +297,8 @@ class CoverityDefectService(Service):
         if bool(checker):
             logging.info('Using checker filter [%s]', checker)
             self.config_service.get_checkers()
-            validated = self.config_service.add_filter_rqt('Checker', checker, self.config_service.checkers, filter_spec.checkerList)
+            validated = self.config_service.add_filter_rqt('Checker', checker, self.config_service.checkers,
+                                                           filter_spec.checkerList)
             logging.info('Resolves to [%s]', validated)
             if validated:
                 self.filters += ("<Checker(%s)> " % validated)
@@ -314,7 +322,8 @@ class CoverityDefectService(Service):
         # apply any filter on classification
         if bool(classification):
             logging.info('Using classification filter [%s]', classification)
-            validated = self.config_service.add_filter_rqt('Classification', classification, CLASSIFICATION_LIST, filter_spec.classificationNameList)
+            validated = self.config_service.add_filter_rqt('Classification', classification, CLASSIFICATION_LIST,
+                                                           filter_spec.classificationNameList)
             logging.info('Resolves to [%s]', validated)
             if validated:
                 self.filters += ("<Classification(%s)> " % validated)
@@ -408,7 +417,8 @@ class CoverityDefectService(Service):
                                                                     page_spec, snapshot_scope)
 
     def get_defect(self, cid, stream):
-        '''Get the details pertaining a specific CID - it may not have defect instance details if newly eliminated (fixed)'''
+        '''Get the details pertaining a specific CID - it may not have defect instance details if newly eliminated
+        (fixed)'''
         logging.info('Fetching data for CID [%s] in stream [%s] ...', cid, stream)
 
         merged_defect_id = self.client.factory.create('mergedDefectIdDataObj')
@@ -442,7 +452,6 @@ class CoverityDefectService(Service):
         # add to our list
         defect_state_spec.defectStateAttributeValues.append(defect_state_attr_value)
 
-
     # update the external reference id to a third party
     def update_ext_reference_attribute(self, cid, triage_store, ext_ref_id, ccomment=None):
         '''Update external reference attribute for given CID'''
@@ -455,7 +464,6 @@ class CoverityDefectService(Service):
         # CID to update
         merged_defect_id = self.client.factory.create('mergedDefectIdDataObj')
         merged_defect_id.cid = cid
-
 
         # if an ext ref id value supplied
         if bool(ext_ref_id):
@@ -478,8 +486,8 @@ class CoverityDefectService(Service):
         self.add_attribute_name_and_value(defect_state_spec, COMMENT_ATTR_NAME, comment_value)
 
         # apply the update
-        return self.client.service.updateTriageForCIDsInTriageStore(triage_store_id, merged_defect_id, defect_state_spec)
-
+        return self.client.service.updateTriageForCIDsInTriageStore(triage_store_id, merged_defect_id,
+                                                                    defect_state_spec)
 
     @staticmethod
     def get_instance_impact(stream_defect, instance_number=1):
@@ -502,7 +510,6 @@ class CoverityDefectService(Service):
         logging.warning('Value for attribute [%s] not found', attr_name)
         return ""
 
-
     @staticmethod
     def get_event_attribute_value(defect_state, name, value=None):
         '''Get specified attribute was set to given matching value'''
@@ -515,15 +522,16 @@ class CoverityDefectService(Service):
             # check if we have the named attribute
             if compare_strings(attr_value.attributeDefinitionId.name, name):
                 # if any value supplied or it matches requirement
-                if bool(attr_value.attributeValueId.name) and (not value or compare_strings(attr_value.attributeValueId.name, value)):
-                    logging.info('Found [%s] = [%s]', attr_value.attributeDefinitionId.name, attr_value.attributeValueId.name)
+                if bool(attr_value.attributeValueId.name) and\
+                   (not value or compare_strings(attr_value.attributeValueId.name, value)):
+                    logging.info('Found [%s] = [%s]',
+                                 attr_value.attributeDefinitionId.name, attr_value.attributeValueId.name)
                     return True, attr_value.attributeValueId.name
                 else:
                     # break attribute name search - either no value or it doesn't match
                     break
         logging.warning('Event for attribute [%s] not found', name)
         return False, None
-
 
     def seek_nth_match(self, event_history, nth_event, attr_name, attr_value):
         '''Seek for a given attribute name-value pair in the triaging history'''
@@ -538,18 +546,18 @@ class CoverityDefectService(Service):
                     return True, defect_state, req_attr_value
         return False, None, None
 
-
     def get_event_for_attribute_change(self, stream_defect, nth_term, attr_name, attr_value=None):
         '''Get event when specified attribute was set to given matching value'''
-        logging.info('Searching for triage event n=[%d] where attribute [%s] is set to [%s]', nth_term, attr_name, attr_value)
+        logging.info('Searching for triage event n=[%d] where attribute [%s] is set to [%s]',
+                     nth_term, attr_name, attr_value)
 
         if nth_term > 0:
             found, defect_state, value = self.seek_nth_match(stream_defect.history, nth_term, attr_name, attr_value)
         else:
-            found, defect_state, value = self.seek_nth_match(reversed(stream_defect.history), abs(int(nth_term)), attr_name, attr_value)
+            found, defect_state, value = self.seek_nth_match(reversed(stream_defect.history), abs(int(nth_term)),
+                                                             attr_name, attr_value)
 
         return found, defect_state, value
-
 
     def get_ext_reference_id(self, stream_defect):
         '''Get external reference ID attribute value for given defect'''
@@ -574,8 +582,5 @@ class CoverityDefectService(Service):
         return self.get_service_url('/query/defects.htm?stream=%s&cid=%s' % (stream, str(cid)))
 
 
-
-
 if __name__ == '__main__':
     print("Sorry, no main here")
-
