@@ -1,8 +1,10 @@
 from unittest import TestCase
 try:
-    from unittest.mock import MagicMock, patch, call
+    from unittest.mock import MagicMock, patch
+    # from unittest.mock import call
 except ImportError as err:
-    from mock import MagicMock, patch, call
+    from mock import MagicMock, patch
+    # from mock import call
 import mlx.coverity as cov
 
 
