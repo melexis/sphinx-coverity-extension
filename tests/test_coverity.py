@@ -5,6 +5,7 @@ except ImportError as err:
     from mock import MagicMock, patch, call
 import mlx.coverity as cov
 
+
 class TestCoverity(TestCase):
 
     def SetUp(self):
@@ -15,6 +16,3 @@ class TestCoverity(TestCase):
         ''' Currently just a dummy unit test '''
         cov_mock_object = MagicMock(spec=cov.CoverityConfigurationService)
         cov_mock.return_value = cov_mock_object
-        
-
-

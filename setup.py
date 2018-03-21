@@ -8,7 +8,7 @@ requires = ['Sphinx>=0.6', 'docutils', 'suds', 'setuptools_scm']
 
 setup(
     name='mlx.coverity',
-#    use_scm_version=True,
+    # use_scm_version=True,
     setup_requires=['setuptools_scm'],
     version='0.0.1',
     url=project_url,
