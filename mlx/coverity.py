@@ -11,10 +11,8 @@ from __future__ import print_function
 import pkg_resources
 
 from docutils.parsers.rst import Directive
-from sphinx.environment import NoUri
 from docutils import nodes
 from docutils.parsers.rst import directives
-from docutils.utils import get_source_line
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
 from urllib2 import URLError
 from sphinx import __version__ as sphinx_version
