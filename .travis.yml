@@ -39,16 +39,16 @@ jobs:
       env:
         - TOXENV=py36,sphinx-latest,codecov
       deploy:
-        #  # production pypi
-        #  - provider: pypi
-        #    distributions: sdist bdist_wheel
-        #    user: CrtMori
-        #    password:
-        #        secure:
-        #    on:
-        #      branch: master
-        #      python: 3.6
-        #      tags: true
+        # production pypi
+        - provider: pypi
+          distributions: sdist bdist_wheel
+          user: Letme
+          password:
+              secure:
+          on:
+            branch: master
+            python: 3.6
+            tags: true
         # publish example: build by tox, published to pages
         - provider: pages
           skip_cleanup: true
