@@ -75,11 +75,8 @@ class TestCoverity(TestCase):
         suds_client_mock.return_value.service.getVersion = MagicMock()
         with open('tests/defect_soap.xml', 'r') as xmlfile:
             defect_soap = objectify.fromstring(xmlfile.read())
-        print("defect_soap:")
-        print(objectify.dump(defect_soap))
-        print("defect_soap.Body:")
-        print(defect_soap.Body["{http://ws.coverity.com/v9}getMergedDefectsForSnapshotScopeResponse"].totalNumberOfRecords)
-        suds_client_mock.return_value.service.getMergedDefectsForSnapshotScope = MagicMock(spec=defect_soap, return_value=defect_soap)
+        suds_client_mock.return_value.service.getMergedDefectsForSnapshotScope = MagicMock(spec=defect_soap,
+                                                                                           return_value=defect_soap)
         suds_client_mock.return_value.factory = MagicMock()
         suds_security_mock.return_value = MagicMock(spec=Security)
         suds_security_mock.return_value.tokens = []
@@ -97,7 +94,4 @@ class TestCoverity(TestCase):
         suds_security_mock.assert_called_once()
         suds_username_mock.assert_called_once_with('user', 'password')
 
-        defects = coverity_service.get_defects('projectname', 'somestream')
-        print("Defects:")
-        print(defects)
-        self.assertTrue(False)
+        coverity_service.get_defects('projectname', 'somestream')
