@@ -19,3 +19,6 @@ recursive-include tests *.txt
 
 # added by check_manifest.py
 recursive-include example *.css
+
+# added by check_manifest.py
+recursive-include tests *.xml
