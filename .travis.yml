@@ -22,7 +22,7 @@ jobs:
     - stage: test
       python: '2.7'
       env:
-        - TOXENV=py27-test,py27-sphinx1.3,py27-sphinx1.4,py27-sphinx1.5,py27-sphinx1.6,py27-sphinxlatest,py27-codecov
+        - TOXENV=py27-test,py27-sphinx1.3,py27-sphinx1.4,py27-sphinx1.5,py27-sphinx1.6,py27-sphinxlatest
     - stage: test
       python: '3.6'
       env:
