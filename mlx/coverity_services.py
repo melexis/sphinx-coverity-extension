@@ -6,7 +6,12 @@
 import re
 import csv
 import logging
-from urllib2 import URLError
+try:
+    # For Python 3.0 and later
+    from urllib.error import URLError
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import URLError
 
 # For Coverity - SOAP
 from suds.client import Client
@@ -264,7 +269,7 @@ class CoverityDefectService(Service):
                                                     config_service.get_ws_version())
         self.config_service = config_service
         self.filters = ""
-
+        # logging.getLogger('suds.client').setLevel(logging.DEBUG)
         url = self.get_ws_url('defectservice')
         try:
             self.client = Client(url)

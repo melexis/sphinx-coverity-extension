@@ -17,17 +17,21 @@ jobs:
     - stage: check
       python: '2.7'
       env:
-        - TOXENV=check
+        - TOXENV=py27-check
     # Stage test
     - stage: test
       python: '2.7'
       env:
-        - TOXENV=py27,sphinx1.3,sphinx1.4,sphinx1.5,sphinx1.6,sphinx-latest,codecov
+        - TOXENV=py27-test,py27-sphinx1.3,py27-sphinx1.4,py27-sphinx1.5,py27-sphinx1.6,py27-sphinxlatest,py27-codecov
+    - stage: test
+      python: '3.6'
+      env:
+        - TOXENV=py36-test,py36-sphinx1.3,py36-sphinx1.4,py36-sphinx1.5,py36-sphinx1.6,py36-sphinxlatest,py36-codecov
     # Stage deploy
     - stage: deploy
-      python: 2.7
+      python: 3.6
       env:
-        - TOXENV=py27,sphinx-latest,codecov
+        - TOXENV=py36-test,py36-sphinxlatest,py36-codecov
       deploy:
         # production pypi
         - provider: pypi
@@ -37,7 +41,7 @@ jobs:
               secure: "ZhogUet19V4cfbIXmlEepK5PemHiIl6UQwjleCEh9sTfmxgYiAMsDHIvSHSDArXPiFJ9BZlBX4vBmhGEyrUp58I+Rn4V7nm3Ml+KB0pQTvoUruNM2uA7fmBT76i2OGSuDl1pc3Ap2ajTNWDYltBJN7o0/l9QsgC65oe76Uvj4kPJCcfp2xT3e7uw/bt1JLegQGYChOUG7uz9HnsbwZ9eejx5Ogxrmeb42/5cFAokkC4eUs9rYuaRuNLzfNzStBE1QWRXQRqDgfw5FwFnkXYrNwetqjcnHWa5+7ljyKg36jcWDKDeHWXdThGJm8pLVaKthMv/+GgPoUn65Y+aw89bXTkdfCzWaye9GEo2wkRi7nziRFNsm5rNA2eKHjCcmtk8uPwszyMQo9VQ2aeeQ8cnAK6NBR2U6OytAyIb9ptXS/MHECAB0Elo71QE9gyFesWGjVOLbSUy91ZA0pifZlFMmBGd60Bt7MlNUGpFpuRq7Rr8n11Tdr6BIycKbMYhIahwQeCq47pgv9X/RQRbfpp9GpRPY+/IT24mYDIhzKzWSBRXWGPEY/fBIwG7AM88COsNXejmn8EgwYQCjSdLxLxsVv5LRrD4B6dOLb920MUR+sMNWCw2AmPNckV6LIgw5/r44yOOSYGva2cgJk66BQ4DaFrJMADTEyO/NSg6jhZocD8="
           on:
             branch: master
-            python: 2.7
+            python: 3.6
             tags: true
         # publish example: build by tox, published to pages
         - provider: pages
@@ -46,7 +50,7 @@ jobs:
           github_token: $GITHUB_TOKEN
           on:
             branch: master
-            python: 2.7
+            python: 3.6
 
 before_install:
   - python --version

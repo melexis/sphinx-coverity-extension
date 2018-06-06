@@ -73,7 +73,7 @@ class TestCoverity(TestCase):
         suds_client_mock.return_value = MagicMock(spec=Client)
         suds_client_mock.return_value.service = MagicMock(spec=covservices.Service)
         suds_client_mock.return_value.service.getVersion = MagicMock()
-        with open('tests/defect_soap.xml', 'r') as xmlfile:
+        with open('tests/defect_soap.xml', 'rb') as xmlfile:
             defect_soap = objectify.fromstring(xmlfile.read())
         suds_client_mock.return_value.service.getMergedDefectsForSnapshotScope = MagicMock(spec=defect_soap,
                                                                                            return_value=defect_soap)

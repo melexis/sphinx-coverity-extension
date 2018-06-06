@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
+import sys
 
 project_url = 'https://github.com/melexis/sphinx-coverity-extension'
 
-requires = ['Sphinx>=0.6', 'docutils', 'suds', 'setuptools_scm']
+if sys.version_info[0] == 2:
+    requires = ['Sphinx>=0.6', 'docutils', 'suds', 'setuptools_scm']
+else:
+    requires = ['Sphinx>=0.6', 'docutils', 'suds-py3', 'setuptools_scm']
+
 
 setup(
     name='mlx.coverity',
-    # use_scm_version=True,
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
     url=project_url,
@@ -29,6 +33,9 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Documentation',
         'Topic :: Documentation :: Sphinx',
         'Topic :: Utilities',

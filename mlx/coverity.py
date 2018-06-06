@@ -14,7 +14,12 @@ from docutils.parsers.rst import Directive
 from docutils import nodes
 from docutils.parsers.rst import directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
-from urllib2 import URLError
+try:
+    # For Python 3.0 and later
+    from urllib.error import URLError
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import URLError
 from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
