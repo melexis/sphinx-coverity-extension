@@ -267,7 +267,7 @@ def create_top_node(title):
 
 
 def create_cell(contents):
-    if isinstance(contents, basestring):
+    if isinstance(contents, str):
         contents = nodes.paragraph(text=contents)
 
     return nodes.entry('', contents)
