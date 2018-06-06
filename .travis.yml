@@ -18,6 +18,10 @@ jobs:
       python: '2.7'
       env:
         - TOXENV=py27-check
+    - stage: check
+      python: '3.6'
+      env:
+        - TOXENV=py36-check
     # Stage test
     - stage: test
       python: '2.7'
