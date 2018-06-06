@@ -10,7 +10,7 @@ setup(
     name='mlx.coverity',
     # use_scm_version=True,
     setup_requires=['setuptools_scm'],
-    version='0.0.1',
+    use_scm_version=True,
     url=project_url,
     license='GNU General Public License v3 (GPLv3)',
     author='Crt Mori',
@@ -19,7 +19,7 @@ setup(
     long_description=open("README.rst").read(),
     zip_safe=False,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Environment :: Web Environment',
         'Framework :: Sphinx :: Extension',
