@@ -79,7 +79,7 @@ First the plugin needs to be enabled in the *extensions* variable:
 .. code-block::
 
     extensions = [
-        'mlx.coverity.coverity',
+        'mlx.coverity',
         ...
     ]
 
