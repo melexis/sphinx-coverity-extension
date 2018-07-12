@@ -147,27 +147,42 @@ def process_coverity_nodes(app, doctree, fromdocname):
     env = app.builder.env
 
     # Login to Coverity and obtain stream information
-    coverity_conf_service = CoverityConfigurationService(app.config.coverity_credentials['transport'],
-                                                         app.config.coverity_credentials['hostname'],
-                                                         app.config.coverity_credentials['port'])
-    report_info(env, 'Login to Coverity server... ', True)
-    coverity_conf_service.login(app.config.coverity_credentials['username'],
-                                app.config.coverity_credentials['password'])
-    report_info(env, 'done')
-    report_info(env, 'obtaining stream information... ', True)
-    stream = coverity_conf_service.get_stream(app.config.coverity_credentials['stream'])
-    if stream is None:
-        report_info(env, 'failed')
-        raise ValueError('No such Coverity stream [%s] found on [%s]',
-                         app.config.coverity_credentials['stream'], coverity_conf_service.get_service_url())
-    report_info(env, 'done')
+    try:
+        report_info(env, 'Login to Coverity server... ', True)
+        coverity_conf_service = CoverityConfigurationService(app.config.coverity_credentials['transport'],
+                                                             app.config.coverity_credentials['hostname'],
+                                                             app.config.coverity_credentials['port'])
+        coverity_conf_service.login(app.config.coverity_credentials['username'],
+                                    app.config.coverity_credentials['password'])
+        report_info(env, 'done')
 
-    # Get Stream's project name
-    report_info(env, 'obtaining project name from stream... ', True)
-    project_name = coverity_conf_service.get_project_name(stream)
-    report_info(env, 'done')
-    coverity_service = CoverityDefectService(coverity_conf_service)
-    coverity_service.login(app.config.coverity_credentials['username'], app.config.coverity_credentials['password'])
+        report_info(env, 'obtaining stream information... ', True)
+        stream = coverity_conf_service.get_stream(app.config.coverity_credentials['stream'])
+        if stream is None:
+            report_info(env, 'failed')
+            raise ValueError('No such Coverity stream [%s] found on [%s]',
+                             app.config.coverity_credentials['stream'], coverity_conf_service.get_service_url())
+        report_info(env, 'done')
+
+        # Get Stream's project name
+        report_info(env, 'obtaining project name from stream... ', True)
+        project_name = coverity_conf_service.get_project_name(stream)
+        report_info(env, 'done')
+        coverity_service = CoverityDefectService(coverity_conf_service)
+        coverity_service.login(app.config.coverity_credentials['username'], app.config.coverity_credentials['password'])
+    except URLError:
+        # Create failed topnode
+        for node in doctree.traverse(CoverityDefect):
+            top_node = create_top_node("Failed to connect to Coverity Server")
+            table = nodes.table()
+            tgroup = nodes.tgroup()
+            tbody = nodes.tbody()
+
+            tgroup += tbody
+            table += tgroup
+            top_node += table
+            node.replace_self(top_node)
+        return
 
     # Item matrix:
     # Create table with related items, printing their target references.
