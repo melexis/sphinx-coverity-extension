@@ -218,7 +218,9 @@ def process_coverity_nodes(app, doctree, fromdocname):
             for item_col in node['col']:
                 if 'CID' == item_col:
                     # CID is default and even if it is in disregard
-                    row += create_cell(str(defect['cid']))
+                    row += create_cell(str(defect['cid']),
+                                       link=coverity_service.get_defect_url(app.config.coverity_credentials['stream'],
+                                                                            str(defect['cid'])))
                 elif 'Category' == item_col:
                     row += create_cell(defect['displayCategory'])
                 elif 'Impact' == item_col:
@@ -274,8 +276,18 @@ def create_top_node(title):
     return top_node
 
 
-def create_cell(contents):
-    if isinstance(contents, str):
+def create_cell(contents, link=False):
+    if link is not False:
+        p_node = nodes.paragraph()
+        itemlink = nodes.reference()
+        itemlink['refuri'] = link
+        itemlink.append(nodes.Text(contents))
+        targetid = nodes.make_id(contents)
+        target = nodes.target('', '', ids=[targetid])
+        p_node += target
+        p_node += itemlink
+        return nodes.entry('',p_node)
+    elif isinstance(contents, str):
         contents = nodes.paragraph(text=contents)
 
     return nodes.entry('', contents)
