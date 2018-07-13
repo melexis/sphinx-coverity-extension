@@ -174,13 +174,6 @@ def process_coverity_nodes(app, doctree, fromdocname):
         # Create failed topnode
         for node in doctree.traverse(CoverityDefect):
             top_node = create_top_node("Failed to connect to Coverity Server")
-            table = nodes.table()
-            tgroup = nodes.tgroup()
-            tbody = nodes.tbody()
-
-            tgroup += tbody
-            table += tgroup
-            top_node += table
             node.replace_self(top_node)
         return
 
