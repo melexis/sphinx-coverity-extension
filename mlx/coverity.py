@@ -286,7 +286,7 @@ def create_cell(contents, link=False):
         target = nodes.target('', '', ids=[targetid])
         p_node += target
         p_node += itemlink
-        return nodes.entry('',p_node)
+        return nodes.entry('', p_node)
     elif isinstance(contents, str):
         contents = nodes.paragraph(text=contents)
 
