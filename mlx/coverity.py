@@ -211,42 +211,45 @@ def process_coverity_nodes(app, doctree, fromdocname):
         report_info(env, "%d received" % (defects['totalNumberOfRecords']))
         report_info(env, "building defects table... ", True)
 
-        for defect in defects['mergedDefects']:
-            row = nodes.row()
+        try:
+            for defect in defects['mergedDefects']:
+                row = nodes.row()
 
-            # go through each col and decide if it is there or we print empty
-            for item_col in node['col']:
-                if 'CID' == item_col:
-                    # CID is default and even if it is in disregard
-                    row += create_cell(str(defect['cid']),
-                                       url=coverity_service.get_defect_url(app.config.coverity_credentials['stream'],
-                                                                           str(defect['cid'])))
-                elif 'Category' == item_col:
-                    row += create_cell(defect['displayCategory'])
-                elif 'Impact' == item_col:
-                    row += create_cell(defect['displayImpact'])
-                elif 'Issue' == item_col:
-                    row += create_cell(defect['displayIssueKind'])
-                elif 'Type' == item_col:
-                    row += create_cell(defect['displayType'])
-                elif 'Checker' == item_col:
-                    row += create_cell(defect['checkerName'])
-                elif 'Component' == item_col:
-                    row += create_cell(defect['componentName'])
-                elif 'Comment' == item_col:
-                    row += cov_attribute_value_to_col(defect, 'Comment')
-                elif 'Classification' == item_col:
-                    row += cov_attribute_value_to_col(defect, 'Classification')
-                elif 'Action' == item_col:
-                    row += cov_attribute_value_to_col(defect, 'Action')
-                elif 'Status' == item_col:
-                    row += cov_attribute_value_to_col(defect, 'DefectStatus')
-                else:
-                    # generic check which if it is missing prints empty cell anyway
-                    row += cov_attribute_value_to_col(defect, item_col)
+                # go through each col and decide if it is there or we print empty
+                for item_col in node['col']:
+                    if 'CID' == item_col:
+                        # CID is default and even if it is in disregard
+                        row += create_cell(str(defect['cid']),
+                                           url=coverity_service.get_defect_url(app.config.coverity_credentials['stream'],
+                                                                               str(defect['cid'])))
+                    elif 'Category' == item_col:
+                        row += create_cell(defect['displayCategory'])
+                    elif 'Impact' == item_col:
+                        row += create_cell(defect['displayImpact'])
+                    elif 'Issue' == item_col:
+                        row += create_cell(defect['displayIssueKind'])
+                    elif 'Type' == item_col:
+                        row += create_cell(defect['displayType'])
+                    elif 'Checker' == item_col:
+                        row += create_cell(defect['checkerName'])
+                    elif 'Component' == item_col:
+                        row += create_cell(defect['componentName'])
+                    elif 'Comment' == item_col:
+                        row += cov_attribute_value_to_col(defect, 'Comment')
+                    elif 'Classification' == item_col:
+                        row += cov_attribute_value_to_col(defect, 'Classification')
+                    elif 'Action' == item_col:
+                        row += cov_attribute_value_to_col(defect, 'Action')
+                    elif 'Status' == item_col:
+                        row += cov_attribute_value_to_col(defect, 'DefectStatus')
+                    else:
+                        # generic check which if it is missing prints empty cell anyway
+                        row += cov_attribute_value_to_col(defect, item_col)
 
-            tbody += row
-        report_info(env, "done")
+                tbody += row
+            report_info(env, "done")
+        except AttributeError as e:
+            report_warning(env, 'Empty stream? Error: %s' % e)
         top_node += table
         node.replace_self(top_node)
 #        try:
