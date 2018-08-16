@@ -220,7 +220,7 @@ def process_coverity_nodes(app, doctree, fromdocname):
                     if 'CID' == item_col:
                         # CID is default and even if it is in disregard
                         row += create_cell(str(defect['cid']),
-                                           url=coverity_service.get_defect_url(app.config.coverity_credentials['stream'],
+                                           url=coverity_service.get_defect_url(app.config.coverity_credentials['stream'],  # noqa: E501
                                                                                str(defect['cid'])))
                     elif 'Category' == item_col:
                         row += create_cell(defect['displayCategory'])
