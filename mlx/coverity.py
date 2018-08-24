@@ -249,7 +249,7 @@ def process_coverity_nodes(app, doctree, fromdocname):
                 tbody += row
             report_info(env, "done")
         except AttributeError as e:
-            report_warning(env, 'Empty stream? Error: %s' % e)
+            report_info(env, 'No issues matching your query or empty stream. %s' % e)
         top_node += table
         node.replace_self(top_node)
 #        try:
