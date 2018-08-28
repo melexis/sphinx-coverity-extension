@@ -205,7 +205,7 @@ def process_coverity_nodes(app, doctree, fromdocname):
                                                    checker=node['checker'], impact=node['impact'], kind=node['kind'],
                                                    classification=node['classification'], action=node['action'],
                                                    component=node['component'], cwe=node['cwe'], cid=node['cid'])
-        except URLError as e:
+        except (URLError, AttributeError) as e:
             report_warning(env, 'failed with %s' % e)
             continue
         report_info(env, "%d received" % (defects['totalNumberOfRecords']))
