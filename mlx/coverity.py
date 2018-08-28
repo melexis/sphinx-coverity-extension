@@ -170,7 +170,7 @@ def process_coverity_nodes(app, doctree, fromdocname):
         report_info(env, 'done')
         coverity_service = CoverityDefectService(coverity_conf_service)
         coverity_service.login(app.config.coverity_credentials['username'], app.config.coverity_credentials['password'])
-    except URLError:
+    except Exception:
         # Create failed topnode
         for node in doctree.traverse(CoverityDefect):
             top_node = create_top_node("Failed to connect to Coverity Server")
