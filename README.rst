@@ -145,7 +145,8 @@ Attributes to coverity-list
 ===========================
 
 Block coverity-list takes below attributes to provide better granularity and filtering of the displayed information.
-Keep in mind all the attributes are to be encapsulated by `:`.
+Keep in mind all the attributes are to be encapsulated by `:`. All parameters are passed in CSV format (separate them
+with commas).
 
 col
 ---
