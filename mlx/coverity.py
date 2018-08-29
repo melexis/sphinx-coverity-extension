@@ -248,13 +248,12 @@ def process_coverity_nodes(app, doctree, fromdocname):
 
                 tbody += row
             report_info(env, "done")
+            top_node += table
         except AttributeError as e:
             report_info(env, 'No issues matching your query or empty stream. %s' % e)
-            row = nodes.row()
-            row += create_cell('No issues matching your query or empty stream')
-            tbody += row
+            top_node += table
+            top_node += nodes.paragraph(text='No issues matching your query or empty stream')
 
-        top_node += table
         node.replace_self(top_node)
 #        try:
 #            percentage = int(100 * count_covered / count_total)
