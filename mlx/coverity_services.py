@@ -281,7 +281,23 @@ class CoverityDefectService(Service):
 
     def get_defects(self, project, stream, checker=None, impact=None, kind=None, classification=None, action=None,
                     component=None, cwe=None, cid=None, custom=None):
-        '''Get a list of defects for given stream, with some query criteria'''
+        '''
+        Get a list of defects for given stream, with some query criteria
+
+        Arguments:
+        project (str) - Name of the project to query
+        stream (str) - Name of the stream to query
+        checker (str) - A CSV list of the checker(s) to query
+        impact (str) - A CSV list of the impact(s) to query
+        kind (str) - A CSV list of the kind(s) to query
+        classification (str) - A CSV list of the classification(s) to query
+        action (str) - A CSV list of the action(s) to query
+        component (str) - A CSV list of component(s) to include/exclude in the query
+        exclude_component(bool) - True for excluding the given component(s), false for including them
+        cwe (str) - A CSV list of the cwe(s) to query
+        cid (str) - A CSV list of the cid(s) to query
+        custom (str) - A custom query
+        '''
         logging.info('Querying Coverity for defects in project [%s] stream [%s] ...', project, stream)
 
         # define the project
