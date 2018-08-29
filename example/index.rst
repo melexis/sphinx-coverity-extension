@@ -30,6 +30,9 @@ Coverity plugin table
     :col: CID,Checker,Status,Comment
     :classification: Intentional
 
+.. coverity-list:: Coverity defects table
+    :col: CID,Checker,Status,Comment
+    :classification: Pending,Unclassified
 
 Coverity plugin graph generation
 
