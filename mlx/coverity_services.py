@@ -149,6 +149,7 @@ class CoverityConfigurationService(Service):
         super(CoverityConfigurationService, self).__init__(transport, hostname, port, ws_version)
         self.checkers = None
         url = self.get_ws_url('configurationservice')
+        logging.getLogger('suds.client').setLevel(logging.CRITICAL)
         try:
             self.client = Client(url)
             logging.info("Validated presence of Coverity Configuration Service [%s]", url)

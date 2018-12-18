@@ -16,10 +16,10 @@ from docutils.parsers.rst import directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
 try:
     # For Python 3.0 and later
-    from urllib.error import URLError
+    from urllib.error import URLError, HTTPError
 except ImportError:
     # Fall back to Python 2's urllib2
-    from urllib2 import URLError
+    from urllib2 import URLError, HTTPError
 from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
@@ -170,7 +170,8 @@ def process_coverity_nodes(app, doctree, fromdocname):
         report_info(env, 'done')
         coverity_service = CoverityDefectService(coverity_conf_service)
         coverity_service.login(app.config.coverity_credentials['username'], app.config.coverity_credentials['password'])
-    except URLError:
+    except (URLError, HTTPError, Exception, ValueError) as error_info:
+        report_info(env, 'failed with: %s' % error_info)
         # Create failed topnode
         for node in doctree.traverse(CoverityDefect):
             top_node = create_top_node("Failed to connect to Coverity Server")
@@ -205,7 +206,7 @@ def process_coverity_nodes(app, doctree, fromdocname):
                                                    checker=node['checker'], impact=node['impact'], kind=node['kind'],
                                                    classification=node['classification'], action=node['action'],
                                                    component=node['component'], cwe=node['cwe'], cid=node['cid'])
-        except (URLError, AttributeError) as e:
+        except (URLError, AttributeError, Exception) as e:
             report_warning(env, 'failed with %s' % e)
             continue
         report_info(env, "%d received" % (defects['totalNumberOfRecords']))
