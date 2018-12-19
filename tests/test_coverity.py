@@ -99,7 +99,8 @@ class TestCoverity(TestCase):
     @patch('mlx.coverity_services.UsernameToken')
     @patch('mlx.coverity_services.Security')
     @patch('mlx.coverity_services.Client')
-    def test_configuration_service_login_no_username_error(self, suds_client_mock, suds_security_mock, suds_username_mock):
+    def test_configuration_service_login_no_username_error(self, suds_client_mock, suds_security_mock,
+                                                           suds_username_mock):
         ''' Test login function of CoverityConfigurationService when error occurs'''
         suds_client_mock.return_value = MagicMock(spec=Client)
         suds_client_mock.return_value.service = MagicMock(spec=covservices.Service)
