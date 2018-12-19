@@ -2,7 +2,7 @@ from unittest import TestCase
 try:
     from unittest.mock import MagicMock, patch
     # from unittest.mock import call
-except ImportError as err:
+except ImportError:
     from mock import MagicMock, patch
     # from mock import call
 import mlx.coverity as cov
@@ -95,3 +95,22 @@ class TestCoverity(TestCase):
         suds_username_mock.assert_called_once_with('user', 'password')
 
         coverity_service.get_defects('projectname', 'somestream')
+
+    @patch('mlx.coverity_services.UsernameToken')
+    @patch('mlx.coverity_services.Security')
+    @patch('mlx.coverity_services.Client')
+    def test_configuration_service_login_no_username_error(self, suds_client_mock, suds_security_mock, suds_username_mock):
+        ''' Test login function of CoverityConfigurationService when error occurs'''
+        suds_client_mock.return_value = MagicMock(spec=Client)
+        suds_client_mock.return_value.service = MagicMock(spec=covservices.Service)
+        suds_client_mock.return_value.service.getVersion = MagicMock()
+        suds_security_mock.return_value = MagicMock(spec=Security)
+        suds_security_mock.return_value.tokens = []
+
+        # Login to Coverity and obtain stream information
+        coverity_conf_service = cov.CoverityConfigurationService('http', 'scan.coverity.com', '8080')
+        suds_client_mock.assert_called_once_with('http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl')
+
+        suds_client_mock.side_effect = Exception((401, 'Unauthorized'))
+        coverity_conf_service.login('', '')
+
