@@ -224,7 +224,7 @@ class CoverityConfigurationService(Service):
 
             if abs(required) > 0 and abs(required) <= num_snapshots:
                 # base zero
-                return snapshots[required-1].id
+                return snapshots[required - 1].id
         return 0
 
     def get_snapshot_detail(self, snapshot_id):
@@ -396,7 +396,7 @@ class CoverityDefectService(Service):
                     name_value_pair = name_value_pair.strip()
                     valid, name, values = parse_two_part_term(name_value_pair, ':')
                     if valid:
-                        logging.info("attr (%d) [%s] = any of ...", i+1, name)
+                        logging.info("attr (%d) [%s] = any of ...", i + 1, name)
 
                         attribute_definition_id = self.client.factory.create('attributeDefinitionIdDataObj')
                         attribute_definition_id.name = name
