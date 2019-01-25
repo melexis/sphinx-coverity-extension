@@ -180,7 +180,8 @@ class SphinxCoverityConnector():
             self.project_name = coverity_conf_service.get_project_name(stream)
             report_info(env, 'done')
             self.coverity_service = CoverityDefectService(coverity_conf_service)
-            self.coverity_service.login(app.config.coverity_credentials['username'], app.config.coverity_credentials['password'])
+            self.coverity_service.login(app.config.coverity_credentials['username'],
+                                        app.config.coverity_credentials['password'])
         except (URLError, HTTPError, Exception, ValueError) as error_info:
             self.coverity_login_error_msg = error_info
             report_info(env, 'failed with: %s' % error_info)
@@ -228,10 +229,10 @@ class SphinxCoverityConnector():
             # Get items from server
             report_info(env, 'obtaining defects... ', True)
             try:
-                defects = self.coverity_service.get_defects(self.project_name, app.config.coverity_credentials['stream'],
-                                                       checker=node['checker'], impact=node['impact'], kind=node['kind'],
-                                                       classification=node['classification'], action=node['action'],
-                                                       component=node['component'], cwe=node['cwe'], cid=node['cid'])
+                defects = self.coverity_service.get_defects(self.project_name, app.config.coverity_credentials['stream'],   # noqa: E501
+                                                            checker=node['checker'], impact=node['impact'], kind=node['kind'],  # noqa: E501
+                                                            classification=node['classification'], action=node['action'],   # noqa: E501
+                                                            component=node['component'], cwe=node['cwe'], cid=node['cid'])  # noqa: E501
             except (URLError, AttributeError, Exception) as e:
                 report_warning(env, 'failed with %s' % e, fromdocname)
                 continue
@@ -248,7 +249,7 @@ class SphinxCoverityConnector():
                             # CID is default and even if it is in disregard
                             row += create_cell(str(defect['cid']),
                                                url=self.coverity_service.get_defect_url(app.config.coverity_credentials['stream'],  # noqa: E501
-                                                                                   str(defect['cid'])))
+                                                                                        str(defect['cid'])))
                         elif 'Category' == item_col:
                             row += create_cell(defect['displayCategory'])
                         elif 'Impact' == item_col:
@@ -350,7 +351,6 @@ def cov_attribute_value_to_col(defect, name):
     return col
 
 
-
 # Extension setup
 def setup(app):
     '''Extension setup'''
@@ -369,7 +369,7 @@ def setup(app):
 
     app.add_node(CoverityDefect)
 
-    sphinx_coverity_connector =  SphinxCoverityConnector()
+    sphinx_coverity_connector = SphinxCoverityConnector()
 
     app.add_directive('coverity-list', CoverityDefectListDirective)
 
