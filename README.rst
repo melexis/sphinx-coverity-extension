@@ -136,7 +136,7 @@ filtering classification items with value `Bug` you should use the following sni
     .. coverity-list:: Custom table title
         :col: CID,Classification,Action,Comment
         :classification: Bug
-
+        :width: 10,20,20,50
 
 The plugin will then automatically replace this block with the table queried from the Coverity server.
 
@@ -174,6 +174,13 @@ default list includes:
     - `False Positive`
     - `Intentional`
     - `Bug`
+
+width
+-----
+
+Optional attribute that provides possibility to set each column width to a predefined percentage. This makes it nicer
+for the pdf builders that are able to fit the table to the printable page width and because of longtable also provide
+nice table continuation through multiple pages.
 
 
 -------------
