@@ -23,15 +23,18 @@ Coverity plugin table
 
 .. coverity-list:: Coverity defects table
     :col: CID,Classification,Action,Comment
+    :widths: 10, 15, 15, 60
     :classification: Bug
 
 
 .. coverity-list:: Coverity defects table
     :col: CID,Checker,Status,Comment
+    :widths: 10, 15, 15, 60
     :classification: Intentional
 
 .. coverity-list:: Coverity defects table
     :col: CID,Checker,Status,Comment
+    :widths: 10, 15, 15, 60
     :classification: Pending,Unclassified
 
 Coverity plugin graph generation
