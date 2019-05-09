@@ -34,7 +34,6 @@ Coverity plugin table
 
 .. coverity-list:: Coverity defects table
     :col: CID,Checker,Status,Comment
-    :widths: 10, 15, 15, 60
     :classification: Pending,Unclassified
 
 Coverity plugin graph generation
