@@ -91,6 +91,8 @@ class CoverityDefectListDirective(Directive):
     # Options
     option_spec = {'class': directives.class_option,
                    'col': directives.unchanged,
+                   'widths': directives.value_or(('auto', 'grid'),
+                                                 directives.positive_int_list),
                    'graph': directives.flag,
                    'checker': directives.unchanged,
                    'impact': directives.unchanged,
@@ -118,6 +120,12 @@ class CoverityDefectListDirective(Directive):
             item_list_node['col'] = self.options['col'].split(',')
         else:
             item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')
+
+        # Process ``widths`` option
+        if 'widths' in self.options:
+            item_list_node['widths'] = self.options['widths']
+        else:
+            item_list_node['widths'] = ''
 
         # Process ``graph`` option
         if 'graph' in self.options:
@@ -211,12 +219,24 @@ class SphinxCoverityConnector():
         for node in doctree.traverse(CoverityDefect):
             top_node = create_top_node(node['title'])
             table = nodes.table()
+            table.set_class('longtable')
+            if node['widths'] == 'auto':
+                table['classes'] += ['colwidths-auto']
+            elif node['widths']:  # "grid" or list of integers
+                table['classes'] += ['colwidths-given']
             tgroup = nodes.tgroup()
 
             for c in node['col']:
                 tgroup += [nodes.colspec(colwidth=5)]
 
             tgroup += nodes.thead('', create_row(node['col']))
+
+            if type(node['widths']) == list:
+                colspecs = [child for child in tgroup.children
+                            if child.tagname == 'colspec']
+                for colspec, col_width in zip(colspecs, node['widths']):
+                    colspec['colwidth'] = col_width
+
             tbody = nodes.tbody()
 
             tgroup += tbody
