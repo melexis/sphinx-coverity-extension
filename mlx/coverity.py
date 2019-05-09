@@ -222,7 +222,7 @@ class SphinxCoverityConnector():
             table.set_class('longtable')
             if node['widths'] == 'auto':
                 table['classes'] += ['colwidths-auto']
-            elif node['widths']: # "grid" or list of integers
+            elif node['widths']:  # "grid" or list of integers
                 table['classes'] += ['colwidths-given']
             tgroup = nodes.tgroup()
 
