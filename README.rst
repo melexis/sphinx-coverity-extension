@@ -39,19 +39,19 @@ Sphinx Coverity plugin
 ======================
 
 Publish Coverity report along your documentation - up-to-date at every build. Include comments and other special data
-in the same table and draw some nice graphs to showcase the quality
+in the same table and draw some nice graphs to showcase the quality.
 
 ----
 Goal
 ----
 
-Coverity reporting capabilities enable you to export data into separate documentation. While this might be preferred
+Coverity's reporting capabilities enable you to export data into separate documentation. While this might be preferred,
 it is also detached from your software documentation. Another lack is that it does not include comments or any
-other special fields. That means you can end up with huge amount of intentionally triage defects, without any
-explanation why they are intentional. Because of that you cannot link your explanations for actions to that report and
+other special fields. That means you can end up with a huge amount of intentionally triaged defects, without any
+explanation why they are intentional. Because of that, you cannot link your explanations for actions to that report and
 numbers could mean just anything. Plugin should enable simple and seamless Coverity reporting integration into existing
 Sphinx documentation. Generating a reStructured Text table of defects was one option, but that allows changing before
-it is rendered, so to provide a more trustworthy path plugin that generates the data through Coverity API was
+it is rendered, so to provide a more trustworthy path plugin, that generates the data through, Coverity API was
 developed.
 
 
@@ -72,7 +72,7 @@ Configuration
 -------------
 
 The *conf.py* file contains the documentation configuration for your project. This file needs to be equipped in order
-to configure the coverity plugin.
+to configure the Coverity plugin.
 
 First the plugin needs to be enabled in the *extensions* variable:
 
@@ -88,7 +88,7 @@ First the plugin needs to be enabled in the *extensions* variable:
 Credentials
 ===========
 
-Python variable *coverity_credentials* should be defined in order to override the default configuration of the coverity plugin.
+Python variable *coverity_credentials* should be defined in order to override the default configuration of the Coverity plugin.
 
 Example of custom credentials for the plugin:
 
@@ -120,16 +120,16 @@ The plugin itself holds a default config that can be used for any Coverity proje
         'stream': 'some_coverty_stream',
     }
 
-This default configuration build into the plugin, can be overriden through the conf.py of your project.
+This default configuration, built into the plugin, can be overridden through the *conf.py* of your project.
 
 
 -----
 Usage
 -----
 
-Inside your reStructured text file you can call a block `.. coverity-list:` which will generate the table
-with title and defined columns. For example to display CID, Classification, Action and Comment columns while
-filtering classification items with value `Bug` you should use the following snippet:
+Inside your reStructured text file, you can call a block `.. coverity-list:` which will generate the table
+with title and defined columns. For example, to display CID, Classification, Action and Comment columns while
+filtering classification items with value `Bug`, you should use the following snippet:
 
 .. code-block:: python
 
@@ -179,7 +179,7 @@ width
 -----
 
 Optional attribute that provides possibility to set each column width to a predefined percentage. This makes it nicer
-for the pdf builders that are able to fit the table to the printable page width and because of longtable also provide
+for the pdf builders that are able to fit the table to the printable page width and, because of longtable, also provide
 nice table continuation through multiple pages.
 
 
