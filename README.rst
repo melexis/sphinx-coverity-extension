@@ -49,11 +49,10 @@ Coverity's reporting capabilities enable you to export data into separate docume
 it is also detached from your software documentation. Another lack is that it does not include comments or any
 other special fields. That means you can end up with a huge amount of intentionally triaged defects, without any
 explanation why they are intentional. Because of that, you cannot link your explanations for actions to that report and
-numbers could mean just anything. Plugin should enable simple and seamless Coverity reporting integration into existing
-Sphinx documentation. Generating a reStructured Text table of defects was one option, but that allows changing before
-it is rendered, so to provide a more trustworthy path plugin, that generates the data through, Coverity API was
-developed.
-
+numbers could mean just anything. This plugin should enable simple and seamless Coverity reporting integration into
+existing Sphinx documentation. Generating a reStructured Text table of defects was one option, but that allows changing
+before it is rendered, so to provide a more trustworthy path, this plugin retrieves the data through Coverity API and
+generates/renders documentation via Sphinx without intermediate (editable) artifacts.
 
 .. _coverity_installing:
 
@@ -74,7 +73,7 @@ Configuration
 The *conf.py* file contains the documentation configuration for your project. This file needs to be equipped in order
 to configure the Coverity plugin.
 
-First the plugin needs to be enabled in the *extensions* variable:
+First, the plugin needs to be enabled in the *extensions* variable:
 
 .. code-block::
 
@@ -120,15 +119,15 @@ The plugin itself holds a default config that can be used for any Coverity proje
         'stream': 'some_coverty_stream',
     }
 
-This default configuration, built into the plugin, can be overridden through the *conf.py* of your project.
+This default configuration, which is built into the plugin, can be overridden through the *conf.py* of your project.
 
 
 -----
 Usage
 -----
 
-Inside your reStructured text file, you can call a block `.. coverity-list:` which will generate the table
-with title and defined columns. For example, to display CID, Classification, Action and Comment columns while
+Inside your reStructured text file you can call a block `.. coverity-list:`, which will generate the table
+with title and defined columns. For example, to display CID, Classification, Action and Comment columns, while
 filtering classification items with value `Bug`, you should use the following snippet:
 
 .. code-block:: python
@@ -144,7 +143,7 @@ The plugin will then automatically replace this block with the table queried fro
 Attributes to coverity-list
 ===========================
 
-Block coverity-list takes below attributes to provide better granularity and filtering of the displayed information.
+Block `coverity-list` takes below attributes to provide better granularity and filtering of the displayed information.
 Keep in mind all the attributes are to be encapsulated by `:`. All parameters are passed in CSV format (separate them
 with commas).
 
