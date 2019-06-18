@@ -190,4 +190,35 @@ We welcome any contributions to this plugin. Do not be shy and open a pull reque
 you include your contribution to our repository. Keep in mind that reporting a bug or requesting a feature is also a
 nice gesture and considered as contribution, even if you do not have development skills to implement it.
 
+-----------------
+Development setup
+-----------------
+
+To run tests and checks we use tox.
+
+.. code-block:: bash
+
+    # to install tox
+    pip3 install tox
+
+    # to run tests
+    tox
+
+To build example locally you will need to install some dependencies and set your enviornment
+
+.. code-block:: bash
+
+    # install dependencies
+    pip3 install -r example/pip-dependencies.txt
+
+    # install current locally the package
+    pip3 install -e .
+
+    # copy example .env to your .env
+    cp example/.env.example .env
+
+    # add env variables adjust the values in .env
+    # build
+    make -C example/ html
+
 

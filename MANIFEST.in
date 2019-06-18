@@ -17,6 +17,9 @@ recursive-include tests *.py
 recursive-include tests *.rst
 recursive-include tests *.txt
 
+exclude example/.env.example
+exclude example/pip-dependencies.txt
+
 # added by check_manifest.py
 recursive-include example *.css
 
