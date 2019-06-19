@@ -88,3 +88,13 @@ before_deploy:
   - mkdir -p example/_build/html/
   - touch example/_build/html/.nojekyll
 
+deploy:
+  # publish example: build by tox, published to pages
+  - provider: pages
+    skip_cleanup: true
+    local_dir: example/_build/html/
+    github_token: $GITHUB_TOKEN
+    on:
+      branch: master
+      python: 3.7
+
