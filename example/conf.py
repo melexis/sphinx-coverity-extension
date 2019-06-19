@@ -309,9 +309,9 @@ intersphinx_mapping = {'http://docs.python.org/': None}
 from decouple import config
 
 coverity_credentials = {
-    'transport': 'http',
-    'port': '8080',
-    'hostname': 'coverity.melexis.com',
+    'transport': config('COVERITY_TRANSPORT', default='http'),
+    'port': config('COVERITY_PORT', default='8080'),
+    'hostname': config('COVERITY_HOSTNAME'),
     'username': config('COVERITY_USERNAME'),
     'password': config('COVERITY_PASSWORD'),
     'stream': config('COVERITY_STREAM'),
