@@ -95,6 +95,6 @@ deploy:
     local_dir: example/_build/html/
     github_token: $GITHUB_TOKEN
     on:
-      branch: master
+      branch: make_conf_less_mlx_flavored
       python: 3.7
 
