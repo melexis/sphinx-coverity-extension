@@ -44,7 +44,7 @@ def report_warning(env, msg, docname, lineno=None):
 
 
 def report_info(env, msg, nonl=False):
-    '''Convenience function for inofrmation printing
+    '''Convenience function for information printing
 
     Args:
         msg (str): Message of the warning
@@ -74,7 +74,7 @@ class CoverityDefectListDirective(Directive):
 
       .. coverity-list:: title
          :col: list of columns to be displayed
-         :graph: display graphs on end of list
+         :chart: display chart that labels each specified classification
          :checker: filter for only these checkers
          :impact: filter for only these impacts
          :kind: filter for only these kinds
@@ -83,7 +83,6 @@ class CoverityDefectListDirective(Directive):
          :component: filter for only these components
          :cwe: filter for only these CWE rating
          :cid: filter only these cid
-
     """
     # Optional argument: title (whitespace allowed)
     optional_arguments = 1
@@ -93,7 +92,7 @@ class CoverityDefectListDirective(Directive):
                    'col': directives.unchanged,
                    'widths': directives.value_or(('auto', 'grid'),
                                                  directives.positive_int_list),
-                   'graph': directives.flag,
+                   'chart': directives.unchanged,
                    'checker': directives.unchanged,
                    'impact': directives.unchanged,
                    'kind': directives.unchanged,
@@ -101,7 +100,7 @@ class CoverityDefectListDirective(Directive):
                    'action': directives.unchanged,
                    'component': directives.unchanged,
                    'cwe': directives.unchanged,
-                   'cid': directives.unchanged
+                   'cid': directives.unchanged,
                    }
     # Content disallowed
     has_content = False
@@ -118,8 +117,10 @@ class CoverityDefectListDirective(Directive):
         # Process ``col`` option
         if 'col' in self.options:
             item_list_node['col'] = self.options['col'].split(',')
+        elif 'chart' not in self.options:
+            item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')  # use default colums
         else:
-            item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')
+            item_list_node['col'] = []  # don't display a table if the ``chart`` option is present without ``col``
 
         # Process ``widths`` option
         if 'widths' in self.options:
@@ -127,13 +128,13 @@ class CoverityDefectListDirective(Directive):
         else:
             item_list_node['widths'] = ''
 
-        # Process ``graph`` option
-        if 'graph' in self.options:
-            item_list_node['graph'] = self.options['graph']
+        # Process ``chart`` option
+        if 'chart' in self.options:
+            item_list_node['chart'] = self.options['chart']
         else:
-            item_list_node['graph'] = ''
+            item_list_node['chart'] = ''
 
-        # Process even more optional filters ``checker`` option
+        # Process the optional filters
         filters = ['checker', 'impact', 'kind', 'classification', 'action', 'component', 'cwe', 'cid']
         for fil in filters:
             if fil in self.options:
@@ -218,33 +219,38 @@ class SphinxCoverityConnector():
         # Only source and target items matching respective regexp shall be included
         for node in doctree.traverse(CoverityDefect):
             top_node = create_top_node(node['title'])
-            table = nodes.table()
-            table.set_class('longtable')
-            if node['widths'] == 'auto':
-                table['classes'] += ['colwidths-auto']
-            elif node['widths']:  # "grid" or list of integers
-                table['classes'] += ['colwidths-given']
-            tgroup = nodes.tgroup()
 
-            for c in node['col']:
-                tgroup += [nodes.colspec(colwidth=5)]
+            # Initialize table
+            if node['col']:
+                table = nodes.table()
+                table.set_class('longtable')
+                if node['widths'] == 'auto':
+                    table['classes'] += ['colwidths-auto']
+                elif node['widths']:  # "grid" or list of integers
+                    table['classes'] += ['colwidths-given']
+                tgroup = nodes.tgroup()
 
-            tgroup += nodes.thead('', create_row(node['col']))
+                for _ in node['col']:
+                    tgroup += [nodes.colspec(colwidth=5)]
 
-            if type(node['widths']) == list:
-                colspecs = [child for child in tgroup.children
-                            if child.tagname == 'colspec']
-                for colspec, col_width in zip(colspecs, node['widths']):
-                    colspec['colwidth'] = col_width
+                tgroup += nodes.thead('', create_row(node['col']))
 
-            tbody = nodes.tbody()
+                if isinstance(node['widths'], list):
+                    colspecs = [child for child in tgroup.children
+                                if child.tagname == 'colspec']
+                    for colspec, col_width in zip(colspecs, node['widths']):
+                        colspec['colwidth'] = col_width
 
-            tgroup += tbody
-            table += tgroup
+                tbody = nodes.tbody()
 
-            # Setup counters
-            # count_total = 0
-            # count_covered = 0
+                tgroup += tbody
+                table += tgroup
+
+            # Initialize dictionary to store counters
+            if node['chart']:
+                classification_count = {}
+                for label in node['chart'].split(','):
+                    classification_count[tuple(label.split('+'))] = 0
 
             # Get items from server
             report_info(env, 'obtaining defects... ', True)
@@ -253,55 +259,73 @@ class SphinxCoverityConnector():
                                                             checker=node['checker'], impact=node['impact'], kind=node['kind'],  # noqa: E501
                                                             classification=node['classification'], action=node['action'],   # noqa: E501
                                                             component=node['component'], cwe=node['cwe'], cid=node['cid'])  # noqa: E501
-            except (URLError, AttributeError, Exception) as e:
-                report_warning(env, 'failed with %s' % e, fromdocname)
+            except (URLError, AttributeError, Exception) as err:
+                report_warning(env, 'failed with %s' % err, fromdocname)
                 continue
             report_info(env, "%d received" % (defects['totalNumberOfRecords']))
-            report_info(env, "building defects table... ", True)
+            report_info(env, "building defects table and/or chart... ", True)
 
             try:
                 for defect in defects['mergedDefects']:
-                    row = nodes.row()
+                    if node['col']:
+                        row = nodes.row()
 
-                    # go through each col and decide if it is there or we print empty
-                    for item_col in node['col']:
-                        if 'CID' == item_col:
-                            # CID is default and even if it is in disregard
-                            row += create_cell(str(defect['cid']),
-                                               url=self.coverity_service.get_defect_url(app.config.coverity_credentials['stream'],  # noqa: E501
-                                                                                        str(defect['cid'])))
-                        elif 'Category' == item_col:
-                            row += create_cell(defect['displayCategory'])
-                        elif 'Impact' == item_col:
-                            row += create_cell(defect['displayImpact'])
-                        elif 'Issue' == item_col:
-                            row += create_cell(defect['displayIssueKind'])
-                        elif 'Type' == item_col:
-                            row += create_cell(defect['displayType'])
-                        elif 'Checker' == item_col:
-                            row += create_cell(defect['checkerName'])
-                        elif 'Component' == item_col:
-                            row += create_cell(defect['componentName'])
-                        elif 'Comment' == item_col:
-                            row += cov_attribute_value_to_col(defect, 'Comment')
-                        elif 'Classification' == item_col:
-                            row += cov_attribute_value_to_col(defect, 'Classification')
-                        elif 'Action' == item_col:
-                            row += cov_attribute_value_to_col(defect, 'Action')
-                        elif 'Status' == item_col:
-                            row += cov_attribute_value_to_col(defect, 'DefectStatus')
-                        else:
-                            # generic check which if it is missing prints empty cell anyway
-                            row += cov_attribute_value_to_col(defect, item_col)
+                        # go through each col and decide if it is there or we print empty
+                        for item_col in node['col']:
+                            if 'CID' == item_col:
+                                # CID is default and even if it is in disregard
+                                row += create_cell(str(defect['cid']),
+                                                   url=self.coverity_service.get_defect_url(
+                                                       app.config.coverity_credentials['stream'],  # noqa: E501
+                                                       str(defect['cid'])))
+                            elif 'Category' == item_col:
+                                row += create_cell(defect['displayCategory'])
+                            elif 'Impact' == item_col:
+                                row += create_cell(defect['displayImpact'])
+                            elif 'Issue' == item_col:
+                                row += create_cell(defect['displayIssueKind'])
+                            elif 'Type' == item_col:
+                                row += create_cell(defect['displayType'])
+                            elif 'Checker' == item_col:
+                                row += create_cell(defect['checkerName'])
+                            elif 'Component' == item_col:
+                                row += create_cell(defect['componentName'])
+                            elif 'Comment' == item_col:
+                                row += cov_attribute_value_to_col(defect, 'Comment')
+                            elif 'Classification' == item_col:
+                                row += cov_attribute_value_to_col(defect, 'Classification')
+                            elif 'Action' == item_col:
+                                row += cov_attribute_value_to_col(defect, 'Action')
+                            elif 'Status' == item_col:
+                                row += cov_attribute_value_to_col(defect, 'DefectStatus')
+                            else:
+                                # generic check which, if it is missing, prints empty cell anyway
+                                row += cov_attribute_value_to_col(defect, item_col)
+                        tbody += row
 
-                    tbody += row
-                report_info(env, "done")
-                top_node += table
-            except AttributeError as e:
-                report_info(env, 'No issues matching your query or empty stream. %s' % e)
-                top_node += table
+                    if node['chart']:
+                        col = cov_attribute_value_to_col(defect, 'Classification')
+                        classification_value = col.children[0].children[0]  # get text in paragraph of column
+                        for label in classification_count.keys():
+                            if classification_value in label:
+                                classification_count[label] += 1
+
+            except AttributeError as err:
+                report_info(env, 'No issues matching your query or empty stream. %s' % err)
                 top_node += nodes.paragraph(text='No issues matching your query or empty stream')
 
+            if node['col']:
+                top_node += table
+
+            if node['chart']:
+                total_defects = defects['totalNumberOfRecords']
+                total_labeled = 0
+                for count in classification_count.values():
+                    total_labeled += count
+                classification_count[('other', )] = total_defects - total_labeled
+                top_node += nodes.paragraph(text=str(classification_count))
+
+            report_info(env, "done")
             node.replace_self(top_node)
     #        try:
     #            percentage = int(100 * count_covered / count_total)

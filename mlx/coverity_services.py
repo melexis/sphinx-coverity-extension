@@ -241,7 +241,7 @@ class CoverityConfigurationService(Service):
         return self.checkers
 
     @staticmethod
-    def add_filter_rqt(name, req_csv, valid_list, filter_list):
+    def add_filter_rqt(name, req_csv, valid_list, filter_list, allow_regex=False):
         '''Lookup the list of given filter possibility, add to filter spec and return a validated list'''
         logging.info('Validate required %s [%s]', name, req_csv)
         validated = ""
@@ -252,6 +252,13 @@ class CoverityConfigurationService(Service):
                 filter_list.append(field)
                 validated += delim + field
                 delim = ","
+            elif allow_regex:
+                pattern = re.compile(field)
+                for element in valid_list:
+                    if pattern.search(element) and element not in filter_list:
+                        filter_list.append(element)
+                        validated += delim + element
+                        delim = ","
             else:
                 logging.error('Invalid %s filter: %s', name, field)
         return validated
@@ -320,7 +327,7 @@ class CoverityDefectService(Service):
             logging.info('Using checker filter [%s]', checker)
             self.config_service.get_checkers()
             validated = self.config_service.add_filter_rqt('Checker', checker, self.config_service.checkers,
-                                                           filter_spec.checkerList)
+                                                           filter_spec.checkerList, allow_regex=True)
             logging.info('Resolves to [%s]', validated)
             if validated:
                 self.filters += ("<Checker(%s)> " % validated)
