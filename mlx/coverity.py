@@ -118,9 +118,9 @@ class CoverityDefectListDirective(Directive):
         if 'col' in self.options:
             item_list_node['col'] = self.options['col'].split(',')
         elif 'chart' not in self.options:
-            item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')
+            item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')  # use default colums
         else:
-            item_list_node['col'] = []  # don't display a table if the ``chart`` option is present
+            item_list_node['col'] = []  # don't display a table if the ``chart`` option is present without ``col``
 
         # Process ``widths`` option
         if 'widths' in self.options:
