@@ -25,20 +25,17 @@ Coverity plugin table
     :col: CID,Classification,Action,Comment
     :widths: 10, 15, 15, 60
     :classification: Bug
-
+    :graph: Intentional,Bug,Pending+Unclassified
 
 .. coverity-list:: Coverity defects table
     :col: CID,Checker,Status,Comment
     :widths: 10, 15, 15, 60
-    :classification: Intentional
-
-.. coverity-list:: Coverity defects table
-    :col: CID,Checker,Status,Comment
     :classification: Pending,Unclassified
 
 Coverity plugin graph generation
 
-
+.. coverity-list:: Coverity defects graph
+    :graph: Intentional,Pending+Unclassified
 
 This text is not part of any item
 
