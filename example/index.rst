@@ -26,6 +26,7 @@ Coverity plugin table
     :widths: 10, 15, 15, 60
     :chart: Intentional,Bug,Pending+Unclassified
     :classification: Bug
+    :checker: MISRA
 
 .. coverity-list:: Coverity defects table
     :col: CID,Checker,Status,Comment
