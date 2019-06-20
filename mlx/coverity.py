@@ -74,7 +74,7 @@ class CoverityDefectListDirective(Directive):
 
       .. coverity-list:: title
          :col: list of columns to be displayed
-         :graph: display graph that labels each specified classification
+         :chart: display chart that labels each specified classification
          :checker: filter for only these checkers
          :impact: filter for only these impacts
          :kind: filter for only these kinds
@@ -92,7 +92,7 @@ class CoverityDefectListDirective(Directive):
                    'col': directives.unchanged,
                    'widths': directives.value_or(('auto', 'grid'),
                                                  directives.positive_int_list),
-                   'graph': directives.unchanged,
+                   'chart': directives.unchanged,
                    'checker': directives.unchanged,
                    'impact': directives.unchanged,
                    'kind': directives.unchanged,
@@ -117,10 +117,10 @@ class CoverityDefectListDirective(Directive):
         # Process ``col`` option
         if 'col' in self.options:
             item_list_node['col'] = self.options['col'].split(',')
-        elif 'graph' not in self.options:
+        elif 'chart' not in self.options:
             item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')
         else:
-            item_list_node['col'] = []  # don't display a table if the ``graph`` option is present
+            item_list_node['col'] = []  # don't display a table if the ``chart`` option is present
 
         # Process ``widths`` option
         if 'widths' in self.options:
@@ -128,11 +128,11 @@ class CoverityDefectListDirective(Directive):
         else:
             item_list_node['widths'] = ''
 
-        # Process ``graph`` option
-        if 'graph' in self.options:
-            item_list_node['graph'] = self.options['graph']
+        # Process ``chart`` option
+        if 'chart' in self.options:
+            item_list_node['chart'] = self.options['chart']
         else:
-            item_list_node['graph'] = ''
+            item_list_node['chart'] = ''
 
         # Process the optional filters
         filters = ['checker', 'impact', 'kind', 'classification', 'action', 'component', 'cwe', 'cid']
@@ -247,9 +247,9 @@ class SphinxCoverityConnector():
                 table += tgroup
 
             # Initialize dictionary to store counters
-            if node['graph']:
+            if node['chart']:
                 classification_count = {}
-                for label in node['graph'].split(','):
+                for label in node['chart'].split(','):
                     classification_count[tuple(label.split('+'))] = 0
 
             # Get items from server
@@ -263,7 +263,7 @@ class SphinxCoverityConnector():
                 report_warning(env, 'failed with %s' % err, fromdocname)
                 continue
             report_info(env, "%d received" % (defects['totalNumberOfRecords']))
-            report_info(env, "building defects table and/or graph... ", True)
+            report_info(env, "building defects table and/or chart... ", True)
 
             try:
                 for defect in defects['mergedDefects']:
@@ -303,7 +303,7 @@ class SphinxCoverityConnector():
                                 row += cov_attribute_value_to_col(defect, item_col)
                         tbody += row
 
-                    if node['graph']:
+                    if node['chart']:
                         col = cov_attribute_value_to_col(defect, 'Classification')
                         classification_value = col.children[0].children[0]  # get text in paragraph of column
                         for label in classification_count.keys():
@@ -317,7 +317,7 @@ class SphinxCoverityConnector():
             if node['col']:
                 top_node += table
 
-            if node['graph']:
+            if node['chart']:
                 total_defects = defects['totalNumberOfRecords']
                 total_labeled = 0
                 for count in classification_count.values():
