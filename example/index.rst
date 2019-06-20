@@ -24,7 +24,7 @@ Coverity plugin table
 .. coverity-list:: Coverity defects table
     :col: CID,Classification,Action,Comment
     :widths: 10, 15, 15, 60
-    :graph: Intentional,Bug,Pending+Unclassified
+    :chart: Intentional,Bug,Pending+Unclassified
     :classification: Bug
     :checker: MISRA
 
@@ -33,10 +33,10 @@ Coverity plugin table
     :widths: 10, 15, 15, 60
     :classification: Pending,Unclassified
 
-Coverity plugin graph generation
+Coverity plugin chart generation
 
-.. coverity-list:: Coverity defects graph
-    :graph: Intentional,Pending+Unclassified
+.. coverity-list:: Coverity defects chart
+    :chart: Intentional,Pending+Unclassified
 
 This text is not part of any item
 
