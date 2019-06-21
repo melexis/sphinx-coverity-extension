@@ -6,17 +6,15 @@ Coverity plugin
 Sphinx extension for restructured text that adds Coverity reporting to documentation.
 See README.rst for more details.
 '''
-
-from __future__ import print_function
-
-from hashlib import sha256
-from os import environ, mkdir, path
-
 import matplotlib as mpl
 if not environ.get('DISPLAY'):
     mpl.use('Agg')
 import matplotlib.pyplot as plt
 import pkg_resources
+
+from __future__ import print_function
+from hashlib import sha256
+from os import environ, mkdir, path
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
