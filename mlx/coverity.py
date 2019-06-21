@@ -405,7 +405,6 @@ def cov_attribute_value_to_col(defect, name):
     return col
 
 
-
 def make_internal_item_ref(app, fromdocname, item_id):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
