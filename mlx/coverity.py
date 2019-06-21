@@ -8,25 +8,27 @@ See README.rst for more details.
 '''
 
 from __future__ import print_function
-from os import environ, path, mkdir
-from hashlib import sha256
-import pkg_resources
 
-from docutils.parsers.rst import Directive
-from docutils import nodes
-from docutils.parsers.rst import directives
+from hashlib import sha256
+from os import environ, mkdir, path
+
 import matplotlib as mpl
 if not environ.get('DISPLAY'):
     mpl.use('Agg')
 import matplotlib.pyplot as plt
+import pkg_resources
+from docutils import nodes
+from docutils.parsers.rst import Directive, directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
+from sphinx import __version__ as sphinx_version
+
+
 try:
     # For Python 3.0 and later
     from urllib.error import URLError, HTTPError
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError, HTTPError
-from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
 
@@ -341,7 +343,6 @@ class SphinxCoverityConnector():
                 for count in chart_labels.values():
                     total_labeled += count
                 chart_labels[('Other', )] = total_defects - total_labeled
-                #top_node += nodes.paragraph(text=str(chart_labels))
                 # remove items with count value equal to 0
                 chart_labels = {k: v for k, v in chart_labels.items() if v}
 
@@ -362,7 +363,8 @@ class SphinxCoverityConnector():
                 rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
                 if rel_file_path not in env.images.keys():
                     fig.savefig(path.join(env.app.srcdir, rel_file_path), format='png')
-                    env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]  # store file name in build env
+                    # store file name in build env
+                    env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]
 
                 image_node = nodes.image()
                 image_node['uri'] = rel_file_path
