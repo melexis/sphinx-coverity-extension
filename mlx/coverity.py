@@ -6,12 +6,6 @@ Coverity plugin
 Sphinx extension for restructured text that adds Coverity reporting to documentation.
 See README.rst for more details.
 '''
-import matplotlib as mpl
-if not environ.get('DISPLAY'):
-    mpl.use('Agg')
-import matplotlib.pyplot as plt
-import pkg_resources
-
 from __future__ import print_function
 from hashlib import sha256
 from os import environ, mkdir, path
@@ -19,8 +13,6 @@ from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
 from sphinx import __version__ as sphinx_version
-
-
 try:
     # For Python 3.0 and later
     from urllib.error import URLError, HTTPError
@@ -29,6 +21,11 @@ except ImportError:
     from urllib2 import URLError, HTTPError
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
+import matplotlib as mpl
+if not environ.get('DISPLAY'):
+    mpl.use('Agg')
+import matplotlib.pyplot as plt
+import pkg_resources
 
 
 def report_warning(env, msg, docname, lineno=None):
