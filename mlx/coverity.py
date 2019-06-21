@@ -9,6 +9,7 @@ See README.rst for more details.
 
 from __future__ import print_function
 import pkg_resources
+from re import search
 
 from docutils.parsers.rst import Directive
 from docutils import nodes
@@ -20,6 +21,7 @@ try:
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError, HTTPError
+from sphinx.environment import NoUri
 from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
@@ -291,7 +293,15 @@ class SphinxCoverityConnector():
                             elif 'Component' == item_col:
                                 row += create_cell(defect['componentName'])
                             elif 'Comment' == item_col:
-                                row += cov_attribute_value_to_col(defect, 'Comment')
+                                col = cov_attribute_value_to_col(defect, 'Comment')
+                                text = col.children[0].children[0]
+                                item_match = search(app.config.TRACEABILITY_ITEM_ID_REGEX, text)
+                                if item_match:
+                                    item_id = item_match.group(1)
+                                    ref_node = make_internal_item_ref(app, fromdocname, item_id)
+                                    if ref_node:
+                                        text.replace(item_id, str(ref_node))
+                                row += col
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
                             elif 'Action' == item_col:
@@ -382,7 +392,7 @@ def create_row(cells):
 
 def cov_attribute_value_to_col(defect, name):
     """
-        Search defects array and return value for name
+    Search defects array and return value for name
     """
     col = create_cell(" ")
 
@@ -393,6 +403,31 @@ def cov_attribute_value_to_col(defect, name):
             except (AttributeError, IndexError):
                 col = create_cell(" ")
     return col
+
+
+
+def make_internal_item_ref(app, fromdocname, item_id):
+    """
+    Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
+    collection.
+    """
+    env = app.builder.env
+
+    if not hasattr(env, 'traceability_collection'):
+        return None
+
+    item_info = env.traceability_collection.get_item(item_id)
+    if not item_info:
+        return None
+
+    ref_node = nodes.reference('', '')
+    ref_node['refdocname'] = item_info.docname
+    try:
+        ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item_id
+    except NoUri:
+        # no URI can be determined for LaTeX output :(
+        return None
+    return ref_node
 
 
 # Extension setup
@@ -410,6 +445,7 @@ def setup(app):
                              'stream': 'some_coverty_stream',
                          },
                          'env')
+    app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', "([A-Z_]+-[A-Z0-9_]+)", 'env')
 
     app.add_node(CoverityDefect)
 
