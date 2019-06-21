@@ -7,6 +7,10 @@ Sphinx extension for restructured text that adds Coverity reporting to documenta
 See README.rst for more details.
 '''
 from __future__ import print_function
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pkg_resources
+
 from hashlib import sha256
 from os import environ, mkdir, path
 from docutils import nodes
@@ -21,11 +25,9 @@ except ImportError:
     from urllib2 import URLError, HTTPError
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
-import matplotlib as mpl
+
 if not environ.get('DISPLAY'):
     mpl.use('Agg')
-import matplotlib.pyplot as plt
-import pkg_resources
 
 
 def report_warning(env, msg, docname, lineno=None):
