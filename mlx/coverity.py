@@ -9,7 +9,7 @@ See README.rst for more details.
 
 from __future__ import print_function
 import pkg_resources
-from re import search
+from re import findall
 
 from docutils.parsers.rst import Directive
 from docutils import nodes
@@ -293,16 +293,9 @@ class SphinxCoverityConnector():
                             elif 'Component' == item_col:
                                 row += create_cell(defect['componentName'])
                             elif 'Comment' == item_col:
-                                col = cov_attribute_value_to_col(defect, 'Comment')
-                                text = col.children[0].children[0]
-                                item_match = search(app.config.TRACEABILITY_ITEM_ID_REGEX, text)
-                                if item_match:
-                                    item_id = item_match.group(1)
-                                    ref_node = make_internal_item_ref(app, fromdocname, item_id)
-                                    if ref_node:
-                                        text.replace(item_id, str(ref_node))
-                                        col = create_cell(text)
-                                row += col
+                                text = cov_attribute_value_to_col(defect, 'Comment').children[0].children[0]
+                                contents = create_paragraph_with_links(app, fromdocname, text)
+                                row += nodes.entry('', contents)
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
                             elif 'Action' == item_col:
@@ -406,6 +399,53 @@ def cov_attribute_value_to_col(defect, name):
     return col
 
 
+def create_paragraph_with_links(app, docname, remaining_text):
+    """
+    Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
+    their definition.
+    """
+    contents = nodes.paragraph()
+    parts = [remaining_text]
+    url_matches = findall(app.config.URL_REGEX, remaining_text)
+    if url_matches:
+        parts = []
+        for url in url_matches:
+            url = url.rstrip(":;,.\n")
+            text_before = remaining_text.split(url)[0]
+            parts.append(text_before)
+
+            ref_node = nodes.reference()
+            ref_node['refuri'] = url
+            ref_node.append(nodes.Text(url))
+            parts.append(ref_node)
+
+            remaining_text = remaining_text.replace(text_before + url, '', 1)
+        if remaining_text:
+            parts.append(remaining_text)
+
+    linked_parts = []
+    for part in parts:
+        if isinstance(part, nodes.Node):
+            linked_parts.append(part)
+            continue
+
+        item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, part)
+        for item in item_matches:
+            text_before = part.split(item)[0]
+            linked_parts.append(nodes.Text(text_before))
+            ref_node = make_internal_item_ref(app, docname, item)
+            if ref_node is None:
+                ref_node = nodes.Text('*%s*' % item)
+            linked_parts.append(ref_node)
+            part = part.replace(text_before + item, '', 1)
+        if part:
+            linked_parts.append(nodes.Text(part))
+
+    for part in linked_parts:
+        contents += part
+    return contents
+
+
 def make_internal_item_ref(app, fromdocname, item_id):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
@@ -445,7 +485,8 @@ def setup(app):
                              'stream': 'some_coverty_stream',
                          },
                          'env')
-    app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', "([A-Z_]+-[A-Z0-9_]+)", 'env')
+    app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', r"([A-Z_]+-[A-Z0-9_]+)", 'env')
+    app.add_config_value('URL_REGEX', r"(http[s]?://[\S]*)", 'env')
 
     app.add_node(CoverityDefect)
 
