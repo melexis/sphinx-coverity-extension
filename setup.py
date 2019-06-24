@@ -8,7 +8,7 @@ project_url = 'https://github.com/melexis/sphinx-coverity-extension'
 if sys.version_info[0] == 2:
     requires = ['Sphinx>=0.6', 'docutils', 'suds', 'setuptools_scm']
 else:
-    requires = ['Sphinx>=0.6', 'docutils', 'suds-py3', 'setuptools_scm', 'matplotlib']
+    requires = ['Sphinx>=0.6', 'docutils', 'suds-py3', 'setuptools_scm', 'matplotlib', 'urlextract']
 
 
 setup(

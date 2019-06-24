@@ -14,6 +14,7 @@ from re import findall
 
 from hashlib import sha256
 from os import environ, mkdir, path
+from urlextract import URLExtract
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
@@ -442,51 +443,54 @@ def cov_attribute_value_to_col(defect, name):
     return col
 
 
-def create_paragraph_with_links(app, docname, remaining_text):
+def create_paragraph_with_links(text, *args):
     """
     Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
     their definition.
     """
     contents = nodes.paragraph()
-    parts = [remaining_text]
-    url_matches = findall(app.config.URL_REGEX, remaining_text)
-    if url_matches:
-        parts = []
-        for url in url_matches:
-            url = url.rstrip(":;,.\n")
-            text_before = remaining_text.split(url)[0]
-            parts.append(text_before)
-
-            ref_node = nodes.reference()
-            ref_node['refuri'] = url
-            ref_node.append(nodes.Text(url))
-            parts.append(ref_node)
-
-            remaining_text = remaining_text.replace(text_before + url, '', 1)
-        if remaining_text:
-            parts.append(remaining_text)
-
-    linked_parts = []
-    for part in parts:
-        if isinstance(part, nodes.Node):
-            linked_parts.append(part)
-            continue
-
-        item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, part)
-        for item in item_matches:
-            text_before = part.split(item)[0]
-            linked_parts.append(nodes.Text(text_before))
-            ref_node = make_internal_item_ref(app, docname, item)
-            if ref_node is None:
-                ref_node = nodes.Text('*%s*' % item)
-            linked_parts.append(ref_node)
-            part = part.replace(text_before + item, '', 1)
-        if part:
-            linked_parts.append(nodes.Text(part))
-
-    for part in linked_parts:
-        contents += part
+    remaining_text = text
+    link_to_urls(contents, remaining_text, *args)
     return contents
+
+
+def link_to_urls(contents, text, *args):
+    remaining_text = text
+    extractor = URLExtract()
+    urls = extractor.find_urls(remaining_text)
+    for url in urls:
+        text_before = remaining_text.split(url)[0]
+        if text_before:
+            link_to_item_ids(contents, text_before, *args)
+
+        ref_node = nodes.reference()
+        ref_node['refuri'] = url
+        ref_node.append(nodes.Text(url))
+        contents += ref_node
+
+        remaining_text = remaining_text.replace(text_before + url, '', 1)
+
+    if remaining_text:
+        contents.append(nodes.Text(remaining_text))
+
+
+def link_to_item_ids(contents, text, app, docname):
+    remaining_text = text
+    item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, remaining_text)
+    for item in item_matches:
+        text_before = remaining_text.split(item)[0]
+        if text_before:
+            contents.append(nodes.Text(text_before))
+
+        ref_node = make_internal_item_ref(app, docname, item)
+        if ref_node is None:  # no link could be made
+            ref_node = nodes.Text(item)
+        contents += ref_node
+
+        remaining_text = remaining_text.replace(text_before + item, '', 1)
+
+    if remaining_text:
+        contents.append(nodes.Text(remaining_text))
 
 
 def make_internal_item_ref(app, fromdocname, item_id):
@@ -501,6 +505,7 @@ def make_internal_item_ref(app, fromdocname, item_id):
 
     item_info = env.traceability_collection.get_item(item_id)
     if not item_info:
+        report_warning(app.env, "Could not find item ID '%s' in traceability collection.", fromdocname)
         return None
 
     ref_node = nodes.reference('', '')
@@ -508,7 +513,6 @@ def make_internal_item_ref(app, fromdocname, item_id):
     try:
         ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item_id
     except NoUri:
-        # no URI can be determined for LaTeX output :(
         return None
     return ref_node
 
@@ -529,7 +533,6 @@ def setup(app):
                          },
                          'env')
     app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', r"([A-Z_]+-[A-Z0-9_]+)", 'env')
-    app.add_config_value('URL_REGEX', r"(http[s]?://[\S]*)", 'env')
 
     app.add_node(CoverityDefect)
 
