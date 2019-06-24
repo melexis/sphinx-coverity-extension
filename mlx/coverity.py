@@ -18,14 +18,13 @@ from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
 from sphinx import __version__ as sphinx_version
+from sphinx.environment import NoUri
 try:
     # For Python 3.0 and later
     from urllib.error import URLError, HTTPError
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError, HTTPError
-from sphinx.environment import NoUri
-from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
 
