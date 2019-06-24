@@ -301,6 +301,7 @@ class SphinxCoverityConnector():
                                     ref_node = make_internal_item_ref(app, fromdocname, item_id)
                                     if ref_node:
                                         text.replace(item_id, str(ref_node))
+                                        col = create_cell(text)
                                 row += col
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
