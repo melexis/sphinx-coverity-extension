@@ -6,23 +6,28 @@ Coverity plugin
 Sphinx extension for restructured text that adds Coverity reporting to documentation.
 See README.rst for more details.
 '''
-
 from __future__ import print_function
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import pkg_resources
 
-from docutils.parsers.rst import Directive
+from hashlib import sha256
+from os import environ, mkdir, path
 from docutils import nodes
-from docutils.parsers.rst import directives
+from docutils.parsers.rst import Directive, directives
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
+from sphinx import __version__ as sphinx_version
 try:
     # For Python 3.0 and later
     from urllib.error import URLError, HTTPError
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError, HTTPError
-from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
+
+if not environ.get('DISPLAY'):
+    mpl.use('Agg')
 
 
 def report_warning(env, msg, docname, lineno=None):
@@ -55,6 +60,18 @@ def report_info(env, msg, nonl=False):
         logger.info(msg, nonl=nonl)
     else:
         env.info(msg, nonl=nonl)
+
+
+def pct_wrapper(sizes):
+    """ Helper function for matplotlib which returns the percentage and the absolute size of the slice.
+
+    Args:
+        sizes (list): List containing the amount of elements per slice.
+    """
+    def make_pct(pct):
+        absolute = int(round(pct / 100 * sum(sizes)))
+        return "{:.0f}%\n({:d})".format(pct, absolute)
+    return make_pct
 
 
 # -----------------------------------------------------------------------------
@@ -248,9 +265,9 @@ class SphinxCoverityConnector():
 
             # Initialize dictionary to store counters
             if node['chart']:
-                classification_count = {}
+                chart_labels = {}
                 for label in node['chart'].split(','):
-                    classification_count[tuple(label.split('+'))] = 0
+                    chart_labels[tuple(label.split('+'))] = 0
 
             # Get items from server
             report_info(env, 'obtaining defects... ', True)
@@ -306,9 +323,9 @@ class SphinxCoverityConnector():
                     if node['chart']:
                         col = cov_attribute_value_to_col(defect, 'Classification')
                         classification_value = col.children[0].children[0]  # get text in paragraph of column
-                        for label in classification_count.keys():
+                        for label in chart_labels.keys():
                             if classification_value in label:
-                                classification_count[label] += 1
+                                chart_labels[label] += 1
 
             except AttributeError as err:
                 report_info(env, 'No issues matching your query or empty stream. %s' % err)
@@ -320,10 +337,36 @@ class SphinxCoverityConnector():
             if node['chart']:
                 total_defects = defects['totalNumberOfRecords']
                 total_labeled = 0
-                for count in classification_count.values():
+                for count in chart_labels.values():
                     total_labeled += count
-                classification_count[('other', )] = total_defects - total_labeled
-                top_node += nodes.paragraph(text=str(classification_count))
+                chart_labels[('Other', )] = total_defects - total_labeled
+                # remove items with count value equal to 0
+                chart_labels = {k: v for k, v in chart_labels.items() if v}
+
+                labels = list(chart_labels.keys())  # list of tuples
+                labels = [' +\n'.join(label) for label in labels]
+                sizes = chart_labels.values()
+
+                fig, axes = plt.subplots()
+                axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
+                axes.axis('equal')
+                folder_name = path.join(env.app.srcdir, '_images')
+                if not path.exists(folder_name):
+                    mkdir(folder_name)
+                hash_string = ''
+                for pie_slice in axes.__dict__['texts']:
+                    hash_string += str(pie_slice)
+                hash_value = sha256(hash_string.encode()).hexdigest()  # create hash value based on chart parameters
+                rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
+                if rel_file_path not in env.images.keys():
+                    fig.savefig(path.join(env.app.srcdir, rel_file_path), format='png')
+                    # store file name in build env
+                    env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]
+
+                image_node = nodes.image()
+                image_node['uri'] = rel_file_path
+                image_node['candidates'] = '*'  # look at uri value for source path, relative to the srcdir folder
+                top_node += image_node
 
             report_info(env, "done")
             node.replace_self(top_node)
