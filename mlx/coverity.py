@@ -6,25 +6,34 @@ Coverity plugin
 Sphinx extension for restructured text that adds Coverity reporting to documentation.
 See README.rst for more details.
 '''
-
 from __future__ import print_function
-import pkg_resources
-from re import search
 
-from docutils.parsers.rst import Directive
+from hashlib import sha256
+from os import environ, mkdir, path
+from re import findall
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pkg_resources
 from docutils import nodes
-from docutils.parsers.rst import directives
+from docutils.parsers.rst import Directive, directives
+from sphinx import __version__ as sphinx_version
+from sphinx.environment import NoUri
+from urlextract import URLExtract
+
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
+
 try:
     # For Python 3.0 and later
     from urllib.error import URLError, HTTPError
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError, HTTPError
-from sphinx.environment import NoUri
-from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
+
+if not environ.get('DISPLAY'):
+    mpl.use('Agg')
 
 
 def report_warning(env, msg, docname, lineno=None):
@@ -57,6 +66,18 @@ def report_info(env, msg, nonl=False):
         logger.info(msg, nonl=nonl)
     else:
         env.info(msg, nonl=nonl)
+
+
+def pct_wrapper(sizes):
+    """ Helper function for matplotlib which returns the percentage and the absolute size of the slice.
+
+    Args:
+        sizes (list): List containing the amount of elements per slice.
+    """
+    def make_pct(pct):
+        absolute = int(round(pct / 100 * sum(sizes)))
+        return "{:.0f}%\n({:d})".format(pct, absolute)
+    return make_pct
 
 
 # -----------------------------------------------------------------------------
@@ -250,9 +271,9 @@ class SphinxCoverityConnector():
 
             # Initialize dictionary to store counters
             if node['chart']:
-                classification_count = {}
+                chart_labels = {}
                 for label in node['chart'].split(','):
-                    classification_count[tuple(label.split('+'))] = 0
+                    chart_labels[tuple(label.split('+'))] = 0
 
             # Get items from server
             report_info(env, 'obtaining defects... ', True)
@@ -293,16 +314,9 @@ class SphinxCoverityConnector():
                             elif 'Component' == item_col:
                                 row += create_cell(defect['componentName'])
                             elif 'Comment' == item_col:
-                                col = cov_attribute_value_to_col(defect, 'Comment')
-                                text = col.children[0].children[0]
-                                item_match = search(app.config.TRACEABILITY_ITEM_ID_REGEX, text)
-                                if item_match:
-                                    item_id = item_match.group(1)
-                                    ref_node = make_internal_item_ref(app, fromdocname, item_id)
-                                    if ref_node:
-                                        text.replace(item_id, str(ref_node))
-                                        col = create_cell(text)
-                                row += col
+                                text = str(cov_attribute_value_to_col(defect, 'Comment').children[0].children[0])
+                                contents = create_paragraph_with_links(text, app, fromdocname)
+                                row += nodes.entry('', contents)
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
                             elif 'Action' == item_col:
@@ -317,9 +331,9 @@ class SphinxCoverityConnector():
                     if node['chart']:
                         col = cov_attribute_value_to_col(defect, 'Classification')
                         classification_value = col.children[0].children[0]  # get text in paragraph of column
-                        for label in classification_count.keys():
+                        for label in chart_labels.keys():
                             if classification_value in label:
-                                classification_count[label] += 1
+                                chart_labels[label] += 1
 
             except AttributeError as err:
                 report_info(env, 'No issues matching your query or empty stream. %s' % err)
@@ -331,10 +345,36 @@ class SphinxCoverityConnector():
             if node['chart']:
                 total_defects = defects['totalNumberOfRecords']
                 total_labeled = 0
-                for count in classification_count.values():
+                for count in chart_labels.values():
                     total_labeled += count
-                classification_count[('other', )] = total_defects - total_labeled
-                top_node += nodes.paragraph(text=str(classification_count))
+                chart_labels[('Other', )] = total_defects - total_labeled
+                # remove items with count value equal to 0
+                chart_labels = {k: v for k, v in chart_labels.items() if v}
+
+                labels = list(chart_labels.keys())  # list of tuples
+                labels = [' +\n'.join(label) for label in labels]
+                sizes = chart_labels.values()
+
+                fig, axes = plt.subplots()
+                axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
+                axes.axis('equal')
+                folder_name = path.join(env.app.srcdir, '_images')
+                if not path.exists(folder_name):
+                    mkdir(folder_name)
+                hash_string = ''
+                for pie_slice in axes.__dict__['texts']:
+                    hash_string += str(pie_slice)
+                hash_value = sha256(hash_string.encode()).hexdigest()  # create hash value based on chart parameters
+                rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
+                if rel_file_path not in env.images.keys():
+                    fig.savefig(path.join(env.app.srcdir, rel_file_path), format='png')
+                    # store file name in build env
+                    env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]
+
+                image_node = nodes.image()
+                image_node['uri'] = rel_file_path
+                image_node['candidates'] = '*'  # look at uri value for source path, relative to the srcdir folder
+                top_node += image_node
 
             report_info(env, "done")
             node.replace_self(top_node)
@@ -406,10 +446,65 @@ def cov_attribute_value_to_col(defect, name):
     return col
 
 
+def create_paragraph_with_links(text, *args):
+    """
+    Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
+    their definition.
+    """
+    contents = nodes.paragraph()
+    remaining_text = text
+    link_to_urls(contents, remaining_text, *args)
+    return contents
+
+
+def link_to_urls(contents, text, *args):
+    """
+    Makes URLs interactive and passes other text to link_to_item_ids, which treats the item IDs.
+    """
+    remaining_text = text
+    extractor = URLExtract()
+    urls = extractor.find_urls(remaining_text)
+    for url in urls:
+        text_before = remaining_text.split(url)[0]
+        if text_before:
+            link_to_item_ids(contents, text_before, *args)
+
+        ref_node = nodes.reference()
+        ref_node['refuri'] = url
+        ref_node.append(nodes.Text(url))
+        contents += ref_node
+
+        remaining_text = remaining_text.replace(text_before + url, '', 1)
+
+    if remaining_text:
+        link_to_item_ids(contents, text, *args)
+
+
+def link_to_item_ids(contents, text, app, docname):
+    """
+    Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
+    """
+    remaining_text = text
+    item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, remaining_text)
+    for item in item_matches:
+        text_before = remaining_text.split(item)[0]
+        if text_before:
+            contents.append(nodes.Text(text_before))
+        ref_node = make_internal_item_ref(app, docname, item)
+        if ref_node is None:  # no link could be made
+            ref_node = nodes.Text(item)
+        contents.append(ref_node)
+
+        remaining_text = remaining_text.replace(text_before + item, '', 1)
+
+    if remaining_text:
+        contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
+
+
 def make_internal_item_ref(app, fromdocname, item_id):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
-    collection.
+    collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
     """
     env = app.builder.env
 
@@ -418,6 +513,7 @@ def make_internal_item_ref(app, fromdocname, item_id):
 
     item_info = env.traceability_collection.get_item(item_id)
     if not item_info:
+        report_warning(env, "Could not find item ID '%s' in traceability collection.", fromdocname)
         return None
 
     ref_node = nodes.reference('', '')
@@ -425,8 +521,8 @@ def make_internal_item_ref(app, fromdocname, item_id):
     try:
         ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item_id
     except NoUri:
-        # no URI can be determined for LaTeX output :(
         return None
+    ref_node.append(nodes.Text(item_id))
     return ref_node
 
 
@@ -445,7 +541,7 @@ def setup(app):
                              'stream': 'some_coverty_stream',
                          },
                          'env')
-    app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', "([A-Z_]+-[A-Z0-9_]+)", 'env')
+    app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', r"([A-Z_]+-[A-Z0-9_]+)", 'env')
 
     app.add_node(CoverityDefect)
 

@@ -319,4 +319,4 @@ coverity_credentials = {
     'stream': config('COVERITY_STREAM'),
 }
 
-TRACEABILITY_ITEM_ID_REGEX = "([A-Z_]+-[A-Z0-9_]+)"
+TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
