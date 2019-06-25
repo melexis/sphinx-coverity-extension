@@ -1,3 +1,5 @@
+.. _deviate:
+
 Coverity deviation description
 ==============================
 
