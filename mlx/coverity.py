@@ -314,8 +314,8 @@ class SphinxCoverityConnector():
                             elif 'Component' == item_col:
                                 row += create_cell(defect['componentName'])
                             elif 'Comment' == item_col:
-                                text = cov_attribute_value_to_col(defect, 'Comment').children[0].children[0]
-                                contents = create_paragraph_with_links(app, fromdocname, text)
+                                text = str(cov_attribute_value_to_col(defect, 'Comment').children[0].children[0])
+                                contents = create_paragraph_with_links(text, app, fromdocname)
                                 row += nodes.entry('', contents)
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
