@@ -458,6 +458,9 @@ def create_paragraph_with_links(text, *args):
 
 
 def link_to_urls(contents, text, *args):
+    """
+    Makes URLs interactive and passes other text to link_to_item_ids, which treats the item IDs.
+    """
     remaining_text = text
     extractor = URLExtract()
     urls = extractor.find_urls(remaining_text)
@@ -478,6 +481,9 @@ def link_to_urls(contents, text, *args):
 
 
 def link_to_item_ids(contents, text, app, docname):
+    """
+    Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
+    """
     remaining_text = text
     item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, remaining_text)
     for item in item_matches:
@@ -487,7 +493,7 @@ def link_to_item_ids(contents, text, app, docname):
         ref_node = make_internal_item_ref(app, docname, item)
         if ref_node is None:  # no link could be made
             ref_node = nodes.Text(item)
-        contents += ref_node
+        contents.append(ref_node)
 
         remaining_text = remaining_text.replace(text_before + item, '', 1)
 
@@ -498,7 +504,7 @@ def link_to_item_ids(contents, text, app, docname):
 def make_internal_item_ref(app, fromdocname, item_id):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
-    collection.
+    collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
     """
     env = app.builder.env
 
@@ -507,7 +513,7 @@ def make_internal_item_ref(app, fromdocname, item_id):
 
     item_info = env.traceability_collection.get_item(item_id)
     if not item_info:
-        report_warning(app.env, "Could not find item ID '%s' in traceability collection.", fromdocname)
+        report_warning(env, "Could not find item ID '%s' in traceability collection.", fromdocname)
         return None
 
     ref_node = nodes.reference('', '')
@@ -516,6 +522,7 @@ def make_internal_item_ref(app, fromdocname, item_id):
         ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item_id
     except NoUri:
         return None
+    ref_node.append(nodes.Text(item_id))
     return ref_node
 
 
