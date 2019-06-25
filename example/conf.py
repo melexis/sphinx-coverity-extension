@@ -13,6 +13,7 @@
 
 import sys, os
 import mlx.coverity
+import mlx.traceability
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -33,6 +34,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.graphviz',
+    'mlx.traceability',
     'coverity',
     'sphinx_selective_exclude.eager_only',
     'sphinx_selective_exclude.modindex_exclude',
