@@ -474,7 +474,7 @@ def link_to_urls(contents, text, *args):
         remaining_text = remaining_text.replace(text_before + url, '', 1)
 
     if remaining_text:
-        contents.append(nodes.Text(remaining_text))
+        link_to_item_ids(contents, text, *args)
 
 
 def link_to_item_ids(contents, text, app, docname):
@@ -484,7 +484,6 @@ def link_to_item_ids(contents, text, app, docname):
         text_before = remaining_text.split(item)[0]
         if text_before:
             contents.append(nodes.Text(text_before))
-
         ref_node = make_internal_item_ref(app, docname, item)
         if ref_node is None:  # no link could be made
             ref_node = nodes.Text(item)
@@ -493,7 +492,7 @@ def link_to_item_ids(contents, text, app, docname):
         remaining_text = remaining_text.replace(text_before + item, '', 1)
 
     if remaining_text:
-        contents.append(nodes.Text(remaining_text))
+        contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
 
 
 def make_internal_item_ref(app, fromdocname, item_id):
