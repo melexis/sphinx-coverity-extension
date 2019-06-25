@@ -12,8 +12,6 @@ from hashlib import sha256
 from os import environ, mkdir, path
 from re import findall
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import pkg_resources
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
@@ -22,6 +20,10 @@ from sphinx.environment import NoUri
 from urlextract import URLExtract
 
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
+import matplotlib as mpl
+if not environ.get('DISPLAY'):
+    mpl.use('Agg')
+import matplotlib.pyplot as plt  # noqa: E731
 
 try:
     # For Python 3.0 and later
@@ -31,9 +33,6 @@ except ImportError:
     from urllib2 import URLError, HTTPError
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
-
-if not environ.get('DISPLAY'):
-    mpl.use('Agg')
 
 
 def report_warning(env, msg, docname, lineno=None):
@@ -513,7 +512,7 @@ def make_internal_item_ref(app, fromdocname, item_id):
 
     item_info = env.traceability_collection.get_item(item_id)
     if not item_info:
-        report_warning(env, "Could not find item ID '%s' in traceability collection.", fromdocname)
+        report_warning(env, "Could not find item ID '%s' in traceability collection." % item_id, fromdocname)
         return None
 
     ref_node = nodes.reference('', '')
