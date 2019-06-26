@@ -13,6 +13,7 @@
 
 import sys, os
 import mlx.coverity
+import mlx.traceability
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -33,7 +34,8 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.graphviz',
-    'coverity',
+    'mlx.traceability',
+    'mlx.coverity',
     'sphinx_selective_exclude.eager_only',
     'sphinx_selective_exclude.modindex_exclude',
     'sphinx_selective_exclude.search_auto_exclude'
@@ -188,13 +190,15 @@ html_context = {
 
 latex_elements = {
 # The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+'papersize': 'a4paper',
 
 # The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble': '',
+'preamble': 
+r'\setcounter{tocdepth}{3}'
+r'\usepackage{pdflscape}',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -317,3 +321,4 @@ coverity_credentials = {
     'stream': config('COVERITY_STREAM'),
 }
 
+TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"

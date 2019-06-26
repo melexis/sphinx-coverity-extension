@@ -3,9 +3,9 @@
 '''Services and other utilities for Coverity scripting'''
 
 # General
-import re
 import csv
 import logging
+import re
 try:
     # For Python 3.0 and later
     from urllib.error import URLError

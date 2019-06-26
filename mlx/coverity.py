@@ -7,16 +7,24 @@ Sphinx extension for restructured text that adds Coverity reporting to documenta
 See README.rst for more details.
 '''
 from __future__ import print_function
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pkg_resources
 
 from hashlib import sha256
 from os import environ, mkdir, path
+from re import findall
+
+import pkg_resources
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
-from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
 from sphinx import __version__ as sphinx_version
+from sphinx.environment import NoUri
+from urlextract import URLExtract
+
+from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
+import matplotlib as mpl
+if not environ.get('DISPLAY'):
+    mpl.use('Agg')
+import matplotlib.pyplot as plt  # noqa: E731
+
 try:
     # For Python 3.0 and later
     from urllib.error import URLError, HTTPError
@@ -25,9 +33,6 @@ except ImportError:
     from urllib2 import URLError, HTTPError
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
-
-if not environ.get('DISPLAY'):
-    mpl.use('Agg')
 
 
 def report_warning(env, msg, docname, lineno=None):
@@ -308,7 +313,9 @@ class SphinxCoverityConnector():
                             elif 'Component' == item_col:
                                 row += create_cell(defect['componentName'])
                             elif 'Comment' == item_col:
-                                row += cov_attribute_value_to_col(defect, 'Comment')
+                                text = str(cov_attribute_value_to_col(defect, 'Comment').children[0].children[0])
+                                contents = create_paragraph_with_links(text, app, fromdocname)
+                                row += nodes.entry('', contents)
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
                             elif 'Action' == item_col:
@@ -425,7 +432,7 @@ def create_row(cells):
 
 def cov_attribute_value_to_col(defect, name):
     """
-        Search defects array and return value for name
+    Search defects array and return value for name
     """
     col = create_cell(" ")
 
@@ -436,6 +443,86 @@ def cov_attribute_value_to_col(defect, name):
             except (AttributeError, IndexError):
                 col = create_cell(" ")
     return col
+
+
+def create_paragraph_with_links(text, *args):
+    """
+    Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
+    their definition.
+    """
+    contents = nodes.paragraph()
+    remaining_text = text
+    link_to_urls(contents, remaining_text, *args)
+    return contents
+
+
+def link_to_urls(contents, text, *args):
+    """
+    Makes URLs interactive and passes other text to link_to_item_ids, which treats the item IDs.
+    """
+    remaining_text = text
+    extractor = URLExtract()
+    urls = extractor.find_urls(remaining_text)
+    for url in urls:
+        text_before = remaining_text.split(url)[0]
+        if text_before:
+            link_to_item_ids(contents, text_before, *args)
+
+        ref_node = nodes.reference()
+        ref_node['refuri'] = url
+        ref_node.append(nodes.Text(url))
+        contents += ref_node
+
+        remaining_text = remaining_text.replace(text_before + url, '', 1)
+
+    if remaining_text:
+        link_to_item_ids(contents, text, *args)
+
+
+def link_to_item_ids(contents, text, app, docname):
+    """
+    Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
+    """
+    remaining_text = text
+    item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, remaining_text)
+    for item in item_matches:
+        text_before = remaining_text.split(item)[0]
+        if text_before:
+            contents.append(nodes.Text(text_before))
+        ref_node = make_internal_item_ref(app, docname, item)
+        if ref_node is None:  # no link could be made
+            ref_node = nodes.Text(item)
+        contents.append(ref_node)
+
+        remaining_text = remaining_text.replace(text_before + item, '', 1)
+
+    if remaining_text:
+        contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
+
+
+def make_internal_item_ref(app, fromdocname, item_id):
+    """
+    Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
+    collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
+    """
+    env = app.builder.env
+
+    if not hasattr(env, 'traceability_collection'):
+        return None
+
+    item_info = env.traceability_collection.get_item(item_id)
+    if not item_info:
+        report_warning(env, "Could not find item ID '%s' in traceability collection." % item_id, fromdocname)
+        return None
+
+    ref_node = nodes.reference('', '')
+    ref_node['refdocname'] = item_info.docname
+    try:
+        ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item_id
+    except NoUri:
+        return None
+    ref_node.append(nodes.Text(item_id))
+    return ref_node
 
 
 # Extension setup
@@ -453,6 +540,7 @@ def setup(app):
                              'stream': 'some_coverty_stream',
                          },
                          'env')
+    app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', r"([A-Z_]+-[A-Z0-9_]+)", 'env')
 
     app.add_node(CoverityDefect)
 

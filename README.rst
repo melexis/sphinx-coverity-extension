@@ -204,7 +204,7 @@ To run tests and checks we use tox.
     # to run tests
     tox
 
-To build example locally you will need to install some dependencies and set your enviornment
+To build example locally you will need to install some dependencies and set your environment
 
 .. code-block:: bash
 

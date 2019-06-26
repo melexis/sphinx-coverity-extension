@@ -16,7 +16,7 @@ from lxml import objectify
 
 class TestCoverity(TestCase):
 
-    def SetUp(self):
+    def setUp(self):
         ''' SetUp to be run before each test to provide clean working env '''
 
     @patch('mlx.coverity_services.UsernameToken')
@@ -114,4 +114,3 @@ class TestCoverity(TestCase):
 
         suds_client_mock.side_effect = Exception((401, 'Unauthorized'))
         coverity_conf_service.login('', '')
-
