@@ -1,3 +1,4 @@
 sphinx_rtd_theme
 sphinx_selective_exclude
 python-decouple
+mlx.traceability
