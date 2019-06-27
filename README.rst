@@ -135,11 +135,23 @@ filtering classification items with value `Bug`, you should use the following sn
 
     .. coverity-list:: Custom table title
         :col: CID,Classification,Action,Comment
+        :widths: 10 20 20 50
         :classification: Bug
-        :width: 10,20,20,50
 
 The plugin will then automatically replace this block with the table queried from the Coverity server.
 
+You can also call this block `.. coverity-list:` to generate a pie chart. For example, to label the amount of items
+classified as Intentional and the amount of items classified as Pending or Unclassified, while filtering classification
+items, you should use the following snippet:
+
+.. code-block:: python
+
+    .. coverity-list:: Custom chart title
+        :chart: classification:Intentional,Pending+Unclassified
+        :classification: Bug,Intentional,Pending,Unclassified
+
+The plugin allows the use of both display options, `col`and `chart`, at the same time as well. In that case, they share
+all filtering options.
 
 Attributes to coverity-list
 ===========================
@@ -193,9 +205,19 @@ work for this attribute, e.g. `MISRA`.
 chart
 -----
 
-This optional, second display option will draw a pie chart that visualizes the amount of results for each specified
-classification option. The parameters can be a list of classification options, comma-separated, or even
-plus-sign-separated to combine multiple options into the same slice.
+This optional, second display option will draw a pie chart that visualizes the amount of results for each allowed
+`<<attribute>>` option. Firstly, the attribute can be specified, followed by a colon. The default attribute is
+`classification`. Secondly, you have two optoins. Either you specify a list of attribue values, comma-separated or even
+plus-sign-separated for a merge into the same slice or else you define the minimum number of defects with the same
+attribute value that needs to be reached for them to be grouped together into a slice. All other defects get labeled as
+Other. For example, to visualize the most prevalent MISRA rules with a grouping threshhold of 50 items, you should use
+the following code snippet:
+
+.. code-block:: python
+
+    .. coverity-list:: Chart of most prevalent MISRA rules
+        :chart: checker:50
+        :checker: MISRA
 
 -------------
 Contributions
