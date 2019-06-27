@@ -96,6 +96,7 @@ class CoverityDefectListDirective(Directive):
 
       .. coverity-list:: title
          :col: list of columns to be displayed
+         :widths: list of predefined column widths
          :chart: display chart that labels each specified classification
          :checker: filter for only these checkers
          :impact: filter for only these impacts
