@@ -210,12 +210,12 @@ This optional, second display option will draw a pie chart that visualizes the a
 `classification`. Secondly, you have two optoins. Either you specify a list of attribue values, comma-separated or even
 plus-sign-separated for a merge into the same slice or else you define the minimum number of defects with the same
 attribute value that needs to be reached for them to be grouped together into a slice. All other defects get labeled as
-Other. For example, to visualize the most prevalent MISRA rules with a grouping threshhold of 50 items, you should use
-the following code snippet:
+Other. For example, to visualize the most prevalent MISRA violations with a grouping threshhold of 50 items, you should
+use the following code snippet:
 
 .. code-block:: python
 
-    .. coverity-list:: Chart of most prevalent MISRA rules
+    .. coverity-list:: Chart of the most prevalent MISRA violations
         :chart: checker:50
         :checker: MISRA
 
