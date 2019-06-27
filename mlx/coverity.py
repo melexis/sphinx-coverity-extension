@@ -96,7 +96,7 @@ class CoverityDefectListDirective(Directive):
 
       .. coverity-list:: title
          :col: list of columns to be displayed
-         :chart: display chart that labels each specified classification
+         :chart: display chart that labels each allowed <<attribute>> value
          :checker: filter for only these checkers
          :impact: filter for only these impacts
          :kind: filter for only these kinds
@@ -152,7 +152,19 @@ class CoverityDefectListDirective(Directive):
 
         # Process ``chart`` option
         if 'chart' in self.options:
-            item_list_node['chart'] = self.options['chart']
+            if ':' in self.options['chart']:
+                item_list_node['chart_attribute'] = self.options['chart'].split(':')[0].capitalize()
+            else:
+                item_list_node['chart_attribute'] = 'Classification'
+
+            parameters = self.options['chart'].split(':')[-1]  # str
+            item_list_node['chart'] = parameters.split(',')  # list
+            # try to convert parameters to int, in case a min slice size is defined instead of filter options
+            try:
+                item_list_node['min_slice_size'] = int(item_list_node['chart'][0])
+                item_list_node['chart'] = []  # only when a min slice size is defined
+            except ValueError:
+                item_list_node['min_slice_size'] = 1
         else:
             item_list_node['chart'] = ''
 
@@ -268,12 +280,6 @@ class SphinxCoverityConnector():
                 tgroup += tbody
                 table += tgroup
 
-            # Initialize dictionary to store counters
-            if node['chart']:
-                chart_labels = {}
-                for label in node['chart'].split(','):
-                    chart_labels[tuple(label.split('+'))] = 0
-
             # Get items from server
             report_info(env, 'obtaining defects... ', True)
             try:
@@ -287,6 +293,24 @@ class SphinxCoverityConnector():
             report_info(env, "%d received" % (defects['totalNumberOfRecords']))
             report_info(env, "building defects table and/or chart... ", True)
 
+            # Initialize dictionary to store counters
+            if isinstance(node['chart'], list):
+                chart_labels = {}
+                combined_labels = {}
+                for label in node['chart']:
+                    combined_labels[label] = label.split('+')
+                    for attr_val in label.split('+'):
+                        chart_labels[attr_val] = 0
+
+            column_map = {
+                'Cid': 'cid',
+                'Category': 'displayCategory',
+                'Impact': 'displayImpact',
+                'Issue': 'displayIssueKind',
+                'Type': 'displayType',
+                'Checker': 'checkerName',
+                'Component': 'componentName',
+            }
             try:
                 for defect in defects['mergedDefects']:
                     if node['col']:
@@ -298,7 +322,7 @@ class SphinxCoverityConnector():
                                 # CID is default and even if it is in disregard
                                 row += create_cell(str(defect['cid']),
                                                    url=self.coverity_service.get_defect_url(
-                                                       app.config.coverity_credentials['stream'],  # noqa: E501
+                                                       app.config.coverity_credentials['stream'],
                                                        str(defect['cid'])))
                             elif 'Category' == item_col:
                                 row += create_cell(defect['displayCategory'])
@@ -327,12 +351,17 @@ class SphinxCoverityConnector():
                                 row += cov_attribute_value_to_col(defect, item_col)
                         tbody += row
 
-                    if node['chart']:
-                        col = cov_attribute_value_to_col(defect, 'Classification')
-                        classification_value = col.children[0].children[0]  # get text in paragraph of column
-                        for label in chart_labels.keys():
-                            if classification_value in label:
-                                chart_labels[label] += 1
+                    if isinstance(node['chart'], list):
+                        if node['chart_attribute'] in column_map.keys():
+                            classification_value = str(defect[column_map[node['chart_attribute']]])
+                        else:
+                            col = cov_attribute_value_to_col(defect, node['chart_attribute'])
+                            classification_value = str(col.children[0].children[0])  # get text in paragraph of column
+
+                        if classification_value in chart_labels.keys():
+                            chart_labels[classification_value] += 1
+                        elif not node['chart']:  # remove those that don't comply with min_slice_length
+                            chart_labels[classification_value] = 1
 
             except AttributeError as err:
                 report_info(env, 'No issues matching your query or empty stream. %s' % err)
@@ -341,19 +370,24 @@ class SphinxCoverityConnector():
             if node['col']:
                 top_node += table
 
-            if node['chart']:
-                total_defects = defects['totalNumberOfRecords']
-                total_labeled = 0
-                for count in chart_labels.values():
-                    total_labeled += count
-                chart_labels[('Other', )] = total_defects - total_labeled
-                # remove items with count value equal to 0
-                chart_labels = {k: v for k, v in chart_labels.items() if v}
+            if isinstance(node['chart'], list):
+                for new_label, old_labels in combined_labels.items():
+                    count = 0
+                    for old_label in old_labels:
+                        count += chart_labels.pop(old_label)  # remove old_label and store its count
+                    chart_labels[new_label] = count  # add combined count under new_label
 
-                labels = list(chart_labels.keys())  # list of tuples
-                labels = [' +\n'.join(label) for label in labels]
-                sizes = chart_labels.values()
+                # only keep those labels that comply with the min_slice_size requirement
+                chart_labels = {label: count for label, count in chart_labels.items()
+                                if count >= node['min_slice_size']}
 
+                total_labeled = sum(list(chart_labels.values()))
+                other_count = defects['totalNumberOfRecords'] - total_labeled
+                if other_count:
+                    chart_labels['Other'] = other_count
+
+                labels = list(chart_labels.keys())
+                sizes = list(chart_labels.values())
                 fig, axes = plt.subplots()
                 axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
                 axes.axis('equal')
