@@ -96,6 +96,7 @@ class CoverityDefectListDirective(Directive):
 
       .. coverity-list:: title
          :col: list of columns to be displayed
+         :widths: list of predefined column widths
          :chart: display chart that labels each allowed <<attribute>> value
          :checker: filter for only these checkers
          :impact: filter for only these impacts
@@ -298,8 +299,14 @@ class SphinxCoverityConnector():
                 chart_labels = {}
                 combined_labels = {}
                 for label in node['chart']:
-                    combined_labels[label] = label.split('+')
+                    if '+' in label:
+                        combined_labels[label] = label.split('+')
                     for attr_val in label.split('+'):
+                        if attr_val in chart_labels.keys():
+                            report_warning(env,
+                                           "Attribute value '%s' should not be specified more than once in chart "
+                                           "option." % attr_val,
+                                           fromdocname)
                         chart_labels[attr_val] = 0
 
             column_map = {
