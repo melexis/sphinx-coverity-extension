@@ -87,7 +87,8 @@ First, the plugin needs to be enabled in the *extensions* variable:
 Credentials
 ===========
 
-Python variable *coverity_credentials* should be defined in order to override the default configuration of the Coverity plugin.
+Python variable *coverity_credentials* should be defined in order to override the default configuration of the Coverity
+plugin.
 
 Example of custom credentials for the plugin:
 
@@ -144,13 +145,13 @@ Attributes to coverity-list
 ===========================
 
 Block `coverity-list` takes below attributes to provide better granularity and filtering of the displayed information.
-Keep in mind all the attributes are to be encapsulated by `:`. All parameters are passed in CSV format (separate them
-with commas).
+Keep in mind that all the attributes are to be encapsulated by `:`. All parameters are passed in CSV format
+(comma-separated without any spaces).
 
 col
 ---
 
-List column names of the table. They should match the columns inside Coverity. The list is comma separated without
+List column names of the table. They should match the columns inside Coverity. The list is comma-separated without
 any spaces. Possible Keywords are (but not limited, since Coverity has option to create custom names):
 
     - `CID`: Coverity defect ID
@@ -161,6 +162,15 @@ any spaces. Possible Keywords are (but not limited, since Coverity has option to
     - `Comment`: Coverity defect last Comment
     - ...
 
+This `col` option is optional. If the `graph` option is used, the table won't be generated. If the `graph` option is not
+used, default columns are used to generate the table. The defaults are: `CID,Classification,Action,Comment`.
+
+width
+-----
+
+Optional attribute that provides possibility to set each column width to a predefined percentage. This makes it nicer
+for the pdf builders that are able to fit the table to the printable page width and, because of longtable, also provide
+nice table continuation through multiple pages.
 
 classification
 --------------
@@ -174,13 +184,18 @@ default list includes:
     - `Intentional`
     - `Bug`
 
-width
+checker
+-------
+
+Filtering by checker based on the text following the attribute. The text can be anything you desire. Regular expressions
+work for this attribute, e.g. `MISRA`.
+
+graph
 -----
 
-Optional attribute that provides possibility to set each column width to a predefined percentage. This makes it nicer
-for the pdf builders that are able to fit the table to the printable page width and, because of longtable, also provide
-nice table continuation through multiple pages.
-
+This optional, second display option will draw a pie chart that visualizes the amount of results for each specified
+classification option. The parameters can be a list of classification options, comma-separated, or even
+plus-sign-separated to combine multiple options into the same slice.
 
 -------------
 Contributions
@@ -204,21 +219,19 @@ To run tests and checks we use tox.
     # to run tests
     tox
 
-To build example locally you will need to install some dependencies and set your environment
+To build example locally you will need to install some dependencies and set your environment.
 
 .. code-block:: bash
 
     # install dependencies
     pip3 install -r example/pip-dependencies.txt
 
-    # install current locally the package
+    # install current package locally
     pip3 install -e .
 
     # copy example .env to your .env
     cp example/.env.example .env
 
-    # add env variables adjust the values in .env
+    # add env variables, adjust the values in .env
     # build
     make -C example/ html
-
-
