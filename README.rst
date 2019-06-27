@@ -145,7 +145,7 @@ Attributes to coverity-list
 ===========================
 
 Block `coverity-list` takes below attributes to provide better granularity and filtering of the displayed information.
-Keep in mind that all the attributes are to be encapsulated by `:`. All parameters are passed in CSV format
+Keep in mind that all the attributes are to be encapsulated by `:`. Almost all parameters are passed in CSV format
 (comma-separated without any spaces).
 
 col
@@ -165,12 +165,12 @@ any spaces. Possible Keywords are (but not limited, since Coverity has option to
 This `col` option is optional. If the `chart` option is used, the table won't be generated. If the `chart` option is not
 used, default columns are used to generate the table, i.e. `CID,Classification,Action,Comment`.
 
-width
------
+widths
+------
 
 Optional attribute that provides possibility to set each column width to a predefined percentage. This makes it nicer
 for the pdf builders that are able to fit the table to the printable page width and, because of longtable, also provide
-nice table continuation through multiple pages.
+nice table continuation through multiple pages. Its parameters must be space-separated.
 
 classification
 --------------
