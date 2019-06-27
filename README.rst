@@ -162,8 +162,8 @@ any spaces. Possible Keywords are (but not limited, since Coverity has option to
     - `Comment`: Coverity defect last Comment
     - ...
 
-This `col` option is optional. If the `graph` option is used, the table won't be generated. If the `graph` option is not
-used, default columns are used to generate the table. The defaults are: `CID,Classification,Action,Comment`.
+This `col` option is optional. If the `chart` option is used, the table won't be generated. If the `chart` option is not
+used, default columns are used to generate the table, i.e. `CID,Classification,Action,Comment`.
 
 width
 -----
@@ -190,7 +190,7 @@ checker
 Filtering by checker based on the text following the attribute. The text can be anything you desire. Regular expressions
 work for this attribute, e.g. `MISRA`.
 
-graph
+chart
 -----
 
 This optional, second display option will draw a pie chart that visualizes the amount of results for each specified
