@@ -5,6 +5,8 @@
 
 :orphan:
 
+.. _index:
+
 Welcome to Sphinx Coverity extension example's documentation!
 =============================================================
 
@@ -32,24 +34,24 @@ Coverity plugin table
 
 :latex:`\begin{landscape}`
 
-.. tabularcolumns:: |p{1cm}|p{2.8cm}|p{4cm}|p{9cm}|
-
-.. coverity-list:: Coverity defects table
-    :col: CID,Classification,Checker,External Reference
-    :widths: 10, 15, 15, 60
-    :chart: checker:50
+.. coverity-list:: Coverity defects table and chart
+    :col: CID,Classification,Checker,Reference
+    :widths: 2 4 6 10
+    :chart: checker:1
     :classification: Intentional,Bug,Pending,Unclassified
     :checker: MISRA
 
+Every MISRA rule gets labeled separately.
+
 .. coverity-list:: Coverity defects table
     :col: CID,Checker,Status,Comment
-    :widths: 10, 15, 15, 60
-    :classification: Pending,Unclassified
-
-Coverity plugin chart generation
+    :widths: 21 60 35 120
 
 .. coverity-list:: Coverity defects chart
     :chart: Intentional,Pending+Unclassified
+    :classification: Bug,Intentional,Pending,Unclassified
+
+Coverity plugin chart only generation.
 
 :latex:`\end{landscape}`
 
