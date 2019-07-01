@@ -347,14 +347,16 @@ class SphinxCoverityConnector():
                                 text = str(cov_attribute_value_to_col(defect, 'Comment').children[0].children[0])
                                 contents = create_paragraph_with_links(text, str(defect['cid']), app, fromdocname)
                                 row += nodes.entry('', contents)
+                            elif 'Reference' == item_col:
+                                text = str(cov_attribute_value_to_col(defect, 'Ext. Reference').children[0].children[0])
+                                contents = create_paragraph_with_links(text, str(defect['cid']), app, fromdocname)
+                                row += nodes.entry('', contents)
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
                             elif 'Action' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Action')
                             elif 'Status' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'DefectStatus')
-                            elif 'External Reference' == item_col:
-                                row += cov_attribute_value_to_col(defect, 'Ext. Reference')
                             else:
                                 # generic check which, if it is missing, prints empty cell anyway
                                 row += cov_attribute_value_to_col(defect, item_col)
