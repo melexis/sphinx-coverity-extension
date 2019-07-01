@@ -182,7 +182,7 @@ widths
 
 Optional attribute that provides possibility to set each column width to a predefined percentage. This makes it nicer
 for the pdf builders that are able to fit the table to the printable page width and, because of longtable, also provide
-nice table continuation through multiple pages. Its parameters must be space-separated.
+nice table continuation through multiple pages. Its parameters must be a space-separated list of integers.
 
 classification
 --------------
