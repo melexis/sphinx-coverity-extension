@@ -396,7 +396,7 @@ class SphinxCoverityConnector():
                 labels = list(chart_labels.keys())
                 sizes = list(chart_labels.values())
                 fig, axes = plt.subplots()
-                fig.set_size_inches(10, 6)
+                fig.set_size_inches(7, 4)
                 axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
                 axes.axis('equal')
                 folder_name = path.join(env.app.srcdir, '_images')
