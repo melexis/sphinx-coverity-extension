@@ -7,7 +7,7 @@ Below items from mlx.traceability plugin are used to describe deviations for cer
 
 .. item:: STATIC_DEVIATE-MISRA_UNUSED_EXAMPLE Deviate this example
 
-    This is a test for deviation item description which explains rationale behind group of errors triaged as
+    This is s test for deviation item description which explains rationale behind group of errors triagged as
     intentional in Coverity.
 
 

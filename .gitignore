@@ -5,7 +5,6 @@
 build/
 dist/
 example/_build
-example/_images
 tests/docs/basic/_build
 tests/docs/autodoc/docs/_build
 .tox/
