@@ -345,7 +345,7 @@ class SphinxCoverityConnector():
                                 row += create_cell(defect['componentName'])
                             elif 'Comment' == item_col:
                                 text = str(cov_attribute_value_to_col(defect, 'Comment').children[0].children[0])
-                                contents = create_paragraph_with_links(text, app, fromdocname)
+                                contents = create_paragraph_with_links(text, str(defect['cid']), app, fromdocname)
                                 row += nodes.entry('', contents)
                             elif 'Classification' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'Classification')
@@ -521,7 +521,7 @@ def link_to_urls(contents, text, *args):
         link_to_item_ids(contents, text, *args)
 
 
-def link_to_item_ids(contents, text, app, docname):
+def link_to_item_ids(contents, text, cid, app, docname):
     """
     Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
     """
@@ -531,7 +531,7 @@ def link_to_item_ids(contents, text, app, docname):
         text_before = remaining_text.split(item)[0]
         if text_before:
             contents.append(nodes.Text(text_before))
-        ref_node = make_internal_item_ref(app, docname, item)
+        ref_node = make_internal_item_ref(app, docname, item, cid)
         if ref_node is None:  # no link could be made
             ref_node = nodes.Text(item)
         contents.append(ref_node)
@@ -542,7 +542,7 @@ def link_to_item_ids(contents, text, app, docname):
         contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
 
 
-def make_internal_item_ref(app, fromdocname, item_id):
+def make_internal_item_ref(app, fromdocname, item, cid):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
     collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
@@ -552,18 +552,20 @@ def make_internal_item_ref(app, fromdocname, item_id):
     if not hasattr(env, 'traceability_collection'):
         return None
 
-    item_info = env.traceability_collection.get_item(item_id)
+    item_info = env.traceability_collection.get_item(item)
     if not item_info:
-        report_warning(env, "Could not find item ID '%s' in traceability collection." % item_id, fromdocname)
+        report_warning(env,
+                       "CID %s: Could not find item ID '%s' in traceability collection." % (cid, item),
+                       fromdocname)
         return None
 
     ref_node = nodes.reference('', '')
     ref_node['refdocname'] = item_info.docname
     try:
-        ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item_id
+        ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item
     except NoUri:
         return None
-    ref_node.append(nodes.Text(item_id))
+    ref_node.append(nodes.Text(item))
     return ref_node
 
 
