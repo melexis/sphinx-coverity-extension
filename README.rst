@@ -172,6 +172,7 @@ any spaces. Possible Keywords are (but not limited, since Coverity has option to
     - `Checker`: Coverity defect Checker
     - `Status`: Coverity defect Triage status
     - `Comment`: Coverity defect last Comment
+    - `Reference`: Coverity defect external references
     - ...
 
 This `col` option is optional. If the `chart` option is used, the table won't be generated. If the `chart` option is not
