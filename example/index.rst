@@ -35,7 +35,7 @@ Coverity plugin table
 :latex:`\begin{landscape}`
 
 .. coverity-list:: Coverity defects table and chart
-    :col: CID,Classification,Checker,Reference
+    :col: CID,Classification,Checker,Comment
     :widths: 2 4 6 10
     :chart: checker:1
     :classification: Intentional,Bug,Pending,Unclassified
@@ -43,8 +43,12 @@ Coverity plugin table
 
 Every MISRA rule gets labeled separately.
 
-.. coverity-list:: Coverity defects table
+.. coverity-list:: Coverity defects table with comments
     :col: CID,Checker,Status,Comment
+    :widths: 21 60 35 120
+
+.. coverity-list:: Coverity defects table with references
+    :col: CID,Checker,Status,Reference
     :widths: 21 60 35 120
 
 .. coverity-list:: Coverity defects chart
