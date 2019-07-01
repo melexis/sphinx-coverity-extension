@@ -35,7 +35,7 @@ Coverity plugin table
 .. tabularcolumns:: |p{1cm}|p{2.8cm}|p{4cm}|p{9cm}|
 
 .. coverity-list:: Coverity defects table
-    :col: CID,Classification,Checker,Comment
+    :col: CID,Classification,Checker,External Reference
     :widths: 10, 15, 15, 60
     :chart: checker:50
     :classification: Intentional,Bug,Pending,Unclassified

@@ -353,6 +353,8 @@ class SphinxCoverityConnector():
                                 row += cov_attribute_value_to_col(defect, 'Action')
                             elif 'Status' == item_col:
                                 row += cov_attribute_value_to_col(defect, 'DefectStatus')
+                            elif 'External Reference' == item_col:
+                                row += cov_attribute_value_to_col(defect, 'Ext. Reference')
                             else:
                                 # generic check which, if it is missing, prints empty cell anyway
                                 row += cov_attribute_value_to_col(defect, item_col)
