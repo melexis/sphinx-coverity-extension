@@ -332,7 +332,10 @@ class SphinxCoverityConnector():
                                                        app.config.coverity_credentials['stream'],
                                                        str(defect['cid'])))
                             elif 'Location' == item_col:
-                                row += create_cell(defect['filePathname'])
+                                info = self.coverity_service.get_defect(str(defect['cid']),
+                                                                        app.config.coverity_credentials['stream'])
+                                linenum = info[-1]['defectInstances'][-1]['events'][-1]['lineNumber']
+                                row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
                             elif 'Category' == item_col:
                                 row += create_cell(defect['displayCategory'])
                             elif 'Impact' == item_col:
