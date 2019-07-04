@@ -17,6 +17,8 @@ from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from sphinx import __version__ as sphinx_version
 from sphinx.environment import NoUri
+if sphinx_version >= '1.6.0':
+    from sphinx.util.logging import getLogger
 from urlextract import URLExtract
 
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
@@ -31,8 +33,6 @@ try:
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError, HTTPError
-if sphinx_version >= '1.6.0':
-    from sphinx.util.logging import getLogger
 
 
 def report_warning(env, msg, docname, lineno=None):
