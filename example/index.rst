@@ -48,8 +48,8 @@ Every MISRA rule gets labeled separately.
     :widths: 21 60 35 120
 
 .. coverity-list:: Coverity defects table with references
-    :col: CID,Checker,Status,Reference
-    :widths: 21 60 35 120
+    :col: CID,Location,Reference
+    :widths: 21 95 120
 
 .. coverity-list:: Coverity defects chart
     :chart: Intentional,Pending+Unclassified

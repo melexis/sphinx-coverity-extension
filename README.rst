@@ -167,6 +167,7 @@ List column names of the table. They should match the columns inside Coverity. T
 any spaces. Possible Keywords are (but not limited, since Coverity has option to create custom names):
 
     - `CID`: Coverity defect ID
+    - `Location`: Coverity defect location consisting of file path and line number
     - `Classification`: Coverity defect Classification column
     - `Action`: Coverity defect Action information
     - `Checker`: Coverity defect Checker
