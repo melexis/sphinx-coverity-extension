@@ -324,6 +324,7 @@ class CoverityDefectService(Service):
 
         # apply any filter on checker names
         if checker:
+            self.config_service.get_checkers()
             self.handle_filter_attribute(checker,
                                          'Checker',
                                          self.config_service.checkers,
@@ -401,7 +402,7 @@ class CoverityDefectService(Service):
             name (str): String representation of the attribute.
         """
         logging.info('Using %s filter [%s]', name, attribute)
-        validated = self.config_service.add_filter_rqt(name, attribute, *args, **kwargs)
+        validated = self.config_service.add_filter_rqt(name, attribute, args, kwargs)
         logging.info('Resolves to [%s]', validated)
         if validated:
             self.filters += ("<%s(%s)> " % (name, validated))
