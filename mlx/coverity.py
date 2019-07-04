@@ -135,7 +135,7 @@ class CoverityDefectListDirective(Directive):
         item_list_node = CoverityDefect('')
 
         # Process title (optional argument)
-        if len(self.arguments) > 0:
+        if self.arguments:
             item_list_node['title'] = self.arguments[0]
         else:
             item_list_node['title'] = 'Coverity report'
