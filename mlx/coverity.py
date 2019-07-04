@@ -17,6 +17,8 @@ from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from sphinx import __version__ as sphinx_version
 from sphinx.environment import NoUri
+if sphinx_version >= '1.6.0':
+    from sphinx.util.logging import getLogger
 from urlextract import URLExtract
 
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
@@ -31,8 +33,6 @@ try:
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError, HTTPError
-if sphinx_version >= '1.6.0':
-    from sphinx.util.logging import getLogger
 
 
 def report_warning(env, msg, docname, lineno=None):
@@ -65,6 +65,38 @@ def report_info(env, msg, nonl=False):
         logger.info(msg, nonl=nonl)
     else:
         env.info(msg, nonl=nonl)
+
+
+def initialize_table_from_node(node):
+    """ Initializes a table node using the contents of a CoverityDefect node.
+
+    Args:
+        node (CoverityDefect): A CoverityDefect node object.
+
+    Returns:
+        (nodes.table, nodes.tbody) A table node and its body initialized with column widths and a table header.
+    """
+    table = nodes.table()
+    table['classes'].append('longtable')
+    if node['widths'] == 'auto':
+        table['classes'].append('colwidths-auto')
+    elif node['widths']:  # "grid" or list of integers
+        table['classes'].append('colwidths-given')
+    tgroup = nodes.tgroup()
+
+    for _ in node['col']:
+        tgroup += [nodes.colspec(colwidth=5)]
+    tgroup += nodes.thead('', create_row(node['col']))
+
+    if isinstance(node['widths'], list):
+        colspecs = [child for child in tgroup.children if child.tagname == 'colspec']
+        for colspec, col_width in zip(colspecs, node['widths']):
+            colspec['colwidth'] = col_width
+
+    tbody = nodes.tbody()
+    tgroup += tbody
+    table += tgroup
+    return table, tbody
 
 
 def pct_wrapper(sizes):
@@ -129,10 +161,13 @@ class CoverityDefectListDirective(Directive):
     has_content = False
 
     def run(self):
+        """
+        Processes the contents of the directive
+        """
         item_list_node = CoverityDefect('')
 
         # Process title (optional argument)
-        if len(self.arguments) > 0:
+        if self.arguments:
             item_list_node['title'] = self.arguments[0]
         else:
             item_list_node['title'] = 'Coverity report'
@@ -181,6 +216,9 @@ class CoverityDefectListDirective(Directive):
 
 
 class SphinxCoverityConnector():
+    """
+    Class containing functions and variables for Sphinx to access in specific stages of the documentation build.
+    """
     def __init__(self):
         """
         Initialize the object by setting error variable to false
@@ -257,29 +295,7 @@ class SphinxCoverityConnector():
 
             # Initialize table
             if node['col']:
-                table = nodes.table()
-                table.set_class('longtable')
-                if node['widths'] == 'auto':
-                    table['classes'] += ['colwidths-auto']
-                elif node['widths']:  # "grid" or list of integers
-                    table['classes'] += ['colwidths-given']
-                tgroup = nodes.tgroup()
-
-                for _ in node['col']:
-                    tgroup += [nodes.colspec(colwidth=5)]
-
-                tgroup += nodes.thead('', create_row(node['col']))
-
-                if isinstance(node['widths'], list):
-                    colspecs = [child for child in tgroup.children
-                                if child.tagname == 'colspec']
-                    for colspec, col_width in zip(colspecs, node['widths']):
-                        colspec['colwidth'] = col_width
-
-                tbody = nodes.tbody()
-
-                tgroup += tbody
-                table += tgroup
+                table, tbody = initialize_table_from_node(node)
 
             # Get items from server
             report_info(env, 'obtaining defects... ', True)
@@ -308,7 +324,6 @@ class SphinxCoverityConnector():
                                            "option." % attr_val,
                                            fromdocname)
                         chart_labels[attr_val] = 0
-
             column_map = {
                 'Cid': 'cid',
                 'Category': 'displayCategory',
@@ -423,24 +438,18 @@ class SphinxCoverityConnector():
 
             report_info(env, "done")
             node.replace_self(top_node)
-    #        try:
-    #            percentage = int(100 * count_covered / count_total)
-    #        except ZeroDivisionError:
-    #            percentage = 0
-    #        disp = 'Statistics: {cover} out of {total} covered: {pct}%'.format(cover=count_covered,
-    #                                                                           total=count_total,
-    #                                                                           pct=percentage)
-    #        if node['graph']:
-    #            p_node = nodes.paragraph()
-    #            txt = nodes.Text(disp)
-    #            p_node += txt
-    #            top_node += p_node
-    #
-    #        top_node += table
-    #
 
 
 def create_ref_node(contents, url):
+    """ Creates reference node inside a paragraph
+
+    Args:
+        contents (str): Text to be displayed.
+        url (str): URL to be used for the reference.
+
+    Returns:
+        (nodes.paragraph) Paragraph node containing a reference based on the given url.
+    """
     p_node = nodes.paragraph()
     itemlink = nodes.reference()
     itemlink['refuri'] = url
@@ -453,6 +462,14 @@ def create_ref_node(contents, url):
 
 
 def create_top_node(title):
+    """ Creates a container node containing an admonition with the given title inside.
+
+    Args:
+        title (str): Title text to be displayed.
+
+    Returns:
+        (nodes.container) Container node with the title laid out.
+    """
     top_node = nodes.container()
     admon_node = nodes.admonition()
     title_node = nodes.title()
@@ -463,6 +480,16 @@ def create_top_node(title):
 
 
 def create_cell(contents, url=None):
+    """
+    Creates a table entry node with the given contents inside. If a string is given, it gets used inside a paragraph
+    node, either as a text node or a reference node in case a URL is given.
+
+    Args:
+        contents (str|nodes.Node): Title text to be displayed.
+
+    Returns:
+        (nodes.entry) Entry node containing a paragraph with the given contents.
+    """
     if isinstance(contents, str):
         if url is not None:
             contents = create_ref_node(contents, url)
@@ -473,6 +500,14 @@ def create_cell(contents, url=None):
 
 
 def create_row(cells):
+    """ Creates a table row node containing the given strings inside entry nodes.
+
+    Args:
+        cells (list): List of strings to each be divided into cells.
+
+    Returns:
+        (nodes.row) Row node containing all given entry nodes.
+    """
     return nodes.row('', *[create_cell(c) for c in cells])
 
 
