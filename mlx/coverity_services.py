@@ -324,46 +324,30 @@ class CoverityDefectService(Service):
 
         # apply any filter on checker names
         if checker:
-            logging.info('Using checker filter [%s]', checker)
-            self.config_service.get_checkers()
-            validated = self.config_service.add_filter_rqt('Checker', checker, self.config_service.checkers,
-                                                           filter_spec.checkerList, allow_regex=True)
-            logging.info('Resolves to [%s]', validated)
-            if validated:
-                self.filters += ("<Checker(%s)> " % validated)
+            self.handle_filter_attribute(checker,
+                                         'Checker',
+                                         self.config_service.checkers,
+                                         filter_spec.checkerList,
+                                         allow_regex=True)
 
         # apply any filter on impact status
         if impact:
-            logging.info('Using impact status filter [%s]', impact)
-            validated = self.config_service.add_filter_rqt('Impact', impact, IMPACT_LIST, filter_spec.impactNameList)
-            logging.info('Resolves to [%s]', validated)
-            if validated:
-                self.filters += ("<Impact(%s)> " % validated)
+            self.handle_filter_attribute(impact, 'Impact', IMPACT_LIST, filter_spec.impactNameList)
 
         # apply any filter on issue kind
         if kind:
-            logging.info('Using issue kind filter [%s]', kind)
-            validated = self.config_service.add_filter_rqt('Kind', kind, KIND_LIST, filter_spec.issueKindList)
-            logging.info('Resolves to [%s]', validated)
-            if validated:
-                self.filters += ("<Kind(%s)> " % validated)
+            self.handle_filter_attribute(kind, 'Kind', KIND_LIST, filter_spec.issueKindList)
 
         # apply any filter on classification
         if classification:
-            logging.info('Using classification filter [%s]', classification)
-            validated = self.config_service.add_filter_rqt('Classification', classification, CLASSIFICATION_LIST,
-                                                           filter_spec.classificationNameList)
-            logging.info('Resolves to [%s]', validated)
-            if validated:
-                self.filters += ("<Classification(%s)> " % validated)
+            self.handle_filter_attribute(classification,
+                                         'Classification',
+                                         CLASSIFICATION_LIST,
+                                         filter_spec.classificationNameList)
 
         # apply any filter on action
         if action:
-            logging.info('Using action filter [%s]', action)
-            validated = self.config_service.add_filter_rqt('Action', action, ACTION_LIST, filter_spec.actionNameList)
-            logging.info('Resolves to [%s]', validated)
-            if validated:
-                self.filters += ("<Action(%s)> " % validated)
+            self.handle_filter_attribute(action, 'Action', ACTION_LIST, filter_spec.actionNameList)
 
         # apply any filter on Components
         if component:
@@ -380,23 +364,15 @@ class CoverityDefectService(Service):
 
         # apply any filter on CWE values
         if cwe:
-            logging.info('Using CWE filter [%s]', cwe)
-            validated = self.config_service.add_filter_rqt('CWE', cwe, None, filter_spec.cweList)
-            logging.info('Resolves to [%s]', validated)
-            if validated:
-                self.filters += ("<CWE(%s)> " % validated)
+            self.handle_filter_attribute(cwe, 'CWE', None, filter_spec.cweList)
 
         # apply any filter on CID values
         if cid:
-            logging.info('Using CID filter [%s]', cid)
-            validated = self.config_service.add_filter_rqt('CID', cid, None, filter_spec.cidList)
-            logging.info('Resolves to [%s]', validated)
-            if validated:
-                self.filters += ("<CID(%s)> " % validated)
+            self.handle_filter_attribute(cid, 'CID', None, filter_spec.cidList)
 
         # if a special custom attribute value requirement
         if custom:
-            self.handle_custom_attribute(custom, filter_spec)
+            self.handle_custom_filter_attribute(custom, filter_spec)
 
         # create page spec
         page_spec = self.client.factory.create('pageSpecDataObj')
@@ -417,7 +393,20 @@ class CoverityDefectService(Service):
         return self.client.service.getMergedDefectsForSnapshotScope(project_id, filter_spec,
                                                                     page_spec, snapshot_scope)
 
-    def handle_custom_attribute(self, custom, filter_spec):
+    def handle_filter_attribute(self, attribute, name, *args, **kwargs):
+        """ Applies any filter on an attribute's values.
+
+        Args:
+            attribute (str): A CSV list of attribute values to query.
+            name (str): String representation of the attribute.
+        """
+        logging.info('Using %s filter [%s]', name, attribute)
+        validated = self.config_service.add_filter_rqt(name, attribute, *args, **kwargs)
+        logging.info('Resolves to [%s]', validated)
+        if validated:
+            self.filters += ("<%s(%s)> " % (name, validated))
+
+    def handle_custom_filter_attribute(self, custom, filter_spec):
         """ Handles a custom attribute definition, and adds it to the filter spec if it's valid.
 
         Args:
@@ -442,20 +431,23 @@ class CoverityDefectService(Service):
                     filter_map = self.client.factory.create('attributeDefinitionValueFilterMapDataObj')
                     filter_map.attributeDefinitionId = attribute_definition_id
 
-                    # if there are multiple values delimited with comma
-                    for value_fields in csv.reader([values], delimiter=','):
-                        for _, value in enumerate(value_fields):
-                            logging.info("             [%s]", value)
-
-                            attribute_value_id = self.client.factory.create('attributeValueIdDataObj')
-                            attribute_value_id.name = value
-
-                            filter_map.attributeValueIds.append(attribute_value_id)
+                    self._append_multiple_values(values, filter_map)
 
                     filter_spec.attributeDefinitionValueFilterMap.append(filter_map)
                 else:
                     raise ValueError('Invalid custom attribute definition [%s]' % name_value_pair)
         self.filters += ("<Attrs(%s)> " % custom)
+
+    def _append_multiple_values(self, values, filter_map):
+        # if there are multiple values delimited with comma
+        for value_fields in csv.reader([values], delimiter=','):
+            for _, value in enumerate(value_fields):
+                logging.info("             [%s]", value)
+
+                attribute_value_id = self.client.factory.create('attributeValueIdDataObj')
+                attribute_value_id.name = value
+
+                filter_map.attributeValueIds.append(attribute_value_id)
 
     def get_defect(self, cid, stream):
         '''Get the details pertaining a specific CID - it may not have defect instance details if newly eliminated
