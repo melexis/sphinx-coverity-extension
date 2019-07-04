@@ -447,6 +447,15 @@ class SphinxCoverityConnector():
 
 
 def create_ref_node(contents, url):
+    """ Creates reference node inside a paragraph
+
+    Args:
+        contents (str): Text to be displayed.
+        url (str): URL to be used for the reference.
+
+    Returns:
+        (nodes.paragraph) Paragraph node containing a reference based on the given url.
+    """
     p_node = nodes.paragraph()
     itemlink = nodes.reference()
     itemlink['refuri'] = url
@@ -459,6 +468,14 @@ def create_ref_node(contents, url):
 
 
 def create_top_node(title):
+    """ Creates a container node containing an admonition with the given title inside.
+
+    Args:
+        title (str): Title text to be displayed.
+
+    Returns:
+        (nodes.container) Container node with the title laid out.
+    """
     top_node = nodes.container()
     admon_node = nodes.admonition()
     title_node = nodes.title()
@@ -469,6 +486,16 @@ def create_top_node(title):
 
 
 def create_cell(contents, url=None):
+    """
+    Creates a table entry node with the given contents inside. If a string is given, it gets used inside a paragraph
+    node, either as a text node or a reference node in case a URL is given.
+
+    Args:
+        contents (str|nodes.Node): Title text to be displayed.
+
+    Returns:
+        (nodes.entry) Entry node containing a paragraph with the given contents.
+    """
     if isinstance(contents, str):
         if url is not None:
             contents = create_ref_node(contents, url)
@@ -479,6 +506,14 @@ def create_cell(contents, url=None):
 
 
 def create_row(cells):
+    """ Creates a table row node containing the given strings inside entry nodes.
+
+    Args:
+        cells (list): List of strings to each be divided into cells.
+
+    Returns:
+        (nodes.row) Row node containing all given entry nodes.
+    """
     return nodes.row('', *[create_cell(c) for c in cells])
 
 
