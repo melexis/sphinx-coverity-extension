@@ -184,6 +184,9 @@ class CoverityDefectListDirective(Directive):
 
 
 class SphinxCoverityConnector():
+    """
+    Class containing functions and variables for Sphinx to access in specific stages of the documentation build.
+    """
     def __init__(self):
         """
         Initialize the object by setting error variable to false
