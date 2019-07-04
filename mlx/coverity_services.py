@@ -423,7 +423,7 @@ class CoverityDefectService(Service):
 
                         filter_spec.attributeDefinitionValueFilterMap.append(filter_map)
                     else:
-                        raise ValueError('Invalid custom attribute definition [%s]', name_value_pair)
+                        raise ValueError('Invalid custom attribute definition [%s]' % name_value_pair)
             self.filters += ("<Attrs(%s)> " % custom)
 
         # create page spec
