@@ -556,9 +556,8 @@ class CoverityDefectService(Service):
                     logging.info('Found [%s] = [%s]',
                                  attr_value.attributeDefinitionId.name, attr_value.attributeValueId.name)
                     return True, attr_value.attributeValueId.name
-                else:
-                    # break attribute name search - either no value or it doesn't match
-                    break
+                # break attribute name search - either no value or it doesn't match
+                break
         logging.warning('Event for attribute [%s] not found', name)
         return False, None
 
