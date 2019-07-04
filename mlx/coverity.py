@@ -429,21 +429,6 @@ class SphinxCoverityConnector():
 
             report_info(env, "done")
             node.replace_self(top_node)
-    #        try:
-    #            percentage = int(100 * count_covered / count_total)
-    #        except ZeroDivisionError:
-    #            percentage = 0
-    #        disp = 'Statistics: {cover} out of {total} covered: {pct}%'.format(cover=count_covered,
-    #                                                                           total=count_total,
-    #                                                                           pct=percentage)
-    #        if node['graph']:
-    #            p_node = nodes.paragraph()
-    #            txt = nodes.Text(disp)
-    #            p_node += txt
-    #            top_node += p_node
-    #
-    #        top_node += table
-    #
 
 
 def create_ref_node(contents, url):
