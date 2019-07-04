@@ -19,6 +19,7 @@ recursive-include tests *.txt
 
 exclude example/.env.example
 exclude example/pip-dependencies.txt
+exclude .pylintrc
 
 # added by check_manifest.py
 recursive-include example *.css
