@@ -129,6 +129,9 @@ class CoverityDefectListDirective(Directive):
     has_content = False
 
     def run(self):
+        """
+        Processes the contents of the directive
+        """
         item_list_node = CoverityDefect('')
 
         # Process title (optional argument)
