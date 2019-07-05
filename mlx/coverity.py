@@ -243,6 +243,15 @@ class SphinxCoverityConnector():
         self.coverity_login_error = False
         self.coverity_login_error_msg = ''
         self.stream = ''
+        self.column_map = {
+            'Cid': 'cid',
+            'Category': 'displayCategory',
+            'Impact': 'displayImpact',
+            'Issue': 'displayIssueKind',
+            'Type': 'displayType',
+            'Checker': 'checkerName',
+            'Component': 'componentName',
+        }
 
     def initialize_environment(self, app):
         """
@@ -298,15 +307,6 @@ class SphinxCoverityConnector():
         Obtain information from Coverity server and generate a table.
         """
         env = app.builder.env
-        column_map = {
-            'Cid': 'cid',
-            'Category': 'displayCategory',
-            'Impact': 'displayImpact',
-            'Issue': 'displayIssueKind',
-            'Type': 'displayType',
-            'Checker': 'checkerName',
-            'Component': 'componentName',
-        }
 
         if self.coverity_login_error:
             # Create failed topnode
@@ -342,7 +342,7 @@ class SphinxCoverityConnector():
                         tbody += self.get_filled_row(defect, node['col'], app, fromdocname)
 
                     if isinstance(node['chart'], list):
-                        self.increase_attribute_value_count(node, defect, chart_labels, column_map)
+                        self.increase_attribute_value_count(node, defect, chart_labels)
             except AttributeError as err:
                 report_info(env, 'No issues matching your query or empty stream. %s' % err)
                 top_node += nodes.paragraph(text='No issues matching your query or empty stream')
@@ -391,49 +391,38 @@ class SphinxCoverityConnector():
         """
         row = nodes.row()
         for item_col in columns:
-            if 'CID' == item_col:
+            if item_col == 'CID':
                 # CID is default and even if it is in disregard
                 row += create_cell(str(defect['cid']),
                                    url=self.coverity_service.get_defect_url(self.stream,
                                                                             str(defect['cid'])))
-            elif 'Location' == item_col:
+            elif item_col == 'Location':
                 info = self.coverity_service.get_defect(str(defect['cid']),
                                                         self.stream)
                 linenum = info[-1]['defectInstances'][-1]['events'][-1]['lineNumber']
                 row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
-            elif 'Category' == item_col:
-                row += create_cell(defect['displayCategory'])
-            elif 'Impact' == item_col:
-                row += create_cell(defect['displayImpact'])
-            elif 'Issue' == item_col:
-                row += create_cell(defect['displayIssueKind'])
-            elif 'Type' == item_col:
-                row += create_cell(defect['displayType'])
-            elif 'Checker' == item_col:
-                row += create_cell(defect['checkerName'])
-            elif 'Component' == item_col:
-                row += create_cell(defect['componentName'])
-            elif 'Comment' == item_col:
+            elif item_col in self.column_map.keys():
+                row += create_cell(defect[self.column_map[item_col]])
+            elif item_col == 'Comment':
                 contents = create_paragraph_with_links(defect, 'Comment', *args)
                 row += nodes.entry('', contents)
-            elif 'Reference' == item_col:
+            elif item_col == 'Reference':
                 contents = create_paragraph_with_links(defect, 'Ext. Reference', *args)
                 row += nodes.entry('', contents)
-            elif 'Classification' == item_col:
+            elif item_col == 'Classification':
                 row += cov_attribute_value_to_col(defect, 'Classification')
-            elif 'Action' == item_col:
+            elif item_col == 'Action':
                 row += cov_attribute_value_to_col(defect, 'Action')
-            elif 'Status' == item_col:
+            elif item_col == 'Status':
                 row += cov_attribute_value_to_col(defect, 'DefectStatus')
             else:
                 # generic check which, if it is missing, prints empty cell anyway
                 row += cov_attribute_value_to_col(defect, item_col)
         return row
 
-    @staticmethod
-    def increase_attribute_value_count(node, defect, chart_labels, column_map):
-        if node['chart_attribute'] in column_map.keys():
-            attribute_value = str(defect[column_map[node['chart_attribute']]])
+    def increase_attribute_value_count(self, node, defect, chart_labels):
+        if node['chart_attribute'] in self.column_map.keys():
+            attribute_value = str(defect[self.column_map[node['chart_attribute']]])
         else:
             col = cov_attribute_value_to_col(defect, node['chart_attribute'])
             attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
