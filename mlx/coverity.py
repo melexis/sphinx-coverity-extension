@@ -39,6 +39,7 @@ def report_warning(env, msg, docname, lineno=None):
     '''Convenience function for logging a warning
 
     Args:
+        env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
         msg (str): Message of the warning
         docname (str): Name of the document on which the error occured
         lineno (str): Line number in the document on which the error occured
@@ -57,6 +58,7 @@ def report_info(env, msg, nonl=False):
     '''Convenience function for information printing
 
     Args:
+        env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
         msg (str): Message of the warning
         nonl (bool): True when no new line at end
     '''
@@ -100,6 +102,14 @@ def initialize_table_from_node(node):
 
 
 def initialize_labels(labels, env, fromdocname):
+    """
+    Initialize dictionaries related to pie chart labels. The first is used for storing counters, and the second is used
+    for storing labels that consist of multiple attribute values that have been concatenated by a + character.
+
+    Args:
+        labels (list): List of labels (str) for the pie chart.
+        env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
+    """
     chart_labels = {}
     combined_labels = {}
     for label in labels:
@@ -373,6 +383,15 @@ class SphinxCoverityConnector():
             node.replace_self(top_node)
 
     def get_filtered_defects(self, node, env):
+        """ Fetch defects from suds using filters stored in the given CoverityDefect object.
+
+        Args:
+            node (CoverityDefect): CoverityDefect object with zero or more filters stored.
+            env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
+
+        Returns:
+            (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects.
+        """
         report_info(env, 'obtaining defects... ', True)
         defects = self.coverity_service.get_defects(self.project_name, self.stream, checker=node['checker'],
                                                     impact=node['impact'], kind=node['kind'],
@@ -442,6 +461,16 @@ class SphinxCoverityConnector():
 
     @staticmethod
     def build_pie_chart(chart_labels, env):
+        """
+        Builds and returns image node containing the pie chart image.
+
+        Args:
+            chart_labels (dict): Dictionary containing the slice labels as keys and slice sizes (int) as values.
+            env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
+
+        Returns:
+            (nodes.image) Image node containing the pie chart image.
+        """
         labels = list(chart_labels.keys())
         sizes = list(chart_labels.values())
         fig, axes = plt.subplots()
