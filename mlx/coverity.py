@@ -209,20 +209,20 @@ class SphinxCoverityConnector():
         self.coverity_login_error_msg = ''
         self.stream = ''
         self.column_map = {
-            'Cid': 'cid',
-            'Category': 'displayCategory',
-            'Impact': 'displayImpact',
-            'Issue': 'displayIssueKind',
-            'Type': 'displayType',
-            'Checker': 'checkerName',
-            'Component': 'componentName',
+            'CID': 'cid',
+            'CATEGORY': 'displayCategory',
+            'IMPACT': 'displayImpact',
+            'ISSUE': 'displayIssueKind',
+            'TYPE': 'displayType',
+            'CHECKER': 'checkerName',
+            'COMPONENT': 'componentName',
         }
         self.defect_states_map = {
-            'Comment': 'Comment',
-            'Reference': 'Ext. Reference',
-            'Classification': 'Classification',
-            'Action': 'Action',
-            'Status': 'DefectStatus',
+            'COMMENT': 'Comment',
+            'REFERENCE': 'Ext. Reference',
+            'CLASSIFICATION': 'Classification',
+            'ACTION': 'Action',
+            'STATUS': 'DefectStatus',
         }
 
     def initialize_environment(self, app):
@@ -432,18 +432,19 @@ class SphinxCoverityConnector():
         """
         row = nodes.row()
         for item_col in columns:
+            item_col = item_col.upper()
             if item_col == 'CID':
                 # CID is default and even if it is in disregard
                 row += create_cell(str(defect['cid']),
                                    url=self.coverity_service.get_defect_url(self.stream, str(defect['cid'])))
-            elif item_col == 'Location':
+            elif item_col == 'LOCATION':
                 info = self.coverity_service.get_defect(str(defect['cid']),
                                                         self.stream)
                 linenum = info[-1]['defectInstances'][-1]['events'][-1]['lineNumber']
                 row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
             elif item_col in self.column_map.keys():
                 row += create_cell(defect[self.column_map[item_col]])
-            elif item_col in ('Comment', 'Reference'):
+            elif item_col in ('COMMENT', 'REFERENCE'):
                 row += nodes.entry('', create_paragraph_with_links(defect, self.defect_states_map[item_col], *args))
             elif item_col in self.defect_states_map.keys():
                 row += cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
@@ -459,7 +460,7 @@ class SphinxCoverityConnector():
             node (CoverityDefect): CoverityDefect object.
             defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
         """
-        if node['chart_attribute'] in self.column_map.keys():
+        if node['chart_attribute'].upper() in self.column_map.keys():
             attribute_value = str(defect[self.column_map[node['chart_attribute']]])
         else:
             col = cov_attribute_value_to_col(defect, node['chart_attribute'])
@@ -597,12 +598,16 @@ def create_paragraph_with_links(defect, col_name, *args):
     """
     Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
     their definition.
+
+    Args:
+        defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
+        col_name (str): Column name according to suds.
     """
     text = str(cov_attribute_value_to_col(defect, col_name).children[0].children[0])
     cid = str(defect['cid'])
     contents = nodes.paragraph()
     remaining_text = text
-    link_to_urls(contents, remaining_text, cid, args[0], args[1])
+    link_to_urls(contents, remaining_text, cid, *args)
     return contents
 
 
