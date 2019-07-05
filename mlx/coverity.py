@@ -383,16 +383,21 @@ class SphinxCoverityConnector():
         return defects
 
     def get_filled_row(self, defect, columns, *args):
-        """
-        Goes through each column and decides if it is there or prints empty cell.
+        """ Goes through each column and decides if it is there or prints empty cell.
+
+        Args:
+            defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
+            columns (list): List of column names (str).
+
+        Returns:
+            (nodes.row) Filled row node.
         """
         row = nodes.row()
         for item_col in columns:
             if item_col == 'CID':
                 # CID is default and even if it is in disregard
                 row += create_cell(str(defect['cid']),
-                                   url=self.coverity_service.get_defect_url(self.stream,
-                                                                            str(defect['cid'])))
+                                   url=self.coverity_service.get_defect_url(self.stream, str(defect['cid'])))
             elif item_col == 'Location':
                 info = self.coverity_service.get_defect(str(defect['cid']),
                                                         self.stream)
@@ -418,6 +423,12 @@ class SphinxCoverityConnector():
         return row
 
     def increase_attribute_value_count(self, node, defect, chart_labels):
+        """ Increases the counter for a chart attribute value belonging to the defect.
+
+        Args:
+            node (CoverityDefect): CoverityDefect object.
+            defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
+        """
         if node['chart_attribute'] in self.column_map.keys():
             attribute_value = str(defect[self.column_map[node['chart_attribute']]])
         else:
