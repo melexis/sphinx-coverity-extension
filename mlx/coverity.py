@@ -430,11 +430,10 @@ class SphinxCoverityConnector():
                 row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
             elif item_col in self.column_map.keys():
                 row += create_cell(defect[self.column_map[item_col]])
+            elif item_col in ('Comment', 'Reference'):
+                row += nodes.entry('', create_paragraph_with_links(defect, self.defect_states_map[item_col], *args))
             elif item_col in self.defect_states_map.keys():
-                if item_col in ('Comment', 'Reference'):
-                    row += nodes.entry('', create_paragraph_with_links(defect, self.defect_states_map[item_col], *args))
-                else:
-                    row += cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
+                row += cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
             else:
                 # generic check which, if it is missing, prints empty cell anyway
                 row += cov_attribute_value_to_col(defect, item_col)
