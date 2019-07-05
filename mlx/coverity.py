@@ -69,60 +69,6 @@ def report_info(env, msg, nonl=False):
         env.info(msg, nonl=nonl)
 
 
-def initialize_table_from_node(node):
-    """ Initializes a table node using the contents of a CoverityDefect node.
-
-    Args:
-        node (CoverityDefect): A CoverityDefect node object.
-
-    Returns:
-        (nodes.table, nodes.tbody) A table node and its body initialized with column widths and a table header.
-    """
-    table = nodes.table()
-    table['classes'].append('longtable')
-    if node['widths'] == 'auto':
-        table['classes'].append('colwidths-auto')
-    elif node['widths']:  # "grid" or list of integers
-        table['classes'].append('colwidths-given')
-    tgroup = nodes.tgroup()
-
-    for _ in node['col']:
-        tgroup += [nodes.colspec(colwidth=5)]
-    tgroup += nodes.thead('', create_row(node['col']))
-
-    if isinstance(node['widths'], list):
-        colspecs = [child for child in tgroup.children if child.tagname == 'colspec']
-        for colspec, col_width in zip(colspecs, node['widths']):
-            colspec['colwidth'] = col_width
-
-    tbody = nodes.tbody()
-    tgroup += tbody
-    table += tgroup
-    return table, tbody
-
-
-def initialize_labels(labels, env, fromdocname):
-    """
-    Initialize dictionaries related to pie chart labels. The first is used for storing counters, and the second is used
-    for storing labels that consist of multiple attribute values that have been concatenated by a + character.
-
-    Args:
-        labels (list): List of labels (str) for the pie chart.
-        env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
-    """
-    chart_labels = {}
-    combined_labels = {}
-    for label in labels:
-        attr_values = label.split('+')
-        for attr_val in attr_values:
-            if attr_val in chart_labels.keys():
-                report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, fromdocname)
-            chart_labels[attr_val] = 0
-        if len(attr_values) > 1:
-            combined_labels[label] = attr_values
-    return chart_labels, combined_labels
-
-
 def pct_wrapper(sizes):
     """ Helper function for matplotlib which returns the percentage and the absolute size of the slice.
 
@@ -139,7 +85,6 @@ def pct_wrapper(sizes):
 # Declare new node types (based on others):
 class CoverityDefect(nodes.General, nodes.Element):
     '''Coverity defect'''
-    pass
 
 
 # -----------------------------------------------------------------------------
@@ -331,9 +276,9 @@ class SphinxCoverityConnector():
 
             # Initialize table and dictionaries to store counters and labels for pie chart
             if node['col']:
-                table, tbody = initialize_table_from_node(node)
+                table, tbody = self.initialize_table_from_node(node)
             if isinstance(node['chart'], list):
-                chart_labels, combined_labels = initialize_labels(node['chart'], env, fromdocname)
+                chart_labels, combined_labels = self.initialize_labels(node['chart'], env, fromdocname)
 
             # Get items from server
             try:
@@ -381,6 +326,60 @@ class SphinxCoverityConnector():
 
             report_info(env, "done")
             node.replace_self(top_node)
+
+    @staticmethod
+    def initialize_table_from_node(node):
+        """ Initializes a table node using the contents of a CoverityDefect node.
+
+        Args:
+            node (CoverityDefect): A CoverityDefect node object.
+
+        Returns:
+            (nodes.table, nodes.tbody) A table node and its body initialized with column widths and a table header.
+        """
+        table = nodes.table()
+        table['classes'].append('longtable')
+        if node['widths'] == 'auto':
+            table['classes'].append('colwidths-auto')
+        elif node['widths']:  # "grid" or list of integers
+            table['classes'].append('colwidths-given')
+        tgroup = nodes.tgroup()
+
+        for _ in node['col']:
+            tgroup += [nodes.colspec(colwidth=5)]
+        tgroup += nodes.thead('', create_row(node['col']))
+
+        if isinstance(node['widths'], list):
+            colspecs = [child for child in tgroup.children if child.tagname == 'colspec']
+            for colspec, col_width in zip(colspecs, node['widths']):
+                colspec['colwidth'] = col_width
+
+        tbody = nodes.tbody()
+        tgroup += tbody
+        table += tgroup
+        return table, tbody
+
+    @staticmethod
+    def initialize_labels(labels, env, fromdocname):
+        """
+        Initialize dictionaries related to pie chart labels. The first is used for storing counters, and the second is used
+        for storing labels that consist of multiple attribute values that have been concatenated by a + character.
+
+        Args:
+            labels (list): List of labels (str) for the pie chart.
+            env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
+        """
+        chart_labels = {}
+        combined_labels = {}
+        for label in labels:
+            attr_values = label.split('+')
+            for attr_val in attr_values:
+                if attr_val in chart_labels.keys():
+                    report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, fromdocname)
+                chart_labels[attr_val] = 0
+            if len(attr_values) > 1:
+                combined_labels[label] = attr_values
+        return chart_labels, combined_labels
 
     def get_filtered_defects(self, node, env):
         """ Fetch defects from suds using filters stored in the given CoverityDefect object.
