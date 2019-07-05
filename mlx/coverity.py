@@ -587,12 +587,16 @@ def create_paragraph_with_links(defect, col_name, *args):
     """
     Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
     their definition.
+
+    Args:
+        defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
+        col_name (str): Column name according to suds.
     """
     text = str(cov_attribute_value_to_col(defect, col_name).children[0].children[0])
     cid = str(defect['cid'])
     contents = nodes.paragraph()
     remaining_text = text
-    link_to_urls(contents, remaining_text, cid, args[0], args[1])
+    link_to_urls(contents, remaining_text, cid, *args)
     return contents
 
 
