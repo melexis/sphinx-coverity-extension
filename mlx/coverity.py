@@ -204,6 +204,13 @@ class SphinxCoverityConnector():
             'Checker': 'checkerName',
             'Component': 'componentName',
         }
+        self.defect_states_map = {
+            'Comment': 'Comment',
+            'Reference': 'Ext. Reference',
+            'Classification': 'Classification',
+            'Action': 'Action',
+            'Status': 'DefectStatus',
+        }
 
     def initialize_environment(self, app):
         """
@@ -423,18 +430,11 @@ class SphinxCoverityConnector():
                 row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
             elif item_col in self.column_map.keys():
                 row += create_cell(defect[self.column_map[item_col]])
-            elif item_col == 'Comment':
-                contents = create_paragraph_with_links(defect, 'Comment', *args)
-                row += nodes.entry('', contents)
-            elif item_col == 'Reference':
-                contents = create_paragraph_with_links(defect, 'Ext. Reference', *args)
-                row += nodes.entry('', contents)
-            elif item_col == 'Classification':
-                row += cov_attribute_value_to_col(defect, 'Classification')
-            elif item_col == 'Action':
-                row += cov_attribute_value_to_col(defect, 'Action')
-            elif item_col == 'Status':
-                row += cov_attribute_value_to_col(defect, 'DefectStatus')
+            elif item_col in self.defect_states_map.keys():
+                if item_col in ('Comment', 'Reference'):
+                    row += nodes.entry('', create_paragraph_with_links(defect, self.defect_states_map[item_col], *args))
+                else:
+                    row += cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
             else:
                 # generic check which, if it is missing, prints empty cell anyway
                 row += cov_attribute_value_to_col(defect, item_col)
