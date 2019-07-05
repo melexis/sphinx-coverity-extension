@@ -41,8 +41,8 @@ def report_warning(env, msg, docname, lineno=None):
     Args:
         env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
         msg (str): Message of the warning
-        docname (str): Name of the document on which the error occured
-        lineno (str): Line number in the document on which the error occured
+        docname (str): Name of the document in which the error occurred
+        lineno (str): Line number in the document on which the error occurred
     '''
     if sphinx_version >= '1.6.0':
         logger = getLogger(__name__)
@@ -334,6 +334,8 @@ class SphinxCoverityConnector():
             report_info(env, "done")
             node.replace_self(top_node)
 
+    # -----------------------------------------------------------------------------
+    # Helper functions of event handlers
     @staticmethod
     def initialize_table_from_node(node):
         """ Initializes a table node using the contents of a CoverityDefect node.
@@ -367,14 +369,15 @@ class SphinxCoverityConnector():
         return table, tbody
 
     @staticmethod
-    def initialize_labels(labels, env, fromdocname):
+    def initialize_labels(labels, env, docname):
         """
-        Initialize dictionaries related to pie chart labels. The first is used for storing counters, and the second is used
-        for storing labels that consist of multiple attribute values that have been concatenated by a + character.
+        Initialize dictionaries related to pie chart labels. The first is used for storing counters, and the second is
+        used for storing labels that consist of multiple attribute values that have been concatenated by a + character.
 
         Args:
             labels (list): List of labels (str) for the pie chart.
             env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
+            docname (str): Name of the document in which the error occurred.
         """
         chart_labels = {}
         combined_labels = {}
@@ -382,7 +385,7 @@ class SphinxCoverityConnector():
             attr_values = label.split('+')
             for attr_val in attr_values:
                 if attr_val in chart_labels.keys():
-                    report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, fromdocname)
+                    report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, docname)
                 chart_labels[attr_val] = 0
             if len(attr_values) > 1:
                 combined_labels[label] = attr_values
