@@ -99,6 +99,23 @@ def initialize_table_from_node(node):
     return table, tbody
 
 
+def initialize_labels(labels, env, fromdocname):
+    chart_labels = {}
+    combined_labels = {}
+    for label in labels:
+        if '+' in label:
+            combined_labels[label] = label.split('+')
+        for attr_val in label.split('+'):
+            if attr_val in chart_labels.keys():
+                report_warning(env,
+                               "Attribute value '%s' should not be specified more than once in chart "
+                               "option." % attr_val,
+                               fromdocname)
+            chart_labels[attr_val] = 0
+
+    return chart_labels, combined_labels
+
+
 def pct_wrapper(sizes):
     """ Helper function for matplotlib which returns the percentage and the absolute size of the slice.
 
@@ -224,6 +241,8 @@ class SphinxCoverityConnector():
         Initialize the object by setting error variable to false
         """
         self.coverity_login_error = False
+        self.coverity_login_error_msg = ''
+        self.stream = ''
 
     def initialize_environment(self, app):
         """
@@ -239,6 +258,7 @@ class SphinxCoverityConnector():
     \\makeatother'''
 
         env = app.builder.env
+        self.stream = app.config.coverity_credentials['stream']
 
         # Login to Coverity and obtain stream information
         try:
@@ -251,10 +271,10 @@ class SphinxCoverityConnector():
             report_info(env, 'done')
 
             report_info(env, 'obtaining stream information... ', True)
-            stream = coverity_conf_service.get_stream(app.config.coverity_credentials['stream'])
+            stream = coverity_conf_service.get_stream(self.stream)
             if stream is None:
                 raise ValueError('No such Coverity stream [%s] found on [%s]' %
-                                 (app.config.coverity_credentials['stream'], coverity_conf_service.get_service_url()))
+                                 (self.stream, coverity_conf_service.get_service_url()))
             report_info(env, 'done')
 
             # Get Stream's project name
@@ -278,6 +298,15 @@ class SphinxCoverityConnector():
         Obtain information from Coverity server and generate a table.
         """
         env = app.builder.env
+        column_map = {
+            'Cid': 'cid',
+            'Category': 'displayCategory',
+            'Impact': 'displayImpact',
+            'Issue': 'displayIssueKind',
+            'Type': 'displayType',
+            'Checker': 'checkerName',
+            'Component': 'componentName',
+        }
 
         if self.coverity_login_error:
             # Create failed topnode
@@ -293,110 +322,33 @@ class SphinxCoverityConnector():
         for node in doctree.traverse(CoverityDefect):
             top_node = create_top_node(node['title'])
 
-            # Initialize table
+            # Initialize table and dictionaries to store counters and labels for pie chart
             if node['col']:
                 table, tbody = initialize_table_from_node(node)
+            if isinstance(node['chart'], list):
+                chart_labels, combined_labels = initialize_labels(node['chart'], env, fromdocname)
 
             # Get items from server
-            report_info(env, 'obtaining defects... ', True)
             try:
-                defects = self.coverity_service.get_defects(self.project_name, app.config.coverity_credentials['stream'],   # noqa: E501
-                                                            checker=node['checker'], impact=node['impact'], kind=node['kind'],  # noqa: E501
-                                                            classification=node['classification'], action=node['action'],   # noqa: E501
-                                                            component=node['component'], cwe=node['cwe'], cid=node['cid'])  # noqa: E501
+                defects = self.get_filtered_defects(node, env)
             except (URLError, AttributeError, Exception) as err:
                 report_warning(env, 'failed with %s' % err, fromdocname)
                 continue
-            report_info(env, "%d received" % (defects['totalNumberOfRecords']))
-            report_info(env, "building defects table and/or chart... ", True)
 
-            # Initialize dictionary to store counters
-            if isinstance(node['chart'], list):
-                chart_labels = {}
-                combined_labels = {}
-                for label in node['chart']:
-                    if '+' in label:
-                        combined_labels[label] = label.split('+')
-                    for attr_val in label.split('+'):
-                        if attr_val in chart_labels.keys():
-                            report_warning(env,
-                                           "Attribute value '%s' should not be specified more than once in chart "
-                                           "option." % attr_val,
-                                           fromdocname)
-                        chart_labels[attr_val] = 0
-            column_map = {
-                'Cid': 'cid',
-                'Category': 'displayCategory',
-                'Impact': 'displayImpact',
-                'Issue': 'displayIssueKind',
-                'Type': 'displayType',
-                'Checker': 'checkerName',
-                'Component': 'componentName',
-            }
+            # Fill table and increase counters for pie chart
             try:
                 for defect in defects['mergedDefects']:
                     if node['col']:
-                        row = nodes.row()
-
-                        # go through each col and decide if it is there or we print empty
-                        for item_col in node['col']:
-                            if 'CID' == item_col:
-                                # CID is default and even if it is in disregard
-                                row += create_cell(str(defect['cid']),
-                                                   url=self.coverity_service.get_defect_url(
-                                                       app.config.coverity_credentials['stream'],
-                                                       str(defect['cid'])))
-                            elif 'Location' == item_col:
-                                info = self.coverity_service.get_defect(str(defect['cid']),
-                                                                        app.config.coverity_credentials['stream'])
-                                linenum = info[-1]['defectInstances'][-1]['events'][-1]['lineNumber']
-                                row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
-                            elif 'Category' == item_col:
-                                row += create_cell(defect['displayCategory'])
-                            elif 'Impact' == item_col:
-                                row += create_cell(defect['displayImpact'])
-                            elif 'Issue' == item_col:
-                                row += create_cell(defect['displayIssueKind'])
-                            elif 'Type' == item_col:
-                                row += create_cell(defect['displayType'])
-                            elif 'Checker' == item_col:
-                                row += create_cell(defect['checkerName'])
-                            elif 'Component' == item_col:
-                                row += create_cell(defect['componentName'])
-                            elif 'Comment' == item_col:
-                                text = str(cov_attribute_value_to_col(defect, 'Comment').children[0].children[0])
-                                contents = create_paragraph_with_links(text, str(defect['cid']), app, fromdocname)
-                                row += nodes.entry('', contents)
-                            elif 'Reference' == item_col:
-                                text = str(cov_attribute_value_to_col(defect, 'Ext. Reference').children[0].children[0])
-                                contents = create_paragraph_with_links(text, str(defect['cid']), app, fromdocname)
-                                row += nodes.entry('', contents)
-                            elif 'Classification' == item_col:
-                                row += cov_attribute_value_to_col(defect, 'Classification')
-                            elif 'Action' == item_col:
-                                row += cov_attribute_value_to_col(defect, 'Action')
-                            elif 'Status' == item_col:
-                                row += cov_attribute_value_to_col(defect, 'DefectStatus')
-                            else:
-                                # generic check which, if it is missing, prints empty cell anyway
-                                row += cov_attribute_value_to_col(defect, item_col)
-                        tbody += row
+                        tbody += self.get_filled_row(defect, node['col'], app, fromdocname)
 
                     if isinstance(node['chart'], list):
-                        if node['chart_attribute'] in column_map.keys():
-                            classification_value = str(defect[column_map[node['chart_attribute']]])
-                        else:
-                            col = cov_attribute_value_to_col(defect, node['chart_attribute'])
-                            classification_value = str(col.children[0].children[0])  # get text in paragraph of column
-
-                        if classification_value in chart_labels.keys():
-                            chart_labels[classification_value] += 1
-                        elif not node['chart']:  # remove those that don't comply with min_slice_length
-                            chart_labels[classification_value] = 1
-
+                        self.increase_attribute_value_count(node, defect, chart_labels, column_map)
             except AttributeError as err:
                 report_info(env, 'No issues matching your query or empty stream. %s' % err)
                 top_node += nodes.paragraph(text='No issues matching your query or empty stream')
+                # don't generate empty pie chart image
+                node.replace_self(top_node)
+                return
 
             if node['col']:
                 top_node += table
@@ -417,32 +369,105 @@ class SphinxCoverityConnector():
                 if other_count:
                     chart_labels['Other'] = other_count
 
-                labels = list(chart_labels.keys())
-                sizes = list(chart_labels.values())
-                fig, axes = plt.subplots()
-                fig.set_size_inches(7, 4)
-                axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
-                axes.axis('equal')
-                folder_name = path.join(env.app.srcdir, '_images')
-                if not path.exists(folder_name):
-                    mkdir(folder_name)
-                hash_string = ''
-                for pie_slice in axes.__dict__['texts']:
-                    hash_string += str(pie_slice)
-                hash_value = sha256(hash_string.encode()).hexdigest()  # create hash value based on chart parameters
-                rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
-                if rel_file_path not in env.images.keys():
-                    fig.savefig(path.join(env.app.srcdir, rel_file_path), format='png')
-                    # store file name in build env
-                    env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]
-
-                image_node = nodes.image()
-                image_node['uri'] = rel_file_path
-                image_node['candidates'] = '*'  # look at uri value for source path, relative to the srcdir folder
+                image_node = self.build_pie_chart(chart_labels, env)
                 top_node += image_node
 
             report_info(env, "done")
             node.replace_self(top_node)
+
+    def get_filtered_defects(self, node, env):
+        report_info(env, 'obtaining defects... ', True)
+        defects = self.coverity_service.get_defects(self.project_name, self.stream, checker=node['checker'],
+                                                    impact=node['impact'], kind=node['kind'],
+                                                    classification=node['classification'], action=node['action'],
+                                                    component=node['component'], cwe=node['cwe'], cid=node['cid'])
+        report_info(env, "%d received" % (defects['totalNumberOfRecords']))
+        report_info(env, "building defects table and/or chart... ", True)
+        return defects
+
+    def get_filled_row(self, defect, columns, *args):
+        """
+        Goes through each column and decides if it is there or prints empty cell.
+        """
+        row = nodes.row()
+        for item_col in columns:
+            if 'CID' == item_col:
+                # CID is default and even if it is in disregard
+                row += create_cell(str(defect['cid']),
+                                   url=self.coverity_service.get_defect_url(self.stream,
+                                                                            str(defect['cid'])))
+            elif 'Location' == item_col:
+                info = self.coverity_service.get_defect(str(defect['cid']),
+                                                        self.stream)
+                linenum = info[-1]['defectInstances'][-1]['events'][-1]['lineNumber']
+                row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
+            elif 'Category' == item_col:
+                row += create_cell(defect['displayCategory'])
+            elif 'Impact' == item_col:
+                row += create_cell(defect['displayImpact'])
+            elif 'Issue' == item_col:
+                row += create_cell(defect['displayIssueKind'])
+            elif 'Type' == item_col:
+                row += create_cell(defect['displayType'])
+            elif 'Checker' == item_col:
+                row += create_cell(defect['checkerName'])
+            elif 'Component' == item_col:
+                row += create_cell(defect['componentName'])
+            elif 'Comment' == item_col:
+                contents = create_paragraph_with_links(defect, 'Comment', *args)
+                row += nodes.entry('', contents)
+            elif 'Reference' == item_col:
+                contents = create_paragraph_with_links(defect, 'Ext. Reference', *args)
+                row += nodes.entry('', contents)
+            elif 'Classification' == item_col:
+                row += cov_attribute_value_to_col(defect, 'Classification')
+            elif 'Action' == item_col:
+                row += cov_attribute_value_to_col(defect, 'Action')
+            elif 'Status' == item_col:
+                row += cov_attribute_value_to_col(defect, 'DefectStatus')
+            else:
+                # generic check which, if it is missing, prints empty cell anyway
+                row += cov_attribute_value_to_col(defect, item_col)
+        return row
+
+    @staticmethod
+    def increase_attribute_value_count(node, defect, chart_labels, column_map):
+        if node['chart_attribute'] in column_map.keys():
+            attribute_value = str(defect[column_map[node['chart_attribute']]])
+        else:
+            col = cov_attribute_value_to_col(defect, node['chart_attribute'])
+            attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
+
+        if attribute_value in chart_labels.keys():
+            chart_labels[attribute_value] += 1
+        elif not node['chart']:  # remove those that don't comply with min_slice_length
+            chart_labels[attribute_value] = 1
+
+    @staticmethod
+    def build_pie_chart(chart_labels, env):
+        labels = list(chart_labels.keys())
+        sizes = list(chart_labels.values())
+        fig, axes = plt.subplots()
+        fig.set_size_inches(7, 4)
+        axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
+        axes.axis('equal')
+        folder_name = path.join(env.app.srcdir, '_images')
+        if not path.exists(folder_name):
+            mkdir(folder_name)
+        hash_string = ''
+        for pie_slice in axes.__dict__['texts']:
+            hash_string += str(pie_slice)
+        hash_value = sha256(hash_string.encode()).hexdigest()  # create hash value based on chart parameters
+        rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
+        if rel_file_path not in env.images.keys():
+            fig.savefig(path.join(env.app.srcdir, rel_file_path), format='png')
+            # store file name in build env
+            env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]
+
+        image_node = nodes.image()
+        image_node['uri'] = rel_file_path
+        image_node['candidates'] = '*'  # look at uri value for source path, relative to the srcdir folder
+        return image_node
 
 
 def create_ref_node(contents, url):
@@ -531,14 +556,16 @@ def cov_attribute_value_to_col(defect, name):
     return col
 
 
-def create_paragraph_with_links(text, *args):
+def create_paragraph_with_links(defect, col_name, *args):
     """
     Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
     their definition.
     """
+    text = str(cov_attribute_value_to_col(defect, col_name).children[0].children[0])
+    cid = str(defect['cid'])
     contents = nodes.paragraph()
     remaining_text = text
-    link_to_urls(contents, remaining_text, *args)
+    link_to_urls(contents, remaining_text, cid, args[0], args[1])
     return contents
 
 
