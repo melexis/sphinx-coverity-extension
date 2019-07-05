@@ -103,12 +103,13 @@ def initialize_labels(labels, env, fromdocname):
     chart_labels = {}
     combined_labels = {}
     for label in labels:
-        if '+' in label:
-            combined_labels[label] = label.split('+')
-        for attr_val in label.split('+'):
+        attr_values = label.split('+')
+        for attr_val in attr_values:
             if attr_val in chart_labels.keys():
                 report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, fromdocname)
             chart_labels[attr_val] = 0
+        if len(attr_values) > 1:
+            combined_labels[label] = attr_values
     return chart_labels, combined_labels
 
 
