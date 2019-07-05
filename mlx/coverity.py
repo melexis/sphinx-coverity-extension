@@ -93,7 +93,8 @@ class CoverityDefect(nodes.General, nodes.Element):
         'action': None,
         'component': None,
         'cwe': None,
-        'cid': None,}
+        'cid': None,
+    }
 
 
 # -----------------------------------------------------------------------------
