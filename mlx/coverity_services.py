@@ -287,23 +287,14 @@ class CoverityDefectService(Service):
             logging.critical("No such Coverity Defect Service [%s]", url)
             raise
 
-    def get_defects(self, project, stream, checker=None, impact=None, kind=None, classification=None, action=None,
-                    component=None, cwe=None, cid=None, custom=None):
+    def get_defects(self, project, stream, filters, custom=None):
         '''
         Get a list of defects for given stream, with some query criteria
 
         Arguments:
         project (str) - Name of the project to query
         stream (str) - Name of the stream to query
-        checker (str) - A CSV list of the checker(s) to query
-        impact (str) - A CSV list of the impact(s) to query
-        kind (str) - A CSV list of the kind(s) to query
-        classification (str) - A CSV list of the classification(s) to query
-        action (str) - A CSV list of the action(s) to query
-        component (str) - A CSV list of component(s) to include/exclude in the query
-        exclude_component(bool) - True for excluding the given component(s), false for including them
-        cwe (str) - A CSV list of the cwe(s) to query
-        cid (str) - A CSV list of the cid(s) to query
+        filters (dict) - Dictionary with attribute names as keys and CSV lists of attribute values to query as values
         custom (str) - A custom query
         '''
         logging.info('Querying Coverity for defects in project [%s] stream [%s] ...', project, stream)
@@ -323,37 +314,37 @@ class CoverityDefectService(Service):
         filter_spec.streamIncludeNameList.append(stream_id)
 
         # apply any filter on checker names
-        if checker:
+        if filters['checker']:
             self.config_service.get_checkers()
-            self.handle_filter_attribute(checker,
+            self.handle_filter_attribute(filters['checker'],
                                          'Checker',
                                          self.config_service.checkers,
                                          filter_spec.checkerList,
                                          allow_regex=True)
 
         # apply any filter on impact status
-        if impact:
-            self.handle_filter_attribute(impact, 'Impact', IMPACT_LIST, filter_spec.impactNameList)
+        if filters['impact']:
+            self.handle_filter_attribute(filters['impact'], 'Impact', IMPACT_LIST, filter_spec.impactNameList)
 
         # apply any filter on issue kind
-        if kind:
-            self.handle_filter_attribute(kind, 'Kind', KIND_LIST, filter_spec.issueKindList)
+        if filters['kind']:
+            self.handle_filter_attribute(filters['kind'], 'Kind', KIND_LIST, filter_spec.issueKindList)
 
         # apply any filter on classification
-        if classification:
-            self.handle_filter_attribute(classification,
+        if filters['classification']:
+            self.handle_filter_attribute(filters['classification'],
                                          'Classification',
                                          CLASSIFICATION_LIST,
                                          filter_spec.classificationNameList)
 
         # apply any filter on action
-        if action:
-            self.handle_filter_attribute(action, 'Action', ACTION_LIST, filter_spec.actionNameList)
+        if filters['action']:
+            self.handle_filter_attribute(filters['action'], 'Action', ACTION_LIST, filter_spec.actionNameList)
 
         # apply any filter on Components
-        if component:
-            logging.info('Using Component filter [%s]', component)
-            parser = csv.reader([component])
+        if filters['component']:
+            logging.info('Using Component filter [%s]', filters['component'])
+            parser = csv.reader([filters['component']])
 
             for fields in parser:
                 for _, field in enumerate(fields):
@@ -361,15 +352,15 @@ class CoverityDefectService(Service):
                     component_id = self.client.factory.create('componentIdDataObj')
                     component_id.name = field
                     filter_spec.componentIdList.append(component_id)
-            self.filters += ("<Components(%s)> " % (component))
+            self.filters += ("<Components(%s)> " % (filters['component']))
 
         # apply any filter on CWE values
-        if cwe:
-            self.handle_filter_attribute(cwe, 'CWE', None, filter_spec.cweList)
+        if filters['cwe']:
+            self.handle_filter_attribute(filters['cwe'], 'CWE', None, filter_spec.cweList)
 
         # apply any filter on CID values
-        if cid:
-            self.handle_filter_attribute(cid, 'CID', None, filter_spec.cidList)
+        if filters['cid']:
+            self.handle_filter_attribute(filters['cid'], 'CID', None, filter_spec.cidList)
 
         # if a special custom attribute value requirement
         if custom:
