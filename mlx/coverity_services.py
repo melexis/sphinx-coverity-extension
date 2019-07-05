@@ -13,7 +13,7 @@ except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError
 
-# For Coverity - SOAP
+# For Coverity: SOAP
 from suds.client import Client
 from suds.wsse import Security, UsernameToken
 
@@ -163,10 +163,10 @@ class CoverityConfigurationService(Service):
         super(CoverityConfigurationService, self).login(username, password)
         version = self.get_version()
         if version is None:
-            raise RuntimeError("Authentication to [%s] FAILED for [%s] account - check password"
+            raise RuntimeError("Authentication to [%s] FAILED for [%s] account: check password"
                                % (self.get_service_url(), username))
         else:
-            logging.info("Authentication to [%s] using [%s] account was OK - version [%s]",
+            logging.info("Authentication to [%s] using [%s] account was OK: version [%s]",
                          self.get_service_url(), username, version.externalVersion)
 
     def get_version(self):
@@ -214,7 +214,7 @@ class CoverityConfigurationService(Service):
 
     @staticmethod
     def get_snapshot_id(snapshots, idx=1):
-        '''Get the nth snapshot (base 1) - minus numbers to count from the end backwards (-1 = last)'''
+        '''Get the nth snapshot (base 1): minus numbers to count from the end backwards (-1 = last)'''
         if bool(idx):
             num_snapshots = len(snapshots)
             if idx < 0:
@@ -224,7 +224,7 @@ class CoverityConfigurationService(Service):
 
             if abs(required) > 0 and abs(required) <= num_snapshots:
                 # base zero
-                return snapshots[required - 1].id
+                return snapshots[required: 1].id
         return 0
 
     def get_snapshot_detail(self, snapshot_id):
@@ -288,15 +288,17 @@ class CoverityDefectService(Service):
             raise
 
     def get_defects(self, project, stream, filters, custom=None):
-        '''
-        Get a list of defects for given stream, with some query criteria
+        """ Gets a list of defects for given stream, with some query criteria.
 
-        Arguments:
-        project (str) - Name of the project to query
-        stream (str) - Name of the stream to query
-        filters (dict) - Dictionary with attribute names as keys and CSV lists of attribute values to query as values
-        custom (str) - A custom query
-        '''
+        Args:
+            project (str): Name of the project to query
+            stream (str): Name of the stream to query
+            filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
+            custom (str): A custom query
+
+        Returns:
+            (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects
+        """
         logging.info('Querying Coverity for defects in project [%s] stream [%s] ...', project, stream)
 
         # define the project
@@ -442,7 +444,7 @@ class CoverityDefectService(Service):
                 filter_map.attributeValueIds.append(attribute_value_id)
 
     def get_defect(self, cid, stream):
-        '''Get the details pertaining a specific CID - it may not have defect instance details if newly eliminated
+        '''Get the details pertaining a specific CID: it may not have defect instance details if newly eliminated
         (fixed)'''
         logging.info('Fetching data for CID [%s] in stream [%s] ...', cid, stream)
 
@@ -480,7 +482,7 @@ class CoverityDefectService(Service):
     # update the external reference id to a third party
     def update_ext_reference_attribute(self, cid, triage_store, ext_ref_id, ccomment=None):
         '''Update external reference attribute for given CID'''
-        logging.info('Updating Coverity - CID [%s] in TS [%s] with Ext Ref [%s]', cid, triage_store, ext_ref_id)
+        logging.info('Updating Coverity: CID [%s] in TS [%s] with Ext Ref [%s]', cid, triage_store, ext_ref_id)
 
         # triage store identifier
         triage_store_id = self.client.factory.create('triageStoreIdDataObj')
@@ -495,7 +497,7 @@ class CoverityDefectService(Service):
             attr_value = ext_ref_id
             comment_value = 'Automatically recorded reference to new JIRA ticket.'
         else:
-            # set to a space - which works as a blank without the WS complaining :-)
+            # set to a space: which works as a blank without the WS complaining :-)
             attr_value = " "
             comment_value = 'Automatically cleared former JIRA ticket reference.'
 
@@ -552,7 +554,7 @@ class CoverityDefectService(Service):
                     logging.info('Found [%s] = [%s]',
                                  attr_value.attributeDefinitionId.name, attr_value.attributeValueId.name)
                     return True, attr_value.attributeValueId.name
-                # break attribute name search - either no value or it doesn't match
+                # break attribute name search: either no value or it doesn't match
                 break
         logging.warning('Event for attribute [%s] not found', name)
         return False, None
