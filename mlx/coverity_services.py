@@ -13,7 +13,7 @@ except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import URLError
 
-# For Coverity - SOAP
+# For Coverity: SOAP
 from suds.client import Client
 from suds.wsse import Security, UsernameToken
 
@@ -163,10 +163,10 @@ class CoverityConfigurationService(Service):
         super(CoverityConfigurationService, self).login(username, password)
         version = self.get_version()
         if version is None:
-            raise RuntimeError("Authentication to [%s] FAILED for [%s] account - check password"
+            raise RuntimeError("Authentication to [%s] FAILED for [%s] account: check password"
                                % (self.get_service_url(), username))
         else:
-            logging.info("Authentication to [%s] using [%s] account was OK - version [%s]",
+            logging.info("Authentication to [%s] using [%s] account was OK: version [%s]",
                          self.get_service_url(), username, version.externalVersion)
 
     def get_version(self):
@@ -214,7 +214,7 @@ class CoverityConfigurationService(Service):
 
     @staticmethod
     def get_snapshot_id(snapshots, idx=1):
-        '''Get the nth snapshot (base 1) - minus numbers to count from the end backwards (-1 = last)'''
+        '''Get the nth snapshot (base 1): minus numbers to count from the end backwards (-1 = last)'''
         if bool(idx):
             num_snapshots = len(snapshots)
             if idx < 0:
@@ -224,7 +224,7 @@ class CoverityConfigurationService(Service):
 
             if abs(required) > 0 and abs(required) <= num_snapshots:
                 # base zero
-                return snapshots[required - 1].id
+                return snapshots[required: 1].id
         return 0
 
     def get_snapshot_detail(self, snapshot_id):
@@ -287,25 +287,18 @@ class CoverityDefectService(Service):
             logging.critical("No such Coverity Defect Service [%s]", url)
             raise
 
-    def get_defects(self, project, stream, checker=None, impact=None, kind=None, classification=None, action=None,
-                    component=None, cwe=None, cid=None, custom=None):
-        '''
-        Get a list of defects for given stream, with some query criteria
+    def get_defects(self, project, stream, filters, custom=None):
+        """ Gets a list of defects for given stream, with some query criteria.
 
-        Arguments:
-        project (str) - Name of the project to query
-        stream (str) - Name of the stream to query
-        checker (str) - A CSV list of the checker(s) to query
-        impact (str) - A CSV list of the impact(s) to query
-        kind (str) - A CSV list of the kind(s) to query
-        classification (str) - A CSV list of the classification(s) to query
-        action (str) - A CSV list of the action(s) to query
-        component (str) - A CSV list of component(s) to include/exclude in the query
-        exclude_component(bool) - True for excluding the given component(s), false for including them
-        cwe (str) - A CSV list of the cwe(s) to query
-        cid (str) - A CSV list of the cid(s) to query
-        custom (str) - A custom query
-        '''
+        Args:
+            project (str): Name of the project to query
+            stream (str): Name of the stream to query
+            filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
+            custom (str): A custom query
+
+        Returns:
+            (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects
+        """
         logging.info('Querying Coverity for defects in project [%s] stream [%s] ...', project, stream)
 
         # define the project
@@ -323,37 +316,37 @@ class CoverityDefectService(Service):
         filter_spec.streamIncludeNameList.append(stream_id)
 
         # apply any filter on checker names
-        if checker:
+        if filters['checker']:
             self.config_service.get_checkers()
-            self.handle_filter_attribute(checker,
+            self.handle_filter_attribute(filters['checker'],
                                          'Checker',
                                          self.config_service.checkers,
                                          filter_spec.checkerList,
                                          allow_regex=True)
 
         # apply any filter on impact status
-        if impact:
-            self.handle_filter_attribute(impact, 'Impact', IMPACT_LIST, filter_spec.impactNameList)
+        if filters['impact']:
+            self.handle_filter_attribute(filters['impact'], 'Impact', IMPACT_LIST, filter_spec.impactNameList)
 
         # apply any filter on issue kind
-        if kind:
-            self.handle_filter_attribute(kind, 'Kind', KIND_LIST, filter_spec.issueKindList)
+        if filters['kind']:
+            self.handle_filter_attribute(filters['kind'], 'Kind', KIND_LIST, filter_spec.issueKindList)
 
         # apply any filter on classification
-        if classification:
-            self.handle_filter_attribute(classification,
+        if filters['classification']:
+            self.handle_filter_attribute(filters['classification'],
                                          'Classification',
                                          CLASSIFICATION_LIST,
                                          filter_spec.classificationNameList)
 
         # apply any filter on action
-        if action:
-            self.handle_filter_attribute(action, 'Action', ACTION_LIST, filter_spec.actionNameList)
+        if filters['action']:
+            self.handle_filter_attribute(filters['action'], 'Action', ACTION_LIST, filter_spec.actionNameList)
 
         # apply any filter on Components
-        if component:
-            logging.info('Using Component filter [%s]', component)
-            parser = csv.reader([component])
+        if filters['component']:
+            logging.info('Using Component filter [%s]', filters['component'])
+            parser = csv.reader([filters['component']])
 
             for fields in parser:
                 for _, field in enumerate(fields):
@@ -361,15 +354,15 @@ class CoverityDefectService(Service):
                     component_id = self.client.factory.create('componentIdDataObj')
                     component_id.name = field
                     filter_spec.componentIdList.append(component_id)
-            self.filters += ("<Components(%s)> " % (component))
+            self.filters += ("<Components(%s)> " % (filters['component']))
 
         # apply any filter on CWE values
-        if cwe:
-            self.handle_filter_attribute(cwe, 'CWE', None, filter_spec.cweList)
+        if filters['cwe']:
+            self.handle_filter_attribute(filters['cwe'], 'CWE', None, filter_spec.cweList)
 
         # apply any filter on CID values
-        if cid:
-            self.handle_filter_attribute(cid, 'CID', None, filter_spec.cidList)
+        if filters['cid']:
+            self.handle_filter_attribute(filters['cid'], 'CID', None, filter_spec.cidList)
 
         # if a special custom attribute value requirement
         if custom:
@@ -451,7 +444,7 @@ class CoverityDefectService(Service):
                 filter_map.attributeValueIds.append(attribute_value_id)
 
     def get_defect(self, cid, stream):
-        '''Get the details pertaining a specific CID - it may not have defect instance details if newly eliminated
+        '''Get the details pertaining a specific CID: it may not have defect instance details if newly eliminated
         (fixed)'''
         logging.info('Fetching data for CID [%s] in stream [%s] ...', cid, stream)
 
@@ -489,7 +482,7 @@ class CoverityDefectService(Service):
     # update the external reference id to a third party
     def update_ext_reference_attribute(self, cid, triage_store, ext_ref_id, ccomment=None):
         '''Update external reference attribute for given CID'''
-        logging.info('Updating Coverity - CID [%s] in TS [%s] with Ext Ref [%s]', cid, triage_store, ext_ref_id)
+        logging.info('Updating Coverity: CID [%s] in TS [%s] with Ext Ref [%s]', cid, triage_store, ext_ref_id)
 
         # triage store identifier
         triage_store_id = self.client.factory.create('triageStoreIdDataObj')
@@ -504,7 +497,7 @@ class CoverityDefectService(Service):
             attr_value = ext_ref_id
             comment_value = 'Automatically recorded reference to new JIRA ticket.'
         else:
-            # set to a space - which works as a blank without the WS complaining :-)
+            # set to a space: which works as a blank without the WS complaining :-)
             attr_value = " "
             comment_value = 'Automatically cleared former JIRA ticket reference.'
 
@@ -561,7 +554,7 @@ class CoverityDefectService(Service):
                     logging.info('Found [%s] = [%s]',
                                  attr_value.attributeDefinitionId.name, attr_value.attributeValueId.name)
                     return True, attr_value.attributeValueId.name
-                # break attribute name search - either no value or it doesn't match
+                # break attribute name search: either no value or it doesn't match
                 break
         logging.warning('Event for attribute [%s] not found', name)
         return False, None
