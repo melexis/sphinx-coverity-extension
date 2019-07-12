@@ -461,7 +461,7 @@ class SphinxCoverityConnector():
             defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
         """
         if node['chart_attribute'].upper() in self.column_map.keys():
-            attribute_value = str(defect[self.column_map[node['chart_attribute']]])
+            attribute_value = str(defect[self.column_map[node['chart_attribute'].upper()]])
         else:
             col = cov_attribute_value_to_col(defect, node['chart_attribute'])
             attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
