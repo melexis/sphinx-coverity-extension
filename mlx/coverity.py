@@ -170,10 +170,7 @@ class CoverityDefectListDirective(Directive):
         # Process the optional filters
         filters = ['checker', 'impact', 'kind', 'classification', 'action', 'component', 'cwe', 'cid']
         for fil in filters:
-            if fil in self.options:
-                item_list_node[fil] = self.options[fil]
-            else:
-                item_list_node[fil] = None
+            item_list_node[fil] = self.options[fil] if fil in self.options else None
 
         return [item_list_node]
 
