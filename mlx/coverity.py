@@ -136,10 +136,7 @@ class CoverityDefectListDirective(Directive):
         item_list_node = CoverityDefect('')
 
         # Process title (optional argument)
-        if self.arguments:
-            item_list_node['title'] = self.arguments[0]
-        else:
-            item_list_node['title'] = 'Coverity report'
+        item_list_node['title'] = self.arguments[0] if self.arguments else 'Coverity report'
 
         # Process ``col`` option
         if 'col' in self.options:
@@ -150,10 +147,7 @@ class CoverityDefectListDirective(Directive):
             item_list_node['col'] = []  # don't display a table if the ``chart`` option is present without ``col``
 
         # Process ``widths`` option
-        if 'widths' in self.options:
-            item_list_node['widths'] = self.options['widths']
-        else:
-            item_list_node['widths'] = ''
+        item_list_node['widths'] = self.options['widths'] if 'widths' in self.options else ''
 
         # Process ``chart`` option
         if 'chart' in self.options:
