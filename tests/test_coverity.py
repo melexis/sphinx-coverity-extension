@@ -94,7 +94,17 @@ class TestCoverity(TestCase):
         suds_security_mock.assert_called_once()
         suds_username_mock.assert_called_once_with('user', 'password')
 
-        coverity_service.get_defects('projectname', 'somestream')
+        filters = {
+            'checker': None,
+            'impact': None,
+            'kind': None,
+            'classification': None,
+            'action': None,
+            'component': None,
+            'cwe': None,
+            'cid': None,
+        }
+        coverity_service.get_defects('projectname', 'somestream', filters)
 
     @patch('mlx.coverity_services.UsernameToken')
     @patch('mlx.coverity_services.Security')
