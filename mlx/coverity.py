@@ -85,6 +85,16 @@ def pct_wrapper(sizes):
 # Declare new node types (based on others):
 class CoverityDefect(nodes.General, nodes.Element):
     '''Coverity defect'''
+    filters = {
+        'checker': None,
+        'impact': None,
+        'kind': None,
+        'classification': None,
+        'action': None,
+        'component': None,
+        'cwe': None,
+        'cid': None,
+    }
 
 
 # -----------------------------------------------------------------------------
@@ -151,28 +161,34 @@ class CoverityDefectListDirective(Directive):
 
         # Process ``chart`` option
         if 'chart' in self.options:
-            if ':' in self.options['chart']:
-                item_list_node['chart_attribute'] = self.options['chart'].split(':')[0].capitalize()
-            else:
-                item_list_node['chart_attribute'] = 'Classification'
-
-            parameters = self.options['chart'].split(':')[-1]  # str
-            item_list_node['chart'] = parameters.split(',')  # list
-            # try to convert parameters to int, in case a min slice size is defined instead of filter options
-            try:
-                item_list_node['min_slice_size'] = int(item_list_node['chart'][0])
-                item_list_node['chart'] = []  # only when a min slice size is defined
-            except ValueError:
-                item_list_node['min_slice_size'] = 1
+            self._process_chart_option(item_list_node)
         else:
             item_list_node['chart'] = ''
 
         # Process the optional filters
-        filters = ['checker', 'impact', 'kind', 'classification', 'action', 'component', 'cwe', 'cid']
-        for fil in filters:
-            item_list_node[fil] = self.options[fil] if fil in self.options else None
-
+        item_list_node.filters = {k: (self.options[k] if k in self.options else v)
+                                  for (k, v) in item_list_node.filters.items()}
         return [item_list_node]
+
+    def _process_chart_option(self, node):
+        """ Processes the `chart` option.
+
+        Args:
+            node (CoverityDefect): CoverityDefect object used to store this directive's options and their parameters.
+        """
+        if ':' in self.options['chart']:
+            node['chart_attribute'] = self.options['chart'].split(':')[0].capitalize()
+        else:
+            node['chart_attribute'] = 'Classification'
+
+        parameters = self.options['chart'].split(':')[-1]  # str
+        node['chart'] = parameters.split(',')  # list
+        # try to convert parameters to int, in case a min slice size is defined instead of filter options
+        try:
+            node['min_slice_size'] = int(node['chart'][0])
+            node['chart'] = []  # only when a min slice size is defined
+        except ValueError:
+            node['min_slice_size'] = 1
 
 
 class SphinxCoverityConnector():
@@ -393,10 +409,7 @@ class SphinxCoverityConnector():
             (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects.
         """
         report_info(env, 'obtaining defects... ', True)
-        defects = self.coverity_service.get_defects(self.project_name, self.stream, checker=node['checker'],
-                                                    impact=node['impact'], kind=node['kind'],
-                                                    classification=node['classification'], action=node['action'],
-                                                    component=node['component'], cwe=node['cwe'], cid=node['cid'])
+        defects = self.coverity_service.get_defects(self.project_name, self.stream, node.filters)
         report_info(env, "%d received" % (defects['totalNumberOfRecords']))
         report_info(env, "building defects table and/or chart... ", True)
         return defects
