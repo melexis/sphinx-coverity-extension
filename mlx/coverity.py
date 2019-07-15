@@ -195,6 +195,9 @@ class SphinxCoverityConnector():
     """
     Class containing functions and variables for Sphinx to access in specific stages of the documentation build.
     """
+    project_name = ''
+    coverity_service = None
+
     def __init__(self):
         """
         Initialize the object by setting error variable to false
@@ -259,7 +262,7 @@ class SphinxCoverityConnector():
             self.coverity_service = CoverityDefectService(coverity_conf_service)
             self.coverity_service.login(app.config.coverity_credentials['username'],
                                         app.config.coverity_credentials['password'])
-        except (URLError, HTTPError, Exception, ValueError) as error_info:
+        except (URLError, HTTPError, Exception, ValueError) as error_info:  # pylint: disable=broad-except
             self.coverity_login_error_msg = error_info
             report_info(env, 'failed with: %s' % error_info)
             self.coverity_login_error = True
@@ -297,7 +300,7 @@ class SphinxCoverityConnector():
             # Get items from server
             try:
                 defects = self.get_filtered_defects(node, env)
-            except (URLError, AttributeError, Exception) as err:
+            except (URLError, AttributeError, Exception) as err:  # pylint: disable=broad-except
                 report_warning(env, 'failed with %s' % err, fromdocname)
                 continue
 
@@ -335,8 +338,7 @@ class SphinxCoverityConnector():
                 if other_count:
                     chart_labels['Other'] = other_count
 
-                image_node = self.build_pie_chart(chart_labels, env)
-                top_node += image_node
+                top_node += self.build_pie_chart(chart_labels, env)
 
             report_info(env, "done")
             node.replace_self(top_node)
