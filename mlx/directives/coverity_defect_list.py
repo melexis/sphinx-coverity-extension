@@ -7,9 +7,9 @@ from docutils.parsers.rst import Directive, directives
 import matplotlib as mpl
 if not environ.get('DISPLAY'):
     mpl.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt  # pylint:disable=wrong-import-position
 
-from mlx.coverity_logging import report_info, report_warning
+from mlx.coverity_logging import report_info, report_warning  # noqa: E402
 from mlx.coverity_item_element import ItemElement
 
 
