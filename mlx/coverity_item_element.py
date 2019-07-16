@@ -8,10 +8,11 @@ from mlx.coverity_logging import report_warning
 
 
 class ItemElement(nodes.General, nodes.Element):
+    """ Base class for coverity nodes. """
 
     @staticmethod
     def create_ref_node(contents, url):
-        """ Creates reference node inside a paragraph
+        """ Creates reference node inside a paragraph.
 
         Args:
             contents (str): Text to be displayed.
