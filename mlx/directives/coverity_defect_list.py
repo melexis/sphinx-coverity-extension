@@ -94,20 +94,7 @@ class CoverityDefect(ItemElement):
             top_node += table
 
         if isinstance(self['chart'], list):
-            for new_label, old_labels in combined_labels.items():
-                count = 0
-                for old_label in old_labels:
-                    count += self.chart_labels.pop(old_label)  # remove old_label and store its count
-                self.chart_labels[new_label] = count  # add combined count under new_label
-
-            # only keep those labels that comply with the min_slice_size requirement
-            self.chart_labels = {label: count for label, count in self.chart_labels.items()
-                                 if count >= self['min_slice_size']}
-
-            total_labeled = sum(list(self.chart_labels.values()))
-            other_count = defects['totalNumberOfRecords'] - total_labeled
-            if other_count:
-                self.chart_labels['Other'] = other_count
+            self._prepare_labels_and_values(combined_labels, defects['totalNumberOfRecords'])
             top_node += self.build_pie_chart(env)
 
         report_info(env, "done")
@@ -153,7 +140,7 @@ class CoverityDefect(ItemElement):
             docname (str): Name of the document in which the error occurred.
 
         Returns:
-            (dict) Dictionary with the actual labels as keys and a list of associated attribute values as values.
+            (dict) Dictionary with the label_set arguments as keys and a list of associated attribute values as values.
         """
         self.chart_labels = {}
         combined_labels = {}
@@ -216,6 +203,29 @@ class CoverityDefect(ItemElement):
                 # generic check which, if it is missing, prints empty cell anyway
                 row += self.cov_attribute_value_to_col(defect, item_col)
         return row
+
+    def _prepare_labels_and_values(self, combined_labels, total_count):
+        """ Prepares the labels and values to be used to build the pie chart.
+
+        Args:
+            combined_labels (dict): Dictionary with the label_set arguments as keys and a list of associated attribute
+                values as values.
+            total_count (int): Total amount of filtered defects.
+        """
+        for new_label, old_labels in combined_labels.items():
+            count = 0
+            for old_label in old_labels:
+                count += self.chart_labels.pop(old_label)  # remove old_label and store its count
+            self.chart_labels[new_label] = count  # add combined count under new_label
+
+        # only keep those labels that comply with the min_slice_size requirement
+        self.chart_labels = {label: count for label, count in self.chart_labels.items()
+                             if count >= self['min_slice_size']}
+
+        total_labeled = sum(list(self.chart_labels.values()))
+        other_count = total_count - total_labeled
+        if other_count:
+            self.chart_labels['Other'] = other_count
 
     def build_pie_chart(self, env):
         """
