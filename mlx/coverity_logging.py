@@ -1,3 +1,4 @@
+""" Module to provide functions that accommodate logging while supporting different Sphinx versions. """
 from sphinx import __version__ as sphinx_version
 if sphinx_version >= '1.6.0':
     from sphinx.util.logging import getLogger
