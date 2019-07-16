@@ -1,3 +1,4 @@
+""" Module for the CoverityDefect class along with its directive. """
 from hashlib import sha256
 from os import environ, mkdir, path
 
@@ -25,7 +26,7 @@ def pct_wrapper(sizes):
 
 
 class CoverityDefect(ItemElement):
-    '''Coverity defect'''
+    """Coverity defect"""
 
     stream = ''
     coverity_service = None
@@ -257,8 +258,7 @@ class CoverityDefect(ItemElement):
 
 
 class CoverityDefectListDirective(Directive):
-    """
-    Directive to generate a list of defects.
+    """ Directive to generate a list of defects.
 
     Syntax::
 

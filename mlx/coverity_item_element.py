@@ -1,3 +1,4 @@
+""" Module for the Coverity node base class. """
 from re import findall
 
 from docutils import nodes
@@ -8,7 +9,7 @@ from mlx.coverity_logging import report_warning
 
 
 class ItemElement(nodes.General, nodes.Element):
-    """ Base class for coverity nodes. """
+    """ Base class for Coverity nodes. """
 
     @staticmethod
     def create_ref_node(contents, url):
@@ -101,6 +102,10 @@ class ItemElement(nodes.General, nodes.Element):
         Args:
             defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
             col_name (str): Column name according to suds.
+
+        Returns:
+            (nodes.paragraph) Paragraph node filled with column contents for the given defect. Item IDs and hyperlinks
+                have been made interactive.
         """
         text = str(self.cov_attribute_value_to_col(defect, col_name).children[0].children[0])
         cid = str(defect['cid'])
