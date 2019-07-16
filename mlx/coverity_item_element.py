@@ -137,6 +137,7 @@ class ItemElement(nodes.General, nodes.Element):
         if remaining_text:
             link_to_item_ids(contents, text, *args)
 
+
 def link_to_item_ids(contents, text, cid, app, docname):
     """
     Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
