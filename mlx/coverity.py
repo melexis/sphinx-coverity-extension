@@ -12,7 +12,7 @@ import pkg_resources
 
 from mlx.coverity_logging import report_info, report_warning
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
-from mlx.directives.coverity_defect_list import CoverityDefect, CoverityDefectListDirective
+from mlx.coverity_directives.coverity_defect_list import CoverityDefect, CoverityDefectListDirective
 
 try:
     # For Python 3.0 and later
