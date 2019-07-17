@@ -8,24 +8,11 @@ See README.rst for more details.
 '''
 from __future__ import print_function
 
-from hashlib import sha256
-from os import environ, mkdir, path
-from re import findall
-
 import pkg_resources
-from docutils import nodes
-from docutils.parsers.rst import Directive, directives
-from sphinx import __version__ as sphinx_version
-from sphinx.environment import NoUri
-if sphinx_version >= '1.6.0':
-    from sphinx.util.logging import getLogger
-from urlextract import URLExtract
 
+from mlx.coverity_logging import report_info, report_warning
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
-import matplotlib as mpl
-if not environ.get('DISPLAY'):
-    mpl.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E731
+from mlx.directives.coverity_defect_list import CoverityDefect, CoverityDefectListDirective
 
 try:
     # For Python 3.0 and later
@@ -35,166 +22,13 @@ except ImportError:
     from urllib2 import URLError, HTTPError
 
 
-def report_warning(env, msg, docname, lineno=None):
-    '''Convenience function for logging a warning
-
-    Args:
-        env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
-        msg (str): Message of the warning
-        docname (str): Name of the document in which the error occurred
-        lineno (str): Line number in the document on which the error occurred
-    '''
-    if sphinx_version >= '1.6.0':
-        logger = getLogger(__name__)
-        if lineno is not None:
-            logger.warning(msg, location=(docname, lineno))
-        else:
-            logger.warning(msg, location=docname)
-    else:
-        env.warn(docname, msg, lineno=lineno)
-
-
-def report_info(env, msg, nonl=False):
-    '''Convenience function for information printing
-
-    Args:
-        env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
-        msg (str): Message of the warning
-        nonl (bool): True when no new line at end
-    '''
-    if sphinx_version >= '1.6.0':
-        logger = getLogger(__name__)
-        logger.info(msg, nonl=nonl)
-    else:
-        env.info(msg, nonl=nonl)
-
-
-def pct_wrapper(sizes):
-    """ Helper function for matplotlib which returns the percentage and the absolute size of the slice.
-
-    Args:
-        sizes (list): List containing the amount of elements per slice.
-    """
-    def make_pct(pct):
-        absolute = int(round(pct / 100 * sum(sizes)))
-        return "{:.0f}%\n({:d})".format(pct, absolute)
-    return make_pct
-
-
-# -----------------------------------------------------------------------------
-# Declare new node types (based on others):
-class CoverityDefect(nodes.General, nodes.Element):
-    '''Coverity defect'''
-    filters = {
-        'checker': None,
-        'impact': None,
-        'kind': None,
-        'classification': None,
-        'action': None,
-        'component': None,
-        'cwe': None,
-        'cid': None,
-    }
-
-
-# -----------------------------------------------------------------------------
-# Directives
-class CoverityDefectListDirective(Directive):
-    """
-    Directive to generate a list of defects.
-
-    Syntax::
-
-      .. coverity-list:: title
-         :col: list of columns to be displayed
-         :widths: list of predefined column widths
-         :chart: display chart that labels each allowed <<attribute>> value
-         :checker: filter for only these checkers
-         :impact: filter for only these impacts
-         :kind: filter for only these kinds
-         :classification: filter for only these classifications
-         :action: filter for only these actions
-         :component: filter for only these components
-         :cwe: filter for only these CWE rating
-         :cid: filter only these cid
-    """
-    # Optional argument: title (whitespace allowed)
-    optional_arguments = 1
-    final_argument_whitespace = True
-    # Options
-    option_spec = {'class': directives.class_option,
-                   'col': directives.unchanged,
-                   'widths': directives.value_or(('auto', 'grid'),
-                                                 directives.positive_int_list),
-                   'chart': directives.unchanged,
-                   'checker': directives.unchanged,
-                   'impact': directives.unchanged,
-                   'kind': directives.unchanged,
-                   'classification': directives.unchanged,
-                   'action': directives.unchanged,
-                   'component': directives.unchanged,
-                   'cwe': directives.unchanged,
-                   'cid': directives.unchanged,
-                   }
-    # Content disallowed
-    has_content = False
-
-    def run(self):
-        """
-        Processes the contents of the directive
-        """
-        item_list_node = CoverityDefect('')
-
-        # Process title (optional argument)
-        item_list_node['title'] = self.arguments[0] if self.arguments else 'Coverity report'
-
-        # Process ``col`` option
-        if 'col' in self.options:
-            item_list_node['col'] = self.options['col'].split(',')
-        elif 'chart' not in self.options:
-            item_list_node['col'] = 'CID,Classification,Action,Comment'.split(',')  # use default colums
-        else:
-            item_list_node['col'] = []  # don't display a table if the ``chart`` option is present without ``col``
-
-        # Process ``widths`` option
-        item_list_node['widths'] = self.options['widths'] if 'widths' in self.options else ''
-
-        # Process ``chart`` option
-        if 'chart' in self.options:
-            self._process_chart_option(item_list_node)
-        else:
-            item_list_node['chart'] = ''
-
-        # Process the optional filters
-        item_list_node.filters = {k: (self.options[k] if k in self.options else v)
-                                  for (k, v) in item_list_node.filters.items()}
-        return [item_list_node]
-
-    def _process_chart_option(self, node):
-        """ Processes the `chart` option.
-
-        Args:
-            node (CoverityDefect): CoverityDefect object used to store this directive's options and their parameters.
-        """
-        if ':' in self.options['chart']:
-            node['chart_attribute'] = self.options['chart'].split(':')[0].capitalize()
-        else:
-            node['chart_attribute'] = 'Classification'
-
-        parameters = self.options['chart'].split(':')[-1]  # str
-        node['chart'] = parameters.split(',')  # list
-        # try to convert parameters to int, in case a min slice size is defined instead of filter options
-        try:
-            node['min_slice_size'] = int(node['chart'][0])
-            node['chart'] = []  # only when a min slice size is defined
-        except ValueError:
-            node['min_slice_size'] = 1
-
-
 class SphinxCoverityConnector():
     """
     Class containing functions and variables for Sphinx to access in specific stages of the documentation build.
     """
+    project_name = ''
+    coverity_service = None
+
     def __init__(self):
         """
         Initialize the object by setting error variable to false
@@ -202,28 +36,11 @@ class SphinxCoverityConnector():
         self.coverity_login_error = False
         self.coverity_login_error_msg = ''
         self.stream = ''
-        self.column_map = {
-            'CID': 'cid',
-            'CATEGORY': 'displayCategory',
-            'IMPACT': 'displayImpact',
-            'ISSUE': 'displayIssueKind',
-            'TYPE': 'displayType',
-            'CHECKER': 'checkerName',
-            'COMPONENT': 'componentName',
-        }
-        self.defect_states_map = {
-            'COMMENT': 'Comment',
-            'REFERENCE': 'Ext. Reference',
-            'CLASSIFICATION': 'Classification',
-            'ACTION': 'Action',
-            'STATUS': 'DefectStatus',
-        }
 
     def initialize_environment(self, app):
         """
         Perform initializations needed before the build process starts.
         """
-
         # LaTeX-support: since we generate empty tags, we need to relax the verbosity of that error
         if 'preamble' not in app.config.latex_elements:
             app.config.latex_elements['preamble'] = ''
@@ -259,7 +76,7 @@ class SphinxCoverityConnector():
             self.coverity_service = CoverityDefectService(coverity_conf_service)
             self.coverity_service.login(app.config.coverity_credentials['username'],
                                         app.config.coverity_credentials['password'])
-        except (URLError, HTTPError, Exception, ValueError) as error_info:
+        except (URLError, HTTPError, Exception, ValueError) as error_info:  # pylint: disable=broad-except
             self.coverity_login_error_msg = error_info
             report_info(env, 'failed with: %s' % error_info)
             self.coverity_login_error = True
@@ -277,7 +94,7 @@ class SphinxCoverityConnector():
         if self.coverity_login_error:
             # Create failed topnode
             for node in doctree.traverse(CoverityDefect):
-                top_node = create_top_node("Failed to connect to Coverity Server")
+                top_node = node.create_top_node("Failed to connect to Coverity Server")
                 node.replace_self(top_node)
             report_warning(env, 'Connection failed: %s' % self.coverity_login_error_msg, fromdocname)
             return
@@ -286,118 +103,16 @@ class SphinxCoverityConnector():
         # Create table with related items, printing their target references.
         # Only source and target items matching respective regexp shall be included
         for node in doctree.traverse(CoverityDefect):
-            top_node = create_top_node(node['title'])
-
-            # Initialize table and dictionaries to store counters and labels for pie chart
-            if node['col']:
-                table, tbody = self.initialize_table_from_node(node)
-            if isinstance(node['chart'], list):
-                chart_labels, combined_labels = self.initialize_labels(node['chart'], env, fromdocname)
-
             # Get items from server
             try:
                 defects = self.get_filtered_defects(node, env)
-            except (URLError, AttributeError, Exception) as err:
+            except (URLError, AttributeError, Exception) as err:  # pylint: disable=broad-except
                 report_warning(env, 'failed with %s' % err, fromdocname)
                 continue
-
-            # Fill table and increase counters for pie chart
-            try:
-                for defect in defects['mergedDefects']:
-                    if node['col']:
-                        tbody += self.get_filled_row(defect, node['col'], app, fromdocname)
-
-                    if isinstance(node['chart'], list):
-                        self.increase_attribute_value_count(node, defect, chart_labels)
-            except AttributeError as err:
-                report_info(env, 'No issues matching your query or empty stream. %s' % err)
-                top_node += nodes.paragraph(text='No issues matching your query or empty stream')
-                # don't generate empty pie chart image
-                node.replace_self(top_node)
-                return
-
-            if node['col']:
-                top_node += table
-
-            if isinstance(node['chart'], list):
-                for new_label, old_labels in combined_labels.items():
-                    count = 0
-                    for old_label in old_labels:
-                        count += chart_labels.pop(old_label)  # remove old_label and store its count
-                    chart_labels[new_label] = count  # add combined count under new_label
-
-                # only keep those labels that comply with the min_slice_size requirement
-                chart_labels = {label: count for label, count in chart_labels.items()
-                                if count >= node['min_slice_size']}
-
-                total_labeled = sum(list(chart_labels.values()))
-                other_count = defects['totalNumberOfRecords'] - total_labeled
-                if other_count:
-                    chart_labels['Other'] = other_count
-
-                image_node = self.build_pie_chart(chart_labels, env)
-                top_node += image_node
-
-            report_info(env, "done")
-            node.replace_self(top_node)
+            node.perform_replacement(defects, self, app, fromdocname)
 
     # -----------------------------------------------------------------------------
     # Helper functions of event handlers
-    @staticmethod
-    def initialize_table_from_node(node):
-        """ Initializes a table node using the contents of a CoverityDefect node.
-
-        Args:
-            node (CoverityDefect): A CoverityDefect node object.
-
-        Returns:
-            (nodes.table, nodes.tbody) A table node and its body initialized with column widths and a table header.
-        """
-        table = nodes.table()
-        table['classes'].append('longtable')
-        if node['widths'] == 'auto':
-            table['classes'].append('colwidths-auto')
-        elif node['widths']:  # "grid" or list of integers
-            table['classes'].append('colwidths-given')
-        tgroup = nodes.tgroup()
-
-        for _ in node['col']:
-            tgroup += [nodes.colspec(colwidth=5)]
-        tgroup += nodes.thead('', create_row(node['col']))
-
-        if isinstance(node['widths'], list):
-            colspecs = [child for child in tgroup.children if child.tagname == 'colspec']
-            for colspec, col_width in zip(colspecs, node['widths']):
-                colspec['colwidth'] = col_width
-
-        tbody = nodes.tbody()
-        tgroup += tbody
-        table += tgroup
-        return table, tbody
-
-    @staticmethod
-    def initialize_labels(labels, env, docname):
-        """
-        Initialize dictionaries related to pie chart labels. The first is used for storing counters, and the second is
-        used for storing labels that consist of multiple attribute values that have been concatenated by a + character.
-
-        Args:
-            labels (list): List of labels (str) for the pie chart.
-            env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
-            docname (str): Name of the document in which the error occurred.
-        """
-        chart_labels = {}
-        combined_labels = {}
-        for label in labels:
-            attr_values = label.split('+')
-            for attr_val in attr_values:
-                if attr_val in chart_labels.keys():
-                    report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, docname)
-                chart_labels[attr_val] = 0
-            if len(attr_values) > 1:
-                combined_labels[label] = attr_values
-        return chart_labels, combined_labels
-
     def get_filtered_defects(self, node, env):
         """ Fetch defects from suds using filters stored in the given CoverityDefect object.
 
@@ -414,272 +129,10 @@ class SphinxCoverityConnector():
         report_info(env, "building defects table and/or chart... ", True)
         return defects
 
-    def get_filled_row(self, defect, columns, *args):
-        """ Goes through each column and decides if it is there or prints empty cell.
-
-        Args:
-            defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
-            columns (list): List of column names (str).
-
-        Returns:
-            (nodes.row) Filled row node.
-        """
-        row = nodes.row()
-        for item_col in columns:
-            item_col = item_col.upper()
-            if item_col == 'CID':
-                # CID is default and even if it is in disregard
-                row += create_cell(str(defect['cid']),
-                                   url=self.coverity_service.get_defect_url(self.stream, str(defect['cid'])))
-            elif item_col == 'LOCATION':
-                info = self.coverity_service.get_defect(str(defect['cid']),
-                                                        self.stream)
-                linenum = info[-1]['defectInstances'][-1]['events'][-1]['lineNumber']
-                row += create_cell("{}#L{}".format(defect['filePathname'], linenum))
-            elif item_col in self.column_map.keys():
-                row += create_cell(defect[self.column_map[item_col]])
-            elif item_col in ('COMMENT', 'REFERENCE'):
-                row += nodes.entry('', create_paragraph_with_links(defect, self.defect_states_map[item_col], *args))
-            elif item_col in self.defect_states_map.keys():
-                row += cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
-            else:
-                # generic check which, if it is missing, prints empty cell anyway
-                row += cov_attribute_value_to_col(defect, item_col)
-        return row
-
-    def increase_attribute_value_count(self, node, defect, chart_labels):
-        """ Increases the counter for a chart attribute value belonging to the defect.
-
-        Args:
-            node (CoverityDefect): CoverityDefect object.
-            defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
-        """
-        if node['chart_attribute'].upper() in self.column_map.keys():
-            attribute_value = str(defect[self.column_map[node['chart_attribute'].upper()]])
-        else:
-            col = cov_attribute_value_to_col(defect, node['chart_attribute'])
-            attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
-
-        if attribute_value in chart_labels.keys():
-            chart_labels[attribute_value] += 1
-        elif not node['chart']:  # remove those that don't comply with min_slice_length
-            chart_labels[attribute_value] = 1
-
-    @staticmethod
-    def build_pie_chart(chart_labels, env):
-        """
-        Builds and returns image node containing the pie chart image.
-
-        Args:
-            chart_labels (dict): Dictionary containing the slice labels as keys and slice sizes (int) as values.
-            env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
-
-        Returns:
-            (nodes.image) Image node containing the pie chart image.
-        """
-        labels = list(chart_labels.keys())
-        sizes = list(chart_labels.values())
-        fig, axes = plt.subplots()
-        fig.set_size_inches(7, 4)
-        axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
-        axes.axis('equal')
-        folder_name = path.join(env.app.srcdir, '_images')
-        if not path.exists(folder_name):
-            mkdir(folder_name)
-        hash_string = ''
-        for pie_slice in axes.__dict__['texts']:
-            hash_string += str(pie_slice)
-        hash_value = sha256(hash_string.encode()).hexdigest()  # create hash value based on chart parameters
-        rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
-        if rel_file_path not in env.images.keys():
-            fig.savefig(path.join(env.app.srcdir, rel_file_path), format='png')
-            # store file name in build env
-            env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]
-
-        image_node = nodes.image()
-        image_node['uri'] = rel_file_path
-        image_node['candidates'] = '*'  # look at uri value for source path, relative to the srcdir folder
-        return image_node
-
-
-def create_ref_node(contents, url):
-    """ Creates reference node inside a paragraph
-
-    Args:
-        contents (str): Text to be displayed.
-        url (str): URL to be used for the reference.
-
-    Returns:
-        (nodes.paragraph) Paragraph node containing a reference based on the given url.
-    """
-    p_node = nodes.paragraph()
-    itemlink = nodes.reference()
-    itemlink['refuri'] = url
-    itemlink.append(nodes.Text(contents))
-    targetid = nodes.make_id(contents)
-    target = nodes.target('', '', ids=[targetid])
-    p_node += target
-    p_node += itemlink
-    return p_node
-
-
-def create_top_node(title):
-    """ Creates a container node containing an admonition with the given title inside.
-
-    Args:
-        title (str): Title text to be displayed.
-
-    Returns:
-        (nodes.container) Container node with the title laid out.
-    """
-    top_node = nodes.container()
-    admon_node = nodes.admonition()
-    title_node = nodes.title()
-    title_node += nodes.Text(title)
-    admon_node += title_node
-    top_node += admon_node
-    return top_node
-
-
-def create_cell(contents, url=None):
-    """
-    Creates a table entry node with the given contents inside. If a string is given, it gets used inside a paragraph
-    node, either as a text node or a reference node in case a URL is given.
-
-    Args:
-        contents (str|nodes.Node): Title text to be displayed.
-
-    Returns:
-        (nodes.entry) Entry node containing a paragraph with the given contents.
-    """
-    if isinstance(contents, str):
-        if url is not None:
-            contents = create_ref_node(contents, url)
-        else:
-            contents = nodes.paragraph(text=contents)
-
-    return nodes.entry('', contents)
-
-
-def create_row(cells):
-    """ Creates a table row node containing the given strings inside entry nodes.
-
-    Args:
-        cells (list): List of strings to each be divided into cells.
-
-    Returns:
-        (nodes.row) Row node containing all given entry nodes.
-    """
-    return nodes.row('', *[create_cell(c) for c in cells])
-
-
-def cov_attribute_value_to_col(defect, name):
-    """
-    Search defects array and return value for name
-    """
-    col = create_cell(" ")
-
-    for attribute in defect['defectStateAttributeValues']:
-        if attribute['attributeDefinitionId'][0] == name:
-            try:
-                col = create_cell(attribute['attributeValueId'][0])
-            except (AttributeError, IndexError):
-                col = create_cell(" ")
-    return col
-
-
-def create_paragraph_with_links(defect, col_name, *args):
-    """
-    Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked to
-    their definition.
-
-    Args:
-        defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
-        col_name (str): Column name according to suds.
-    """
-    text = str(cov_attribute_value_to_col(defect, col_name).children[0].children[0])
-    cid = str(defect['cid'])
-    contents = nodes.paragraph()
-    remaining_text = text
-    link_to_urls(contents, remaining_text, cid, *args)
-    return contents
-
-
-def link_to_urls(contents, text, *args):
-    """
-    Makes URLs interactive and passes other text to link_to_item_ids, which treats the item IDs.
-    """
-    remaining_text = text
-    extractor = URLExtract()
-    urls = extractor.find_urls(remaining_text)
-    for url in urls:
-        text_before = remaining_text.split(url)[0]
-        if text_before:
-            link_to_item_ids(contents, text_before, *args)
-
-        ref_node = nodes.reference()
-        ref_node['refuri'] = url
-        ref_node.append(nodes.Text(url))
-        contents += ref_node
-
-        remaining_text = remaining_text.replace(text_before + url, '', 1)
-
-    if remaining_text:
-        link_to_item_ids(contents, text, *args)
-
-
-def link_to_item_ids(contents, text, cid, app, docname):
-    """
-    Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
-    """
-    remaining_text = text
-    item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, remaining_text)
-    for item in item_matches:
-        text_before = remaining_text.split(item)[0]
-        if text_before:
-            contents.append(nodes.Text(text_before))
-        ref_node = make_internal_item_ref(app, docname, item, cid)
-        if ref_node is None:  # no link could be made
-            ref_node = nodes.Text(item)
-        contents.append(ref_node)
-
-        remaining_text = remaining_text.replace(text_before + item, '', 1)
-
-    if remaining_text:
-        contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
-
-
-def make_internal_item_ref(app, fromdocname, item, cid):
-    """
-    Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
-    collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
-    """
-    env = app.builder.env
-
-    if not hasattr(env, 'traceability_collection'):
-        return None
-
-    item_info = env.traceability_collection.get_item(item)
-    if not item_info:
-        report_warning(env,
-                       "CID %s: Could not find item ID '%s' in traceability collection." % (cid, item),
-                       fromdocname)
-        return None
-
-    ref_node = nodes.reference('', '')
-    ref_node['refdocname'] = item_info.docname
-    try:
-        ref_node['refuri'] = app.builder.get_relative_uri(fromdocname, item_info.docname) + '#' + item
-    except NoUri:
-        return None
-    ref_node.append(nodes.Text(item))
-    return ref_node
-
 
 # Extension setup
 def setup(app):
     '''Extension setup'''
-
     # Create default configuration. Can be customized in conf.py
     app.add_config_value('coverity_credentials',
                          {
@@ -691,6 +144,7 @@ def setup(app):
                              'stream': 'some_coverty_stream',
                          },
                          'env')
+
     app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', r"([A-Z_]+-[A-Z0-9_]+)", 'env')
 
     app.add_node(CoverityDefect)
