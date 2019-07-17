@@ -9,7 +9,6 @@ include README.rst
 include LICENSE
 include NOTICE
 include tox.ini
-recursive-include mlx *.py
 recursive-include example *.bat
 recursive-include example *.py
 recursive-include example *.rst
