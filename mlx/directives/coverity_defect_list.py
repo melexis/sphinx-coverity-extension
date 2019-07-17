@@ -30,6 +30,8 @@ class CoverityDefect(ItemElement):
 
     stream = ''
     coverity_service = None
+    tbody = None
+    chart_labels = {}
     filters = {
         'checker': None,
         'impact': None,
@@ -74,18 +76,13 @@ class CoverityDefect(ItemElement):
 
         # Initialize table and dictionaries to store counters and labels for pie chart
         if self['col']:
-            table, tbody = self.initialize_table()
+            table = self.initialize_table()
         if isinstance(self['chart'], list):
-            chart_labels, combined_labels = self.initialize_labels(self['chart'], env, fromdocname)
+            combined_labels = self.initialize_labels(self['chart'], env, fromdocname)
 
         # Fill table and increase counters for pie chart
         try:
-            for defect in defects['mergedDefects']:
-                if self['col']:
-                    tbody += self.get_filled_row(defect, self['col'], app, fromdocname)
-
-                if isinstance(self['chart'], list):
-                    self.increase_attribute_value_count(defect, chart_labels)
+            self.fill_table_and_count_attributes(defects['mergedDefects'], app, fromdocname)
         except AttributeError as err:
             report_info(env, 'No issues matching your query or empty stream. %s' % err)
             top_node += nodes.paragraph(text='No issues matching your query or empty stream')
@@ -97,22 +94,8 @@ class CoverityDefect(ItemElement):
             top_node += table
 
         if isinstance(self['chart'], list):
-            for new_label, old_labels in combined_labels.items():
-                count = 0
-                for old_label in old_labels:
-                    count += chart_labels.pop(old_label)  # remove old_label and store its count
-                chart_labels[new_label] = count  # add combined count under new_label
-
-            # only keep those labels that comply with the min_slice_size requirement
-            chart_labels = {label: count for label, count in chart_labels.items()
-                            if count >= self['min_slice_size']}
-
-            total_labeled = sum(list(chart_labels.values()))
-            other_count = defects['totalNumberOfRecords'] - total_labeled
-            if other_count:
-                chart_labels['Other'] = other_count
-
-            top_node += self.build_pie_chart(chart_labels, env)
+            self._prepare_labels_and_values(combined_labels, defects['totalNumberOfRecords'])
+            top_node += self.build_pie_chart(env)
 
         report_info(env, "done")
         self.replace_self(top_node)
@@ -121,7 +104,7 @@ class CoverityDefect(ItemElement):
         """ Initializes a table node.
 
         Returns:
-            (nodes.table, nodes.tbody) A table node and its body initialized with column widths and a table header.
+            (nodes.table) A table node initialized with column widths and a table header.
         """
         table = nodes.table()
         table['classes'].append('longtable')
@@ -140,33 +123,51 @@ class CoverityDefect(ItemElement):
             for colspec, col_width in zip(colspecs, self['widths']):
                 colspec['colwidth'] = col_width
 
-        tbody = nodes.tbody()
-        tgroup += tbody
+        self.tbody = nodes.tbody()
+        tgroup += self.tbody
         table += tgroup
-        return table, tbody
+        return table
 
-    @staticmethod
-    def initialize_labels(labels, env, docname):
+    def initialize_labels(self, labels, env, docname):
         """
-        Initialize dictionaries related to pie chart labels. The first is used for storing counters, and the second is
-        used for storing labels that consist of multiple attribute values that have been concatenated by a + character.
+        Initialize dictionaries related to pie chart labels. The chart_labels class attribute is used for storing
+        counters for each specified attribute value, and the returned dictionary is used for storing labels that consist
+        of multiple attribute values that have been concatenated by a + character.
 
         Args:
             labels (list): List of labels (str) for the pie chart.
             env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
             docname (str): Name of the document in which the error occurred.
+
+        Returns:
+            (dict) Dictionary with the label_set arguments as keys and a list of associated attribute values as values.
         """
-        chart_labels = {}
+        self.chart_labels = {}
         combined_labels = {}
         for label in labels:
             attr_values = label.split('+')
             for attr_val in attr_values:
-                if attr_val in chart_labels.keys():
+                if attr_val in self.chart_labels.keys():
                     report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, docname)
-                chart_labels[attr_val] = 0
+                self.chart_labels[attr_val] = 0
             if len(attr_values) > 1:
                 combined_labels[label] = attr_values
-        return chart_labels, combined_labels
+        return combined_labels
+
+    def fill_table_and_count_attributes(self, defects, *args):
+        """
+        Fills the table body of the col option is in use, and counts the amount of each attribute value of the chart
+        option is in use.
+
+        Args:
+            defects (list): List of defect objects (mergedDefectDataObj).
+        """
+        for defect in defects:
+            if self['col']:
+                self.tbody += self.get_filled_row(defect, self['col'], *args)
+
+            if isinstance(self['chart'], list):
+                self.increase_attribute_value_count(defect)
 
     def get_filled_row(self, defect, columns, *args):
         """ Goes through each column and decides if it is there or prints empty cell.
@@ -203,20 +204,41 @@ class CoverityDefect(ItemElement):
                 row += self.cov_attribute_value_to_col(defect, item_col)
         return row
 
-    @staticmethod
-    def build_pie_chart(chart_labels, env):
+    def _prepare_labels_and_values(self, combined_labels, total_count):
+        """ Prepares the labels and values to be used to build the pie chart.
+
+        Args:
+            combined_labels (dict): Dictionary with the label_set arguments as keys and a list of associated attribute
+                values as values.
+            total_count (int): Total amount of filtered defects.
+        """
+        for new_label, old_labels in combined_labels.items():
+            count = 0
+            for old_label in old_labels:
+                count += self.chart_labels.pop(old_label)  # remove old_label and store its count
+            self.chart_labels[new_label] = count  # add combined count under new_label
+
+        # only keep those labels that comply with the min_slice_size requirement
+        self.chart_labels = {label: count for label, count in self.chart_labels.items()
+                             if count >= self['min_slice_size']}
+
+        total_labeled = sum(list(self.chart_labels.values()))
+        other_count = total_count - total_labeled
+        if other_count:
+            self.chart_labels['Other'] = other_count
+
+    def build_pie_chart(self, env):
         """
         Builds and returns image node containing the pie chart image.
 
         Args:
-            chart_labels (dict): Dictionary containing the slice labels as keys and slice sizes (int) as values.
             env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
 
         Returns:
             (nodes.image) Image node containing the pie chart image.
         """
-        labels = list(chart_labels.keys())
-        sizes = list(chart_labels.values())
+        labels = list(self.chart_labels.keys())
+        sizes = list(self.chart_labels.values())
         fig, axes = plt.subplots()
         fig.set_size_inches(7, 4)
         axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
@@ -239,7 +261,7 @@ class CoverityDefect(ItemElement):
         image_node['candidates'] = '*'  # look at uri value for source path, relative to the srcdir folder
         return image_node
 
-    def increase_attribute_value_count(self, defect, chart_labels):
+    def increase_attribute_value_count(self, defect):
         """ Increases the counter for a chart attribute value belonging to the defect.
 
         Args:
@@ -251,10 +273,10 @@ class CoverityDefect(ItemElement):
             col = self.cov_attribute_value_to_col(defect, self['chart_attribute'])
             attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
 
-        if attribute_value in chart_labels.keys():
-            chart_labels[attribute_value] += 1
+        if attribute_value in self.chart_labels.keys():
+            self.chart_labels[attribute_value] += 1
         elif not self['chart']:  # remove those that don't comply with min_slice_length
-            chart_labels[attribute_value] = 1
+            self.chart_labels[attribute_value] = 1
 
 
 class CoverityDefectListDirective(Directive):
