@@ -51,6 +51,8 @@ plugins:
       threshold: "C"
   sonar-python:
     enabled: true
+    exclude_patterns:
+    - example/conf.py
     config:
       tests_patterns:
         - tests/**
