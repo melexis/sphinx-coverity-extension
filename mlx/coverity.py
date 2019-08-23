@@ -58,7 +58,7 @@ class SphinxCoverityConnector():
         try:
             if not app.config.coverity_credentials['username']:
                 if version_info.major < 3:
-                    get_input = raw_input  # pylint: disable=undefined-variable
+                    get_input = raw_input  # noqa, pylint: disable=undefined-variable
                 else:
                     get_input = input
                 app.config.coverity_credentials['username'] = get_input("Coverity username: ")
