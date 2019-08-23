@@ -8,6 +8,7 @@ See README.rst for more details.
 '''
 from __future__ import print_function
 from getpass import getpass
+from sys import version_info
 
 import pkg_resources
 
@@ -56,7 +57,11 @@ class SphinxCoverityConnector():
         # Login to Coverity and obtain stream information
         try:
             if not app.config.coverity_credentials['username']:
-                app.config.coverity_credentials['username'] = input("Coverity username: ")
+                if version_info.major < 3:
+                    get_input = raw_input  # pylint: disable=undefined-variable
+                else:
+                    get_input = input
+                app.config.coverity_credentials['username'] = get_input("Coverity username: ")
             if not app.config.coverity_credentials['password']:
                 app.config.coverity_credentials['password'] = getpass("Coverity password: ")
             report_info(env, 'Login to Coverity server... ', True)
