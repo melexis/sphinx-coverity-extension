@@ -7,6 +7,7 @@ Sphinx extension for restructured text that adds Coverity reporting to documenta
 See README.rst for more details.
 '''
 from __future__ import print_function
+from getpass import getpass
 
 import pkg_resources
 
@@ -54,6 +55,10 @@ class SphinxCoverityConnector():
 
         # Login to Coverity and obtain stream information
         try:
+            if not app.config.coverity_credentials['username']:
+                app.config.coverity_credentials['username'] = input("Coverity username: ")
+            if not app.config.coverity_credentials['password']:
+                app.config.coverity_credentials['password'] = getpass("Coverity password: ")
             report_info(env, 'Login to Coverity server... ', True)
             coverity_conf_service = CoverityConfigurationService(app.config.coverity_credentials['transport'],
                                                                  app.config.coverity_credentials['hostname'],
