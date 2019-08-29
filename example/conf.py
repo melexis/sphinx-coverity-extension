@@ -11,7 +11,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import sys
+import os
+
+from decouple import config
 import mlx.coverity
 import mlx.traceability
 
@@ -184,28 +187,25 @@ html_context = {
     'css_files': [
         '_static/theme_overrides.css',  # override wide tables in RTD theme
         ],
-     }
+    }
 
 # -- Options for LaTeX output --------------------------------------------------
-
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-'papersize': 'a4paper',
+    # The paper size ('letterpaper' or 'a4paper').
+    'papersize': 'a4paper',
 
-# The font size ('10pt', '11pt' or '12pt').
-'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-'preamble': 
-r'\setcounter{tocdepth}{3}'
-r'\usepackage{pdflscape}',
+    # Additional stuff for the LaTeX preamble.
+    'preamble': r'\setcounter{tocdepth}{3}\usepackage{pdflscape}',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Example.tex', u'Example Documentation',
-   u'Crt Mori', 'manual'),
+    ('index', 'Example.tex', u'Example Documentation',
+     u'Crt Mori', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -248,9 +248,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Example', u'Example Documentation',
-   u'Crt Mori', 'Example', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'Example', u'Example Documentation',
+     u'Crt Mori', 'Example', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -310,8 +310,6 @@ epub_copyright = u'2018, Crt Mori'
 intersphinx_mapping = {'http://docs.python.org/': None}
 
 # -- Options for coverity extension ----------------------------------------
-from decouple import config
-
 coverity_credentials = {
     'transport': 'http',
     'port': '8080',
