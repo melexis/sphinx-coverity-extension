@@ -1,6 +1,7 @@
 """ Module for the CoverityDefect class along with its directive. """
 from hashlib import sha256
-from os import environ, mkdir, path
+from os import environ, path
+from pathlib import Path
 
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
@@ -243,9 +244,7 @@ class CoverityDefect(ItemElement):
         fig.set_size_inches(7, 4)
         axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
         axes.axis('equal')
-        folder_name = path.join(env.app.srcdir, '_images')
-        if not path.exists(folder_name):
-            mkdir(folder_name)
+        Path(env.app.srcdir, '_images').mkdir(mode=0o777, parents=True, exist_ok=True)
         hash_string = ''
         for pie_slice in axes.__dict__['texts']:
             hash_string += str(pie_slice)
