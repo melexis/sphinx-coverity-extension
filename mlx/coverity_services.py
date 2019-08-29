@@ -70,7 +70,7 @@ def compare_strings(str_a, str_b):
     return False
 
 
-class Service(object):
+class Service:
     '''
     Basic endpoint Service
     '''
