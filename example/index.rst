@@ -10,8 +10,6 @@
 Welcome to Sphinx Coverity extension example's documentation!
 =============================================================
 
-Contents:
-
 .. toctree::
     :maxdepth: 1
     :glob:
@@ -23,7 +21,7 @@ Summary
 -------
 
 This document showcases the capabilities to generate structured data from Coverity
-in reStructured text for compilation with Sphinx. Below are few tables with various
+in reStructuredText for compilation with Sphinx. Below are few tables with various
 filters on classification.
 
 
