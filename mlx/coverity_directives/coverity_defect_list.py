@@ -147,7 +147,7 @@ class CoverityDefect(ItemElement):
         for label in labels:
             attr_values = label.split('+')
             for attr_val in attr_values:
-                if attr_val in self.chart_labels.keys():
+                if attr_val in self.chart_labels:
                     report_warning("Attribute value '%s' should be unique in chart option." % attr_val, docname)
                 self.chart_labels[attr_val] = 0
             if len(attr_values) > 1:
@@ -191,13 +191,13 @@ class CoverityDefect(ItemElement):
                                                         self.stream)
                 linenum = info[-1]['defectInstances'][-1]['events'][-1]['lineNumber']
                 row += self.create_cell("{}#L{}".format(defect['filePathname'], linenum))
-            elif item_col in self.column_map.keys():
+            elif item_col in self.column_map:
                 row += self.create_cell(defect[self.column_map[item_col]])
             elif item_col in ('COMMENT', 'REFERENCE'):
                 row += nodes.entry('', self.create_paragraph_with_links(defect,
                                                                         self.defect_states_map[item_col],
                                                                         *args))
-            elif item_col in self.defect_states_map.keys():
+            elif item_col in self.defect_states_map:
                 row += self.cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
             else:
                 # generic check which, if it is missing, prints empty cell anyway
@@ -237,7 +237,7 @@ class CoverityDefect(ItemElement):
         Returns:
             (nodes.image) Image node containing the pie chart image.
         """
-        labels = list(self.chart_labels.keys())
+        labels = list(self.chart_labels)
         sizes = list(self.chart_labels.values())
         fig, axes = plt.subplots()
         fig.set_size_inches(7, 4)
@@ -249,7 +249,7 @@ class CoverityDefect(ItemElement):
             hash_string += str(pie_slice)
         hash_value = sha256(hash_string.encode()).hexdigest()  # create hash value based on chart parameters
         rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
-        if rel_file_path not in env.images.keys():
+        if rel_file_path not in env.images:
             fig.savefig(path.join(env.app.srcdir, rel_file_path), format='png')
             # store file name in build env
             env.images[rel_file_path] = ['_images', path.split(rel_file_path)[-1]]
@@ -265,13 +265,13 @@ class CoverityDefect(ItemElement):
         Args:
             defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
         """
-        if self['chart_attribute'].upper() in self.column_map.keys():
+        if self['chart_attribute'].upper() in self.column_map:
             attribute_value = str(defect[self.column_map[self['chart_attribute'].upper()]])
         else:
             col = self.cov_attribute_value_to_col(defect, self['chart_attribute'])
             attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
 
-        if attribute_value in self.chart_labels.keys():
+        if attribute_value in self.chart_labels:
             self.chart_labels[attribute_value] += 1
         elif not self['chart']:  # remove those that don't comply with min_slice_length
             self.chart_labels[attribute_value] = 1
