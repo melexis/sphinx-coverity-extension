@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
-import sys
 
 project_url = 'https://github.com/melexis/sphinx-coverity-extension'
 
-requires = ['Sphinx>=0.6', 'docutils', 'setuptools_scm', 'matplotlib<=3.0.3', 'mlx.traceability']
-if sys.version_info[0] == 2:
-    requires += ['suds', 'urlextract-py2.7']
-else:
-    requires += ['suds-py3', 'urlextract']
+requires = ['Sphinx>=2.1', 'docutils', 'setuptools_scm', 'matplotlib', 'mlx.traceability', 'suds-py3',
+            'urlextract']
 
 
 setup(
@@ -32,9 +28,6 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',

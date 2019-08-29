@@ -169,9 +169,7 @@ def make_internal_item_ref(app, fromdocname, item, cid):
         return None
     item_info = env.traceability_collection.get_item(item)
     if not item_info:
-        report_warning(env,
-                       "CID %s: Could not find item ID '%s' in traceability collection." % (cid, item),
-                       fromdocname)
+        report_warning("CID %s: Could not find item ID '%s' in traceability collection." % (cid, item), fromdocname)
         return None
     ref_node = nodes.reference('', '')
     ref_node['refdocname'] = item_info.docname

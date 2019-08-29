@@ -16,20 +16,12 @@ jobs:
   include:
     # Stage Check
     - stage: check
-      python: '2.7'
-      env:
-        - TOXENV=py27-check
-    - stage: check
-      python: '3.7'
+      python: 3.7
       env:
         - TOXENV=py37-check
     # Stage test
     - stage: test
-      python: '2.7'
-      env:
-        - TOXENV=py27-test,py27-sphinx1.3,py27-sphinx1.4,py27-sphinx1.5,py27-sphinx1.6,py27-sphinxlatest
-    - stage: test
-      python: '3.7'
+      python: 3.7
       env:
         - TOXENV=py37-test,py37-sphinx1.3,py37-sphinx1.4,py37-sphinx1.5,py37-sphinx1.6,py37-sphinxlatest,py37-codecov
     # Stage deploy

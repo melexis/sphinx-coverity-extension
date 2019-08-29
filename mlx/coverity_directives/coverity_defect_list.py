@@ -79,13 +79,13 @@ class CoverityDefect(ItemElement):
         if self['col']:
             table = self.initialize_table()
         if isinstance(self['chart'], list):
-            combined_labels = self.initialize_labels(self['chart'], env, fromdocname)
+            combined_labels = self.initialize_labels(self['chart'], fromdocname)
 
         # Fill table and increase counters for pie chart
         try:
             self.fill_table_and_count_attributes(defects['mergedDefects'], app, fromdocname)
         except AttributeError as err:
-            report_info(env, 'No issues matching your query or empty stream. %s' % err)
+            report_info('No issues matching your query or empty stream. %s' % err)
             top_node += nodes.paragraph(text='No issues matching your query or empty stream')
             # don't generate empty pie chart image
             self.replace_self(top_node)
@@ -98,7 +98,7 @@ class CoverityDefect(ItemElement):
             self._prepare_labels_and_values(combined_labels, defects['totalNumberOfRecords'])
             top_node += self.build_pie_chart(env)
 
-        report_info(env, "done")
+        report_info("done")
         self.replace_self(top_node)
 
     def initialize_table(self):
@@ -129,7 +129,7 @@ class CoverityDefect(ItemElement):
         table += tgroup
         return table
 
-    def initialize_labels(self, labels, env, docname):
+    def initialize_labels(self, labels, docname):
         """
         Initialize dictionaries related to pie chart labels. The chart_labels class attribute is used for storing
         counters for each specified attribute value, and the returned dictionary is used for storing labels that consist
@@ -137,7 +137,6 @@ class CoverityDefect(ItemElement):
 
         Args:
             labels (list): List of labels (str) for the pie chart.
-            env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
             docname (str): Name of the document in which the error occurred.
 
         Returns:
@@ -149,7 +148,7 @@ class CoverityDefect(ItemElement):
             attr_values = label.split('+')
             for attr_val in attr_values:
                 if attr_val in self.chart_labels.keys():
-                    report_warning(env, "Attribute value '%s' should be unique in chart option." % attr_val, docname)
+                    report_warning("Attribute value '%s' should be unique in chart option." % attr_val, docname)
                 self.chart_labels[attr_val] = 0
             if len(attr_values) > 1:
                 combined_labels[label] = attr_values
