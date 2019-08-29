@@ -2,7 +2,7 @@
 from re import findall
 
 from docutils import nodes
-from sphinx.environment import NoUri
+from sphinx.errors import NoUri
 from urlextract import URLExtract
 
 from mlx.coverity_logging import report_warning
