@@ -23,7 +23,7 @@ jobs:
     - stage: test
       python: 3.7
       env:
-        - TOXENV=py37-test,py37-sphinx1.3,py37-sphinx1.4,py37-sphinx1.5,py37-sphinx1.6,py37-sphinxlatest,py37-codecov
+        - TOXENV=py37-test,py37-sphinx2.1,py37-sphinxlatest,py37-codecov
     # Stage deploy
     - stage: deploy
       python: 3.7
