@@ -6,22 +6,14 @@ Coverity plugin
 Sphinx extension for restructured text that adds Coverity reporting to documentation.
 See README.rst for more details.
 '''
-from __future__ import print_function
 from getpass import getpass
-from sys import version_info
+from urllib.error import URLError, HTTPError
 
 import pkg_resources
 
 from mlx.coverity_logging import report_info, report_warning
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
 from mlx.coverity_directives.coverity_defect_list import CoverityDefect, CoverityDefectListDirective
-
-try:
-    # For Python 3.0 and later
-    from urllib.error import URLError, HTTPError
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import URLError, HTTPError
 
 
 class SphinxCoverityConnector():
@@ -124,11 +116,7 @@ class SphinxCoverityConnector():
             config_credentials (dict): Dictionary to store the user's credentials.
         """
         if not config_credentials['username']:
-            if version_info.major < 3:
-                get_input = raw_input  # noqa, pylint: disable=undefined-variable
-            else:
-                get_input = input
-            config_credentials['username'] = get_input("Coverity username: ")
+            config_credentials['username'] = input("Coverity username: ")
         if not config_credentials['password']:
             config_credentials['password'] = getpass("Coverity password: ")
 
