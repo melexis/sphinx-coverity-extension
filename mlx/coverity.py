@@ -7,6 +7,8 @@ Sphinx extension for restructured text that adds Coverity reporting to documenta
 See README.rst for more details.
 '''
 from __future__ import print_function
+from getpass import getpass
+from sys import version_info
 
 import pkg_resources
 
@@ -54,6 +56,7 @@ class SphinxCoverityConnector():
 
         # Login to Coverity and obtain stream information
         try:
+            self.input_credentials(app.config.coverity_credentials)
             report_info(env, 'Login to Coverity server... ', True)
             coverity_conf_service = CoverityConfigurationService(app.config.coverity_credentials['transport'],
                                                                  app.config.coverity_credentials['hostname'],
@@ -77,7 +80,10 @@ class SphinxCoverityConnector():
             self.coverity_service.login(app.config.coverity_credentials['username'],
                                         app.config.coverity_credentials['password'])
         except (URLError, HTTPError, Exception, ValueError) as error_info:  # pylint: disable=broad-except
-            self.coverity_login_error_msg = error_info
+            if isinstance(error_info, EOFError):
+                self.coverity_login_error_msg = "Coverity credentials are not configured."
+            else:
+                self.coverity_login_error_msg = str(error_info)
             report_info(env, 'failed with: %s' % error_info)
             self.coverity_login_error = True
 
@@ -113,6 +119,22 @@ class SphinxCoverityConnector():
 
     # -----------------------------------------------------------------------------
     # Helper functions of event handlers
+    @staticmethod
+    def input_credentials(config_credentials):
+        """ Ask user to input username and/or password if they haven't been configured yet.
+
+        Args:
+            config_credentials (dict): Dictionary to store the user's credentials.
+        """
+        if not config_credentials['username']:
+            if version_info.major < 3:
+                get_input = raw_input  # noqa, pylint: disable=undefined-variable
+            else:
+                get_input = input
+            config_credentials['username'] = get_input("Coverity username: ")
+        if not config_credentials['password']:
+            config_credentials['password'] = getpass("Coverity password: ")
+
     def get_filtered_defects(self, node, env):
         """ Fetch defects from suds using filters stored in the given CoverityDefect object.
 

@@ -10,8 +10,6 @@
 Welcome to Sphinx Coverity extension example's documentation!
 =============================================================
 
-Contents:
-
 .. toctree::
     :maxdepth: 1
     :glob:
