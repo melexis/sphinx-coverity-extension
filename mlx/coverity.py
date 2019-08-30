@@ -6,22 +6,14 @@ Coverity plugin
 Sphinx extension for restructured text that adds Coverity reporting to documentation.
 See README.rst for more details.
 '''
-from __future__ import print_function
 from getpass import getpass
-from sys import version_info
+from urllib.error import URLError, HTTPError
 
 import pkg_resources
 
 from mlx.coverity_logging import report_info, report_warning
 from mlx.coverity_services import CoverityConfigurationService, CoverityDefectService
 from mlx.coverity_directives.coverity_defect_list import CoverityDefect, CoverityDefectListDirective
-
-try:
-    # For Python 3.0 and later
-    from urllib.error import URLError, HTTPError
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import URLError, HTTPError
 
 
 class SphinxCoverityConnector():
@@ -51,31 +43,30 @@ class SphinxCoverityConnector():
     \\let\@noitemerr\\relax
     \\makeatother'''
 
-        env = app.builder.env
         self.stream = app.config.coverity_credentials['stream']
 
         # Login to Coverity and obtain stream information
         try:
             self.input_credentials(app.config.coverity_credentials)
-            report_info(env, 'Login to Coverity server... ', True)
+            report_info('Login to Coverity server... ', True)
             coverity_conf_service = CoverityConfigurationService(app.config.coverity_credentials['transport'],
                                                                  app.config.coverity_credentials['hostname'],
                                                                  app.config.coverity_credentials['port'])
             coverity_conf_service.login(app.config.coverity_credentials['username'],
                                         app.config.coverity_credentials['password'])
-            report_info(env, 'done')
+            report_info('done')
 
-            report_info(env, 'obtaining stream information... ', True)
+            report_info('obtaining stream information... ', True)
             stream = coverity_conf_service.get_stream(self.stream)
             if stream is None:
                 raise ValueError('No such Coverity stream [%s] found on [%s]' %
                                  (self.stream, coverity_conf_service.get_service_url()))
-            report_info(env, 'done')
+            report_info('done')
 
             # Get Stream's project name
-            report_info(env, 'obtaining project name from stream... ', True)
+            report_info('obtaining project name from stream... ', True)
             self.project_name = coverity_conf_service.get_project_name(stream)
-            report_info(env, 'done')
+            report_info('done')
             self.coverity_service = CoverityDefectService(coverity_conf_service)
             self.coverity_service.login(app.config.coverity_credentials['username'],
                                         app.config.coverity_credentials['password'])
@@ -84,7 +75,7 @@ class SphinxCoverityConnector():
                 self.coverity_login_error_msg = "Coverity credentials are not configured."
             else:
                 self.coverity_login_error_msg = str(error_info)
-            report_info(env, 'failed with: %s' % error_info)
+            report_info('failed with: %s' % error_info)
             self.coverity_login_error = True
 
     # -----------------------------------------------------------------------------
@@ -95,14 +86,12 @@ class SphinxCoverityConnector():
 
         Obtain information from Coverity server and generate a table.
         """
-        env = app.builder.env
-
         if self.coverity_login_error:
             # Create failed topnode
             for node in doctree.traverse(CoverityDefect):
                 top_node = node.create_top_node("Failed to connect to Coverity Server")
                 node.replace_self(top_node)
-            report_warning(env, 'Connection failed: %s' % self.coverity_login_error_msg, fromdocname)
+            report_warning('Connection failed: %s' % self.coverity_login_error_msg, fromdocname)
             return
 
         # Item matrix:
@@ -111,9 +100,9 @@ class SphinxCoverityConnector():
         for node in doctree.traverse(CoverityDefect):
             # Get items from server
             try:
-                defects = self.get_filtered_defects(node, env)
+                defects = self.get_filtered_defects(node)
             except (URLError, AttributeError, Exception) as err:  # pylint: disable=broad-except
-                report_warning(env, 'failed with %s' % err, fromdocname)
+                report_warning('failed with %s' % err, fromdocname)
                 continue
             node.perform_replacement(defects, self, app, fromdocname)
 
@@ -127,28 +116,23 @@ class SphinxCoverityConnector():
             config_credentials (dict): Dictionary to store the user's credentials.
         """
         if not config_credentials['username']:
-            if version_info.major < 3:
-                get_input = raw_input  # noqa, pylint: disable=undefined-variable
-            else:
-                get_input = input
-            config_credentials['username'] = get_input("Coverity username: ")
+            config_credentials['username'] = input("Coverity username: ")
         if not config_credentials['password']:
             config_credentials['password'] = getpass("Coverity password: ")
 
-    def get_filtered_defects(self, node, env):
+    def get_filtered_defects(self, node):
         """ Fetch defects from suds using filters stored in the given CoverityDefect object.
 
         Args:
             node (CoverityDefect): CoverityDefect object with zero or more filters stored.
-            env (sphinx.environment.BuildEnvironment): Sphinx' build environment.
 
         Returns:
             (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects.
         """
-        report_info(env, 'obtaining defects... ', True)
+        report_info('obtaining defects... ', True)
         defects = self.coverity_service.get_defects(self.project_name, self.stream, node.filters)
-        report_info(env, "%d received" % (defects['totalNumberOfRecords']))
-        report_info(env, "building defects table and/or chart... ", True)
+        report_info("%d received" % (defects['totalNumberOfRecords']))
+        report_info("building defects table and/or chart... ", True)
         return defects
 
 
