@@ -50,7 +50,7 @@ it is also detached from your software documentation. Another lack is that it do
 other special fields. That means you can end up with a huge amount of intentionally triaged defects, without any
 explanation why they are intentional. Because of that, you cannot link your explanations for actions to that report and
 numbers could mean just anything. This plugin should enable simple and seamless Coverity reporting integration into
-existing Sphinx documentation. Generating a reStructured Text table of defects was one option, but that allows changing
+existing Sphinx documentation. Generating a reStructuredText table of defects was one option, but that allows changing
 before it is rendered, so to provide a more trustworthy path, this plugin retrieves the data through Coverity API and
 generates/renders documentation via Sphinx without intermediate (editable) artifacts.
 
@@ -100,9 +100,20 @@ Example of custom credentials for the plugin:
         'transport': 'http',
         'username': 'reporter',
         'password': 'coverity',
-        'stream': 'some_coverty_stream',
+        'stream': 'some_coverity_stream',
     }
 
+Link to traceability items
+==========================
+
+The plugin can be linked to `Traceability extension`_. This means that this plugin can link to traceability items in the
+description of Coverity defects by creating a reference in the docnode. Python variable *TRACEABILITY_ITEM_ID_REGEX*
+should be defined in order to override the default regular expression below. An empty string as regex will disable this
+feature.
+
+.. code-block:: python
+
+    TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
 
 Default config
 ==============
@@ -117,8 +128,10 @@ The plugin itself holds a default config that can be used for any Coverity proje
         'transport': 'http',
         'username': 'reporter',
         'password': 'coverity',
-        'stream': 'some_coverty_stream',
+        'stream': 'some_coverity_stream',
     }
+
+    TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
 
 This default configuration, which is built into the plugin, can be overridden through the *conf.py* of your project.
 
@@ -127,7 +140,7 @@ This default configuration, which is built into the plugin, can be overridden th
 Usage
 -----
 
-Inside your reStructured text file you can call a block `.. coverity-list:`, which will generate the table
+Inside your reStructuredText file you can call a block `.. coverity-list:`, which will generate the table
 with title and defined columns. For example, to display CID, Classification, Action and Comment columns, while
 filtering classification items with value `Bug`, you should use the following snippet:
 
@@ -259,3 +272,5 @@ To build example locally you will need to install some dependencies and set your
     # add env variables, adjust the values in .env
     # build
     make -C example/ html
+
+.. _`Traceability extension`: https://github.com/melexis/sphinx-traceability-extension/
