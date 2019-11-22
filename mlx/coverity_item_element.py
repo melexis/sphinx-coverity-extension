@@ -142,6 +142,8 @@ def link_to_item_ids(contents, text, cid, app, docname):
     """
     Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
     """
+    if not app.config.TRACEABILITY_ITEM_ID_REGEX:
+        return  # empty string as regex to disable traceability link generation
     remaining_text = text
     item_matches = findall(app.config.TRACEABILITY_ITEM_ID_REGEX, remaining_text)
     for item in item_matches:
