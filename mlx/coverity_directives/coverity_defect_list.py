@@ -343,8 +343,8 @@ class CoverityDefectListDirective(Directive):
             item_list_node['chart'] = ''
 
         # Process the optional filters
-        item_list_node.filters = {k: (self.options[k] if k in self.options else v)
-                                  for (k, v) in item_list_node.filters.items()}
+        item_list_node['filters'] = {k: (self.options[k] if k in self.options else v)
+                                     for (k, v) in item_list_node.filters.items()}
         return [item_list_node]
 
     def _process_chart_option(self, node):

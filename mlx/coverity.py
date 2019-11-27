@@ -130,7 +130,7 @@ class SphinxCoverityConnector():
             (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects.
         """
         report_info('obtaining defects... ', True)
-        defects = self.coverity_service.get_defects(self.project_name, self.stream, node.filters)
+        defects = self.coverity_service.get_defects(self.project_name, self.stream, node['filters'])
         report_info("%d received" % (defects['totalNumberOfRecords']))
         report_info("building defects table and/or chart... ", True)
         return defects

@@ -49,6 +49,11 @@ Every MISRA rule gets labeled separately.
     :col: CID,Location,Reference
     :widths: 21 95 120
 
+.. coverity-list:: Unclassified coverity defects
+    :col: CID,Classification,Action
+    :widths: 2 4 6
+    :classification: Unclassified
+
 .. coverity-list:: Coverity defects chart
     :chart: Intentional,Pending+Unclassified
     :classification: Bug,Intentional,Pending,Unclassified
