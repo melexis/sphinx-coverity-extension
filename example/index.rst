@@ -51,7 +51,7 @@ Every MISRA rule gets labeled separately.
 
 .. coverity-list:: Unclassified coverity defects
     :col: CID,Classification,Action
-    :widths: 2 4 6 10
+    :widths: 2 4 6
     :classification: Unclassified
 
 .. coverity-list:: Coverity defects chart
