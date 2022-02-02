@@ -115,6 +115,20 @@ feature.
 
     TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
 
+Alter links to traceability items
+=================================
+
+If the item ID matched by *TRACEABILITY_ITEM_ID_REGEX* is incorrect, e.g. it does not exist in the collection of
+traceability items, you can configure the plugin to link to the desired item ID instead.
+Add the item ID returned by Coverity as a key to the Python dictionary *TRACEABILITY_ITEM_ID_REGEX* and the desired
+item ID as value.
+
+.. code-block:: python
+
+    TRACEABILITY_ITEM_RELINK = {
+        "STATIC_DEVIATE-MISRA_RULE_1_0": "STATIC_DEVIATE-MISRA_1_0",
+    }
+
 Default config
 ==============
 
@@ -132,6 +146,7 @@ The plugin itself holds a default config that can be used for any Coverity proje
     }
 
     TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
+    TRACEABILITY_ITEM_RELINK = {}
 
 This default configuration, which is built into the plugin, can be overridden through the *conf.py* of your project.
 
