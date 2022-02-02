@@ -320,3 +320,4 @@ coverity_credentials = {
 }
 
 TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
+TRACEABILITY_ITEM_RELINK = {}

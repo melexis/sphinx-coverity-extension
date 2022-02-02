@@ -152,6 +152,7 @@ def setup(app):
                          'env')
 
     app.add_config_value('TRACEABILITY_ITEM_ID_REGEX', r"([A-Z_]+-[A-Z0-9_]+)", 'env')
+    app.add_config_value('TRACEABILITY_ITEM_RELINK', {}, 'env')
 
     app.add_node(CoverityDefect)
 

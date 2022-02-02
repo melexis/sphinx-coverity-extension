@@ -150,12 +150,14 @@ def link_to_item_ids(contents, text, cid, app, docname):
         text_before = remaining_text.split(item)[0]
         if text_before:
             contents.append(nodes.Text(text_before))
+        remaining_text = remaining_text.replace(text_before + item, '', 1)
+
+        if item in app.config.TRACEABILITY_ITEM_RELINK:
+            item = app.config.TRACEABILITY_ITEM_RELINK[item]
         ref_node = make_internal_item_ref(app, docname, item, cid)
         if ref_node is None:  # no link could be made
             ref_node = nodes.Text(item)
         contents.append(ref_node)
-
-        remaining_text = remaining_text.replace(text_before + item, '', 1)
 
     if remaining_text:
         contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
