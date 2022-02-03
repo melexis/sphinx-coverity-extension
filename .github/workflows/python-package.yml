@@ -46,7 +46,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: html-doc
-        path: doc/_build/html
+        path: example/_build/html
 
   deploy:
 
@@ -59,14 +59,14 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: html-doc
-        path: doc/_build/html
+        path: example/_build/html
     - name: Disable jekyll
-      run: touch doc/_build/html/.nojekyll
+      run: touch example/_build/html/.nojekyll
     - name: Deploy documentation
       uses: JamesIves/github-pages-deploy-action@4.1.3
       with:
         branch: gh-pages
-        folder: doc/_build/html
+        folder: example/_build/html
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
