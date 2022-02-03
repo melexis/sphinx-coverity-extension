@@ -2,6 +2,11 @@ name: Test and deploy on tag
 
 on: push
 
+env:
+  COVERITY_PASSWORD: dummy
+  COVERITY_STREAM: dummy
+  COVERITY_USERNAME: dummy
+
 jobs:
   test:
 
