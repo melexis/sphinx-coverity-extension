@@ -6,8 +6,8 @@
     :target: https://badge.fury.io/py/mlx.coverity
     :alt: Pypi packaged release
 
-.. image:: https://travis-ci.org/melexis/sphinx-coverity-extension.svg?branch=master
-    :target: https://travis-ci.org/melexis/sphinx-coverity-extension
+.. image:: https://github.com/melexis/sphinx-coverity-extension/actions/workflows/python-package.yml/badge.svg?branch=master
+    :target: https://github.com/melexis/sphinx-coverity-extension/actions/workflows/python-package.yml
     :alt: Build status
 
 .. image:: https://img.shields.io/badge/Documentation-published-brightgreen.svg
