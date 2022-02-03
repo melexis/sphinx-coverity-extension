@@ -27,8 +27,12 @@ jobs:
         python -m pip install tox tox-gh-actions
         sudo apt-get update -y
         sudo apt-get install -y latexmk texlive-latex-extra
-    - name: Run test and build documentation
-      run: tox -e py
+    - name: Run test
+      run: tox -e test
+    - name: Build HTML documentation
+      run: tox -e html
+    - name: Build PDF documentation
+      run: tox -e latexpdf
     - name: Codecov
       if: matrix.python-version == 3.9
       run: tox -e codecov
