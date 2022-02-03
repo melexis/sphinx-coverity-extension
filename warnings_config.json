@@ -1,0 +1,11 @@
+{
+    "sphinx":{
+        "enabled": true,
+        "min": 0,
+        "max": 0,
+        "exclude": [
+            "WARNING: Connection failed: <urlopen error \\[Errno -2\\] Name or service not known>",
+            "WARNING: Connection failed: <urlopen error \\[Errno -3\\] Temporary failure in name resolution>"
+        ]
+    }
+}
