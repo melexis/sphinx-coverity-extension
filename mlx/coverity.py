@@ -165,6 +165,11 @@ def setup(app):
     app.connect('builder-inited', sphinx_coverity_connector.initialize_environment)
 
     try:
-        return {'version': pkg_resources.require('mlx.coverity')[0].version}
+        version = pkg_resources.require('mlx.coverity')[0].version
     except LookupError:
-        return {'version': 'dev'}
+        version = 'dev'
+    return {
+        'version': version,
+        'parallel_read_safe': True,
+        'parallel_write_safe': True,
+    }

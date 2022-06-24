@@ -10,7 +10,7 @@ requires = ['Sphinx>=2.1', 'docutils', 'setuptools_scm', 'matplotlib', 'mlx.trac
 
 setup(
     name='mlx.coverity',
-    setup_requires=['setuptools_scm'],
+    setup_requires=['setuptools-scm>=6.0.0,<7.*'],
     use_scm_version=True,
     url=project_url,
     license='GNU General Public License v3 (GPLv3)',
@@ -18,6 +18,7 @@ setup(
     author_email='cmo@melexis.com',
     description='Sphinx coverity extension from Melexis',
     long_description=open("README.rst").read(),
+    long_description_content_type='text/x-rst',
     zip_safe=False,
     classifiers=[
         'Development Status :: 3 - Alpha',
