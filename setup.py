@@ -10,7 +10,7 @@ requires = ['Sphinx>=2.1', 'docutils', 'setuptools_scm', 'matplotlib', 'mlx.trac
 
 setup(
     name='mlx.coverity',
-    setup_requires=['setuptools_scm'],
+    setup_requires=['setuptools-scm>=6.0.0,<7.*'],
     use_scm_version=True,
     url=project_url,
     license='GNU General Public License v3 (GPLv3)',
