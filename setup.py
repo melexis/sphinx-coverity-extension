@@ -18,6 +18,7 @@ setup(
     author_email='cmo@melexis.com',
     description='Sphinx coverity extension from Melexis',
     long_description=open("README.rst").read(),
+    long_description_content_type='text/x-rst',
     zip_safe=False,
     classifiers=[
         'Development Status :: 3 - Alpha',
