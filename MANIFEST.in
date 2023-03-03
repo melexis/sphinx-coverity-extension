@@ -19,7 +19,6 @@ recursive-include tests *.rst
 recursive-include tests *.txt
 
 exclude example/.env.example
-exclude example/pip-dependencies.txt
 exclude .pylintrc
 recursive-exclude example _build *
 

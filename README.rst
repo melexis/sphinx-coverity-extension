@@ -275,10 +275,7 @@ To build example locally you will need to install some dependencies and set your
 
 .. code-block:: bash
 
-    # install dependencies
-    pip3 install -r example/pip-dependencies.txt
-
-    # install current package locally
+    # install current package locally and its dependencies
     pip3 install -e .
 
     # copy example .env to your .env
