@@ -46,7 +46,7 @@ setup(
     keywords=[
         'coverity',
         'reporting',
-        'restructured text coverity report',
+        'reStructuredText coverity report',
         'sphinx',
         'ASPICE',
         'ISO26262',
