@@ -26,10 +26,6 @@
     :target: https://codeclimate.com/github/melexis/sphinx-coverity-extension
     :alt: Issue Count
 
-.. image:: https://requires.io/github/melexis/sphinx-coverity-extension/requirements.svg?branch=master
-    :target: https://requires.io/github/melexis/sphinx-coverity-extension/requirements/?branch=master
-    :alt: Requirements Status
-
 .. image:: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
     :target: https://github.com/melexis/sphinx-coverity-extension/issues
     :alt: Contributions welcome
@@ -275,10 +271,7 @@ To build example locally you will need to install some dependencies and set your
 
 .. code-block:: bash
 
-    # install dependencies
-    pip3 install -r example/pip-dependencies.txt
-
-    # install current package locally
+    # install current package locally and its dependencies
     pip3 install -e .
 
     # copy example .env to your .env

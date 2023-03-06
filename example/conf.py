@@ -186,11 +186,6 @@ html_static_path.append(os.path.join(os.path.dirname(mlx.traceability.__file__),
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Exampledoc'
-html_context = {
-    'css_files': [
-        '_static/theme_overrides.css',  # override wide tables in RTD theme
-        ],
-    }
 
 # -- Options for LaTeX output --------------------------------------------------
 latex_elements = {

@@ -241,12 +241,10 @@ class CoverityDefect(ItemElement):
         sizes = list(self.chart_labels.values())
         fig, axes = plt.subplots()
         fig.set_size_inches(7, 4)
-        axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
+        _, texts, autotexts = axes.pie(sizes, labels=labels, autopct=pct_wrapper(sizes), startangle=90)
         axes.axis('equal')
         Path(env.app.srcdir, '_images').mkdir(mode=0o777, parents=True, exist_ok=True)
-        hash_string = ''
-        for pie_slice in axes.__dict__['texts']:
-            hash_string += str(pie_slice)
+        hash_string = str(texts) + str(autotexts)
         hash_value = sha256(hash_string.encode()).hexdigest()  # create hash value based on chart parameters
         rel_file_path = path.join('_images', 'piechart-{}.png'.format(hash_value))
         if rel_file_path not in env.images:
