@@ -26,10 +26,6 @@
     :target: https://codeclimate.com/github/melexis/sphinx-coverity-extension
     :alt: Issue Count
 
-.. image:: https://requires.io/github/melexis/sphinx-coverity-extension/requirements.svg?branch=master
-    :target: https://requires.io/github/melexis/sphinx-coverity-extension/requirements/?branch=master
-    :alt: Requirements Status
-
 .. image:: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
     :target: https://github.com/melexis/sphinx-coverity-extension/issues
     :alt: Contributions welcome
