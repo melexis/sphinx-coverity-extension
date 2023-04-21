@@ -52,4 +52,5 @@ setup(
         'ISO26262',
         'ASIL',
     ],
+    add_port_to_cid_link=True,
 )
