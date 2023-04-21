@@ -117,7 +117,7 @@ class Service:
     def get_service_url(self, path='', addPort='True'):
         '''Get Service url with given path'''
         url = self.transport + '://' + self.hostname
-        if bool(self.port) && addPort:
+        if bool(self.port) and addPort:
             url += ':' + self.port
         if path:
             url += path
