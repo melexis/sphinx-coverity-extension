@@ -607,7 +607,8 @@ class CoverityDefectService(Service):
         '''Get URL for given defect CID
         http://machine1.eng.company.com:8080/query/defects.htm?stream=StreamA&cid=1234
         '''
-        return self.get_service_url('/query/defects.htm?stream=%s&cid=%s' % (stream, str(cid)), self.add_port_to_cid_link)
+        return self.get_service_url('/query/defects.htm?stream=%s&cid=%s' % (stream, str(cid)),
+                                    self.add_port_to_cid_link)
 
 
 if __name__ == '__main__':
