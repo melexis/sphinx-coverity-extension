@@ -30,6 +30,7 @@ class SphinxCoverityConnector():
         self.coverity_login_error = False
         self.coverity_login_error_msg = ''
         self.stream = ''
+        self.add_port_to_url = True
 
     def initialize_environment(self, app):
         """
@@ -70,8 +71,8 @@ class SphinxCoverityConnector():
             self.coverity_service = CoverityDefectService(coverity_conf_service)
             self.coverity_service.login(app.config.coverity_credentials['username'],
                                         app.config.coverity_credentials['password'])
-            # copy add_port_to_cid_link
-            self.add_port_to_cid_link = app.config.add_port_to_cid_link
+            # copy add_port_to_url
+            self.add_port_to_url = app.config.add_port_to_url
         except (URLError, HTTPError, Exception, ValueError) as error_info:  # pylint: disable=broad-except
             if isinstance(error_info, EOFError):
                 self.coverity_login_error_msg = "Coverity credentials are not configured."
@@ -150,7 +151,7 @@ def setup(app):
                              'username': 'reporter',
                              'password': 'coverity',
                              'stream': 'some_coverty_stream',
-                             'add_port_to_cid_link': 'False',
+                             'add_port_to_url': 'False',
                          },
                          'env')
 

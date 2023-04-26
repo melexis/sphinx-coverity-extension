@@ -125,7 +125,8 @@ class Service:
 
     def get_ws_url(self, service):
         '''Get WS url with given service'''
-        return self.get_service_url('/ws/' + self.ws_version + '/' + service + '?wsdl')
+        return self.get_service_url('/ws/' + self.ws_version + '/' + service + '?wsdl',
+                                    self.add_port_to_url)
 
     def login(self, username, password):
         '''Login to Coverity using given username and password'''
@@ -163,10 +164,10 @@ class CoverityConfigurationService(Service):
         version = self.get_version()
         if version is None:
             raise RuntimeError("Authentication to [%s] FAILED for [%s] account - check password"
-                               % (self.get_service_url(), username))
+                               % (self.get_service_url(add_port=add_port_to_url), username))
         else:
             logging.info("Authentication to [%s] using [%s] account was OK - version [%s]",
-                         self.get_service_url(), username, version.externalVersion)
+                         self.get_service_url(add_port=add_port_to_url), username, version.externalVersion)
 
     def get_version(self):
         '''Get the version of the service, can be used as a means to validate access permissions'''
@@ -608,7 +609,7 @@ class CoverityDefectService(Service):
         http://machine1.eng.company.com:8080/query/defects.htm?stream=StreamA&cid=1234
         '''
         return self.get_service_url('/query/defects.htm?stream=%s&cid=%s' % (stream, str(cid)),
-                                    self.add_port_to_cid_link)
+                                    self.add_port_to_url)
 
 
 if __name__ == '__main__':
