@@ -114,10 +114,10 @@ class Service:
         '''Get WS version for service'''
         return self.ws_version
 
-    def get_service_url(self, path='', addPort='True'):
+    def get_service_url(self, path='', add_port=True):
         '''Get Service url with given path'''
         url = self.transport + '://' + self.hostname
-        if bool(self.port) and addPort:
+        if self.port and add_port:
             url += ':' + self.port
         if path:
             url += path
