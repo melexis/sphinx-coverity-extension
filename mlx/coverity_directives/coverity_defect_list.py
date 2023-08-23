@@ -51,6 +51,8 @@ class CoverityDefect(ItemElement):
         'TYPE': 'displayType',
         'CHECKER': 'checkerName',
         'COMPONENT': 'componentName',
+        'FILE': 'Filename',
+        'LINE NUMBER': 'Line Number',
     }
     defect_states_map = {
         'COMMENT': 'Comment',
