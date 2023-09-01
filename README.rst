@@ -190,7 +190,7 @@ Display options
 ---------------
 
 By default, the Coverity defects are listed in a table, of which the columns can be configured with the `col` option.
-If the `chart` option is used and the `col` option is not, a pie chart is generated instead of a table.
+If the `chart` option is used and the `col` option is not, only a pie chart is generated.
 
 :col: *multiple arguments (CSV format)*
 
