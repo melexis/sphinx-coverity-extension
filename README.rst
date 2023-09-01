@@ -235,7 +235,7 @@ Filter options
 
 All filter options accept *multiple arguments (CSV format)*.
 
-::classification:
+:classification:
 
     Filtering by classification based on the text following the attribute. The text can be anything you desire, but the
     default list includes:
@@ -246,7 +246,7 @@ All filter options accept *multiple arguments (CSV format)*.
         - `Intentional`
         - `Bug`
 
-:checker
+:checker:
 
     Filtering by checker based on the text following the attribute. The text can be anything you desire. Regular expressions
     work for this attribute, e.g. `MISRA`.
