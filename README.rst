@@ -198,15 +198,15 @@ If the `chart` option is used and the `col` option is not, only a pie chart is g
     They should match the columns inside Coverity. Possible Keywords are (but not limited, since Coverity has the
     option to create custom names):
 
-        - `CID`: Coverity defect ID
-        - `Location`: Coverity defect location consisting of file path and line number
-        - `Classification`: Coverity defect Classification column
-        - `Action`: Coverity defect Action information
-        - `Checker`: Coverity defect Checker
-        - `Status`: Coverity defect Triage status
-        - `Comment`: Coverity defect last Comment
-        - `Reference`: Coverity defect external references
-        - ...
+    - `CID`: Coverity defect ID
+    - `Location`: Coverity defect location consisting of file path and line number
+    - `Classification`: Coverity defect Classification column
+    - `Action`: Coverity defect Action information
+    - `Checker`: Coverity defect Checker
+    - `Status`: Coverity defect Triage status
+    - `Comment`: Coverity defect last Comment
+    - `Reference`: Coverity defect external references
+    - ...
 
 :widths: *multiple arguments (space-separated)*
 
