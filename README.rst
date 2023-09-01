@@ -177,73 +177,107 @@ items, you should use the following snippet:
 The plugin allows the use of both display options, `col`and `chart`, at the same time as well. In that case, they share
 all filtering options.
 
-Attributes to coverity-list
-===========================
+Options of coverity-list
+========================
 
-Block `coverity-list` takes below attributes to provide better granularity and filtering of the displayed information.
-Keep in mind that all the attributes are to be encapsulated by `:`. Almost all parameters are passed in CSV format
-(comma-separated without any spaces).
+The directive `coverity-list` is configurable with several options to provide better granularity and filtering of the
+displayed information. They are all optional.
+All option names shall be encapsulated by a colon and almost all option values shall be in CSV format
+(comma-separated without any spaces). All options are documented below, starting with the display options and followed
+by the filter options:
 
-col
----
+Display options
+---------------
 
-List column names of the table. They should match the columns inside Coverity. The list is comma-separated without
-any spaces. Possible Keywords are (but not limited, since Coverity has option to create custom names):
+By default, the Coverity defects are listed in a table, of which the columns can be configured with the `col` option.
+If the `chart` option is used and the `col` option is not, a pie chart is generated instead of a table.
 
-    - `CID`: Coverity defect ID
-    - `Location`: Coverity defect location consisting of file path and line number
-    - `Classification`: Coverity defect Classification column
-    - `Action`: Coverity defect Action information
-    - `Checker`: Coverity defect Checker
-    - `Status`: Coverity defect Triage status
-    - `Comment`: Coverity defect last Comment
-    - `Reference`: Coverity defect external references
-    - ...
+:col: *multiple arguments (CSV format)*
 
-This `col` option is optional. If the `chart` option is used, the table won't be generated. If the `chart` option is not
-used, default columns are used to generate the table, i.e. `CID,Classification,Action,Comment`.
+    Specify column names of the table. The default value is `CID,Classification,Action,Comment`.
+    They should match the columns inside Coverity. Possible Keywords are (but not limited, since Coverity has the
+    option to create custom names):
 
-widths
-------
+        - `CID`: Coverity defect ID
+        - `Location`: Coverity defect location consisting of file path and line number
+        - `Classification`: Coverity defect Classification column
+        - `Action`: Coverity defect Action information
+        - `Checker`: Coverity defect Checker
+        - `Status`: Coverity defect Triage status
+        - `Comment`: Coverity defect last Comment
+        - `Reference`: Coverity defect external references
+        - ...
 
-Optional attribute that provides possibility to set each column width to a predefined percentage. This makes it nicer
-for the pdf builders that are able to fit the table to the printable page width and, because of longtable, also provide
-nice table continuation through multiple pages. Its parameters must be a space-separated list of integers.
+:widths: *multiple arguments (space-separated)*
 
-classification
+    Column widths as a percentage value (integer). This could come in handy to fit the table on a PDF page.
+    The LaTeX package `longtable` provides nice table continuation across multiple pages.
+
+:chart: *optional*
+
+    This optional, second display option draws a pie chart that visualizes the amount of defects for each allowed
+    `<<attribute>>` option. Firstly, the attribute can be specified, followed by a colon. The default attribute is
+    `classification`. Secondly, you have two options. Either you specify a list of attribute values, comma-separated,
+    or even plus-sign-separated for a merge into the same slice.
+    Else, you define the minimum threshold amount of defects with the same attribute value that needs to be reached
+    for them to be grouped together into a slice. All other defects get labeled as "Other".
+    The example below results in a pie chart that visualizes the most prevalent MISRA violations with a grouping
+    threshold of 50 items:
+
+    .. code-block:: python
+
+        .. coverity-list:: Chart of the most prevalent MISRA violations
+            :chart: checker:50
+            :checker: MISRA
+
+Filter options
 --------------
 
-Filtering by classification based on the text following the attribute. The text can be anything you desire, but the
-default list includes:
+All filter options accept *multiple arguments (CSV format)*.
 
-    - `Unclassified`
-    - `Pending`
-    - `False Positive`
-    - `Intentional`
-    - `Bug`
+:classification:
 
-checker
--------
+    Filtering by classification based on the text following the attribute. The text can be anything you desire, but the
+    default list includes:
 
-Filtering by checker based on the text following the attribute. The text can be anything you desire. Regular expressions
-work for this attribute, e.g. `MISRA`.
+        - `Unclassified`
+        - `Pending`
+        - `False Positive`
+        - `Intentional`
+        - `Bug`
 
-chart
------
+:checker:
 
-This optional, second display option will draw a pie chart that visualizes the amount of results for each allowed
-`<<attribute>>` option. Firstly, the attribute can be specified, followed by a colon `:`. The default attribute is
-`classification`. Secondly, you have two optoins. Either you specify a list of attribue values, comma-separated or even
-plus-sign-separated for a merge into the same slice, or else you define the minimum threshold of defects with the same
-attribute value that needs to be reached for them to be grouped together into a slice. All other defects get labeled as
-Other. For example, to visualize the most prevalent MISRA violations with a grouping threshold of 50 items, you should
-use the following code snippet:
+    Filtering by checker based on the text following the attribute. The text can be anything you desire. Regular expressions
+    work for this attribute, e.g. `MISRA`.
 
-.. code-block:: python
+:impact:
 
-    .. coverity-list:: Chart of the most prevalent MISRA violations
-        :chart: checker:50
-        :checker: MISRA
+    Filter for only these impacts.
+
+:kind:
+
+    Filter for only these kinds.
+
+:classification:
+
+    Filter for only these classifications.
+
+:action:
+
+    Filter for only these actions.
+
+:component:
+
+    Filter for only these components.
+
+:cwe:
+
+    Filter for only these CWE ratings.
+
+:cid:
+
+    Filter only these CIDs.
 
 -------------
 Contributions
