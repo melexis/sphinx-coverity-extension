@@ -165,12 +165,6 @@ class CoverityConfigurationService:
         else:
             return req.raise_for_status()
 
-    def get_checkers(self):
-        '''Get a list of checkers from the service'''
-        if not self.checkers:
-            self.checkers = self.client.service.getCheckerNames()
-        return self.checkers
-
     @staticmethod
     def add_filter_rqt(name, req_csv, valid_list, filter_list, allow_regex=False):
         '''Lookup the list of given filter possibility, add to filter spec and return a validated list'''
