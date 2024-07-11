@@ -114,15 +114,41 @@ class CoverityConfigurationService:
             username (str): Username to log in
             password (str): Password to log in
         '''
-        req = requests.post(self.search_issues_url, json=filters, auth=(username, password))
+        return self._post_request(self.search_issues_url, filters, username, password)
+
+    def retrieve_column_keys(self, username, password):
+        '''Retrieves the set of column keys and associated display names
+
+        Args:
+            username (str): Username to log in
+            password (str): Password to log in
+        '''
+        return self._get_request(self.column_keys_url, username, password)
+
+    def _get_request(self, url, username, password):
+        '''GET request
+
+        Args:
+            url (str): The url to request data via GET request
+            username (str): Username to log in
+            password (str): Password to log in
+        '''
+        req = requests.get(url, auth=(username, password))
         if req.ok:
             return json.loads(req.content)
         else:
             return req.raise_for_status()
 
-    def retrieve_column_keys(self, username, password):
-        '''Retrieves the set of column keys and associated display names'''
-        req = requests.get(self.column_keys_url, auth=(username, password))
+    def _post_request(self, url, json_data, username, password):
+        '''POST request
+
+        Args:
+            url (str): The url to request data via POST request
+            json_data (json): The json data to send
+            username (str): Username to log in
+            password (str): Password to log in
+        '''
+        req = requests.post(url, json=json_data, auth=(username, password))
         if req.ok:
             return json.loads(req.content)
         else:
