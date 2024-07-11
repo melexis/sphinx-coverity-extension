@@ -70,11 +70,10 @@ class CoverityConfigurationService:
     '''
     Coverity Configuration Service (WebServices)
     '''
-    _base_url = None
+    _version = "v2"
 
     def __init__(self, transport, hostname, port):
-        self.base_url = str(urljoin(urljoin(transport, hostname),f":{port}"))
-        self._version = "v2"
+        self.base_url = str(urljoin(urljoin(transport, hostname),f":{port}/api/{self.version}"))
         self._checkers = None
 
     @property
@@ -106,7 +105,7 @@ class CoverityConfigurationService:
             username (str): Username to log in
             password (str): Password to log in
         '''
-        url = str(urljoin(self.base_url, f"/api/v2/issues/search"))
+        url = str(urljoin(self.base_url, "/issues/search"))
         return self._post_request(url, filters, username, password)
 
     def retrieve_column_keys(self, username, password):
@@ -116,7 +115,7 @@ class CoverityConfigurationService:
             username (str): Username to log in
             password (str): Password to log in
         '''
-        url = str(urljoin(self.base_url, f"/api/v2/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true'"))
+        url = str(urljoin(self.base_url, "/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true'"))
         return self._get_request(url, username, password)
 
     def retrieve_checkers(self, username, password):
@@ -127,7 +126,7 @@ class CoverityConfigurationService:
             password (str): Password to log in
         '''
         if not self.checkers:
-            url = str(urljoin(self.base_url, f"/api/v2/checkerAttributes/checker"))
+            url = str(urljoin(self.base_url, "/checkerAttributes/checker"))
             checkers = self._get_request(url, username, password)
             if checkers and "checkerAttributedata" in checkers:
                 self._checkers = checkers["checkerAttributedata"]
