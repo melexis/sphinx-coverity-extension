@@ -78,7 +78,7 @@ class CoverityConfigurationService:
     def __init__(self, base_url=DEFAULT_BASE_URL):
         self._base_url = base_url
         self._version = "v2"
-        self.checkers = None
+        self._checkers = None
 
     @property
     def base_url(self):
@@ -95,6 +95,11 @@ class CoverityConfigurationService:
     def version(self):
         '''The API version'''
         return self._version
+
+    @property
+    def checkers(self):
+        '''All checkers available'''
+        return self._checkers
 
     @property
     def search_issues_url(self):
@@ -124,6 +129,20 @@ class CoverityConfigurationService:
             password (str): Password to log in
         '''
         return self._get_request(self.column_keys_url, username, password)
+
+    def retrieve_checkers(self, username, password):
+        '''Retrieves the available checkers
+
+        Args:
+            username (str): Username to log in
+            password (str): Password to log in
+        '''
+        if not self.checkers:
+            url = str(urljoin(self.base_url, f"/api/v2/checkerAttributes/checker"))
+            checkers = self._get_request(url, username, password)
+            if checkers and "checkerAttributedata" in checkers:
+                self._checkers = checkers["checkerAttributedata"]
+        return self.checkers
 
     def _get_request(self, url, username, password):
         '''GET request
