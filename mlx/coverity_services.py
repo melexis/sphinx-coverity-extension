@@ -186,7 +186,7 @@ class CoverityConfigurationService:
         return validated
 
 
-class CoverityDefectService(Service):
+class CoverityDefectService:
     '''
     Coverity Defect Service (WebServices)
     '''
