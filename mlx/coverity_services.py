@@ -101,16 +101,6 @@ class CoverityConfigurationService:
         '''All checkers available'''
         return self._checkers
 
-    @property
-    def search_issues_url(self):
-        '''Get url to retrieve issues'''
-        return urljoin(self.base_url, f"/api/v2/issues/search")
-
-    @property
-    def column_keys_url(self):
-        '''Get url to retrieve all column keys'''
-        return urljoin(self.base_url, f"/api/v2/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true'")
-
     def retrieve_issues(self, filters, username, password):
         '''Retrieve the contents of the specified url in Coverity Connect.
 
@@ -119,7 +109,8 @@ class CoverityConfigurationService:
             username (str): Username to log in
             password (str): Password to log in
         '''
-        return self._post_request(self.search_issues_url, filters, username, password)
+        url = str(urljoin(self.base_url, f"/api/v2/issues/search"))
+        return self._post_request(url, filters, username, password)
 
     def retrieve_column_keys(self, username, password):
         '''Retrieves the set of column keys and associated display names
@@ -128,7 +119,8 @@ class CoverityConfigurationService:
             username (str): Username to log in
             password (str): Password to log in
         '''
-        return self._get_request(self.column_keys_url, username, password)
+        url = str(urljoin(self.base_url, f"/api/v2/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true'"))
+        return self._get_request(url, username, password)
 
     def retrieve_checkers(self, username, password):
         '''Retrieves the available checkers
