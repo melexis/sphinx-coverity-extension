@@ -13,10 +13,6 @@ from urllib.parse import urljoin
 # For Coverity - REST API
 import requests
 
-# -- Default values -- and global settings
-
-DEFAULT_BASE_URL = 'http://localhost:8080/'
-
 # Coverity built in Impact statuses
 IMPACT_LIST = {'High', 'Medium', 'Low'}
 
@@ -74,9 +70,10 @@ class CoverityConfigurationService:
     '''
     Coverity Configuration Service (WebServices)
     '''
+    _base_url = None
 
-    def __init__(self, base_url=DEFAULT_BASE_URL):
-        self._base_url = base_url
+    def __init__(self, transport, hostname, port):
+        self.base_url = str(urljoin(urljoin(transport, hostname),f":{port}"))
         self._version = "v2"
         self._checkers = None
 
