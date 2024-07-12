@@ -76,6 +76,7 @@ class CoverityDefectService:
         self.base_url = str(urljoin(urljoin(transport, hostname),f":{port}/api/{self.version}"))
         self._checkers = None
         self._column_keys = None
+        self.filters = ""
 
     @property
     def base_url(self):
@@ -334,12 +335,11 @@ class CoverityDefectService:
             self.filters += ("<%s(%s)> " % (name, validated))
         return filter_list
 
-    def handle_component_filter(self, attribute_values, filter_spec):
+    def handle_component_filter(self, attribute_values):
         """ Applies any filter on the component attribute's values.
 
         Args:
             attribute_values (str): A CSV list of attribute values to query.
-            filter_spec (sudsobject.Factory): Object to store filter attributes.
         """
         logging.info('Using Component filter [%s]', attribute_values)
         parser = csv.reader([attribute_values])
@@ -352,12 +352,11 @@ class CoverityDefectService:
                 filter_spec.componentIdList.append(component_id)
         self.filters += ("<Components(%s)> " % (attribute_values))
 
-    def handle_custom_filter_attribute(self, custom, filter_spec):
+    def handle_custom_filter_attribute(self, custom):
         """ Handles a custom attribute definition, and adds it to the filter spec if it's valid.
 
         Args:
             custom (str): A custom query.
-            filter_spec (sudsobject.Factory): Object to store filter attributes.
 
         Raises:
             ValueError: Invalid custom attribute definition.
