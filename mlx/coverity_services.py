@@ -251,6 +251,7 @@ class CoverityDefectService:
             }
         ]
         columns = []
+        # TODO: make dict with all matcher types and all filters
         # apply any filter on checker names
         if filters['checker']:
             # this should be a keyMatcher (columnKey: checker)
