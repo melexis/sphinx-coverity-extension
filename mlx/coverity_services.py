@@ -75,6 +75,7 @@ class CoverityConfigurationService:
     def __init__(self, transport, hostname, port):
         self.base_url = str(urljoin(urljoin(transport, hostname),f":{port}/api/{self.version}"))
         self._checkers = None
+        self._column_keys = None
 
     @property
     def base_url(self):
