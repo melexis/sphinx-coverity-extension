@@ -169,11 +169,12 @@ class CoverityDefectService:
             return req.raise_for_status()
 
     @staticmethod
-    def add_filter_rqt(name, req_csv, valid_list, filter_list, allow_regex=False):
+    def add_filter_rqt(name, req_csv, valid_list, allow_regex=False):
         '''Lookup the list of given filter possibility, add to filter spec and return a validated list'''
         logging.info('Validate required %s [%s]', name, req_csv)
         validated = ""
         delim = ""
+        filter_list = []
         for field in req_csv.split(','):
             if not valid_list or field in valid_list:
                 logging.info('Classification [%s] is valid', field)
@@ -189,79 +190,116 @@ class CoverityDefectService:
                         delim = ","
             else:
                 logging.error('Invalid %s filter: %s', name, field)
-        return validated
+        return validated, filter_list
 
-    def get_defects(self, project, filters, username, password):
+    def add_new_filters(self, request_filters, column_key, filter_list):
+        """Add new filter to the filters list of the JSON request data
+
+        Args:
+            request_filters (list[dict]): The list of all filters of the JSON request data
+            column_key (str): The column key
+            filter_list (list[str]): The list of validated filters
+        """
+        for filter in filter_list:
+            request_filters.append({
+                "columnKey": column_key,
+                "matchMode": "oneOrMoreMatch",
+                "matchers":[
+                    {
+                    "key": filter,
+                    "type": "keyMatcher"
+                    }
+                ]
+            })
+
+    def get_defects(self, project, filters, custom, username, password):
         """ Gets a list of defects for given stream, with some query criteria.
 
         Args:
             project (str): Name of the project to query
-            stream (str): Name of the stream to query
             filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
             custom (str): A custom query
+            username (str): Username to log in
+            password (str): Password to log in
 
         Returns:
             (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects
         """
-        logging.info('Querying Coverity for defects in project [%s] stream [%s] ...', project, stream)
-
-        # define the project
-        project_id = self.client.factory.create('projectIdDataObj')
-        project_id.name = project
-
-        # and the stream
-        stream_id = self.client.factory.create('streamIdDataObj')
-        stream_id.name = stream
-
-        # create filter spec
-        filter_spec = self.client.factory.create('snapshotScopeDefectFilterSpecDataObj')
-
-        # only for this stream
-        filter_spec.streamIncludeNameList.append(stream_id)
-
+        logging.info('Querying Coverity for defects in project [%s] ...', project)
+        request_filters = [
+            {
+                "columnKey": "project",
+                "matchMode": "oneOrMoreMatch",
+                "matchers": [
+                    {
+                        "class": "Project",
+                        "name": project,
+                        "type": "nameMatcher"
+                    }
+                ]
+            },
+            {
+                "columnKey":"classification",
+                "matchMode":"oneOrMoreMatch",
+                "matchers":[
+                    {
+                    "key":"Bug",
+                    "type":"keyMatcher"
+                    }
+                ]
+            }
+        ]
+        columns = []
         # apply any filter on checker names
         if filters['checker']:
-            self.config_service.get_checkers()
-            self.handle_attribute_filter(filters['checker'],
-                                         'Checker',
-                                         self.config_service.checkers,
-                                         filter_spec.checkerList,
-                                         allow_regex=True)
+            # this should be a keyMatcher (columnKey: checker)
+            filter_list = self.handle_attribute_filter(filters['checker'], 'Checker', self.checkers, allow_regex=True)
+            if filter_list:
+                self.add_new_filters(request_filters, "checker", filter_list)
 
         # apply any filter on impact status
         if filters['impact']:
-            self.handle_attribute_filter(filters['impact'], 'Impact', IMPACT_LIST, filter_spec.impactNameList)
+            # this should be a keyMatcher (columnKey: displayImpact)
+            filter_list = self.handle_attribute_filter(filters['impact'], 'Impact', IMPACT_LIST)
+            if filter_list:
+                self.add_new_filters(request_filters, "displayImpact", filter_list)
 
         # apply any filter on issue kind
         if filters['kind']:
-            self.handle_attribute_filter(filters['kind'], 'Kind', KIND_LIST, filter_spec.issueKindList)
+            # this should be a keyMatcher (columnKey: displayIssueKind)
+            filter_list = self.handle_attribute_filter(filters['kind'], 'displayIssueKind', KIND_LIST)
 
         # apply any filter on classification
         if filters['classification']:
-            self.handle_attribute_filter(filters['classification'],
+            # this should be a keyMatcher (columnKey: classification)
+            filter_list = self.handle_attribute_filter(filters['classification'],
                                          'Classification',
                                          CLASSIFICATION_LIST,
-                                         filter_spec.classificationNameList)
+                                         )
 
         # apply any filter on action
         if filters['action']:
-            self.handle_attribute_filter(filters['action'], 'Action', ACTION_LIST, filter_spec.actionNameList)
+            # this should be a keyMatcher (columnKey: action)
+            filter_list = self.handle_attribute_filter(filters['action'], 'Action', ACTION_LIST)
 
         # apply any filter on Components
         if filters['component']:
-            self.handle_component_filter(filters['component'], filter_spec)
+            # this should be a nameMatcher (columnKey: displayComponent)
+            filter_list = self.handle_component_filter(filters['component'])
 
         # apply any filter on CWE values
         if filters['cwe']:
-            self.handle_attribute_filter(filters['cwe'], 'CWE', None, filter_spec.cweList)
+            # this should be a idMatcher (columnKey: cwe)
+            filter_list = self.handle_attribute_filter(filters['cwe'], 'CWE', None)
 
         # apply any filter on CID values
         if filters['cid']:
-            self.handle_attribute_filter(filters['cid'], 'CID', None, filter_spec.cidList)
+            # this should be a idMatcher (columnKey: cid)
+            filter_list = self.handle_attribute_filter(filters['cid'], 'CID', None)
 
         # if a special custom attribute value requirement
         if custom:
-            self.handle_custom_filter_attribute(custom, filter_spec)
+            filter_list = self.handle_custom_filter_attribute(custom)
 
         # create page spec
         page_spec = self.client.factory.create('pageSpecDataObj')
@@ -290,10 +328,11 @@ class CoverityDefectService:
             name (str): String representation of the attribute.
         """
         logging.info('Using %s filter [%s]', name, attribute_values)
-        validated = self.config_service.add_filter_rqt(name, attribute_values, *args, **kwargs)
+        validated, filter_list = self.add_filter_rqt(name, attribute_values, *args, **kwargs)
         logging.info('Resolves to [%s]', validated)
         if validated:
             self.filters += ("<%s(%s)> " % (name, validated))
+        return filter_list
 
     def handle_component_filter(self, attribute_values, filter_spec):
         """ Applies any filter on the component attribute's values.
