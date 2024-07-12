@@ -43,33 +43,30 @@ class SphinxCoverityConnector():
     \\let\@noitemerr\\relax
     \\makeatother'''
 
-        self.stream = app.config.coverity_credentials['stream']
+        self.project_name = app.config.coverity_credentials['project_name']
 
         # Login to Coverity and obtain stream information
         try:
             self.input_credentials(app.config.coverity_credentials)
-            report_info('Login to Coverity server... ', True)
-            coverity_conf_service = CoverityConfigurationService(app.config.coverity_credentials['transport'],
-                                                                 app.config.coverity_credentials['hostname'],
-                                                                 app.config.coverity_credentials['port'])
-            coverity_conf_service.login(app.config.coverity_credentials['username'],
-                                        app.config.coverity_credentials['password'])
+            self.coverity_service = CoverityDefectService(
+                app.config.coverity_credentials['transport'],
+                app.config.coverity_credentials['hostname'],
+                app.config.coverity_credentials['port']
+            )
+            # Get all column keys
+            report_info('obtaining all column keys... ', True)
+            self.coverity_service.retrieve_column_keys(
+                app.config.coverity_credentials['username'],
+                app.config.coverity_credentials['password']
+            )
             report_info('done')
-
-            report_info('obtaining stream information... ', True)
-            stream = coverity_conf_service.get_stream(self.stream)
-            if stream is None:
-                raise ValueError('No such Coverity stream [%s] found on [%s]' %
-                                 (self.stream, coverity_conf_service.get_service_url()))
+            # Get all checkers
+            report_info('obtaining all checkers... ', True)
+            self.coverity_service.retrieve_checkers(
+                app.config.coverity_credentials['username'],
+                app.config.coverity_credentials['password']
+            )
             report_info('done')
-
-            # Get Stream's project name
-            report_info('obtaining project name from stream... ', True)
-            self.project_name = coverity_conf_service.get_project_name(stream)
-            report_info('done')
-            self.coverity_service = CoverityDefectService(coverity_conf_service)
-            self.coverity_service.login(app.config.coverity_credentials['username'],
-                                        app.config.coverity_credentials['password'])
         except (URLError, HTTPError, Exception, ValueError) as error_info:  # pylint: disable=broad-except
             if isinstance(error_info, EOFError):
                 self.coverity_login_error_msg = "Coverity credentials are not configured."
@@ -147,7 +144,7 @@ def setup(app):
                              'transport': 'http',
                              'username': 'reporter',
                              'password': 'coverity',
-                             'stream': 'some_coverty_stream',
+                             'project_name': 'some_project',
                          },
                          'env')
 
