@@ -136,7 +136,7 @@ class CoverityDefectService:
             url = str(urljoin(self.base_url, "/checkerAttributes/checker"))
             checkers = self._get_request(url, username, password)
             if checkers and "checkerAttributedata" in checkers:
-                self._checkers = checkers["checkerAttributedata"]
+                self._checkers = [checker["key"] for checker in checkers["checkerAttributedata"]]
         return self.checkers
 
     def _get_request(self, url, username, password):
