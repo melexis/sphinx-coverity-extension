@@ -66,9 +66,9 @@ def compare_strings(str_a, str_b):
         return True
     return False
 
-class CoverityConfigurationService:
+class CoverityDefectService:
     '''
-    Coverity Configuration Service (WebServices)
+    Coverity Defect Service (WebServices)
     '''
     _version = "v2"
 
@@ -191,25 +191,7 @@ class CoverityConfigurationService:
                 logging.error('Invalid %s filter: %s', name, field)
         return validated
 
-
-class CoverityDefectService:
-    '''
-    Coverity Defect Service (WebServices)
-    '''
-
-    def __init__(self, config_service):
-        '''Create a Defect Service, bound to the given Configuration Service'''
-        super(CoverityDefectService, self).__init__(config_service.get_transport(),
-                                                    config_service.get_hostname(),
-                                                    config_service.get_port(),
-                                                    config_service.get_ws_version())
-        self.config_service = config_service
-        self.filters = ""
-        # logging.getLogger('suds.client').setLevel(logging.DEBUG)
-        url = self.get_ws_url('defectservice')
-        self.validate_presence(url, 'Coverity Defect Service')
-
-    def get_defects(self, project, stream, filters, custom=None):
+    def get_defects(self, project, filters, username, password):
         """ Gets a list of defects for given stream, with some query criteria.
 
         Args:
