@@ -97,7 +97,7 @@ class SphinxCoverityConnector():
         for node in doctree.traverse(CoverityDefect):
             # Get items from server
             try:
-                defects = self.get_filtered_defects(node)
+                defects = self.get_filtered_defects(node, app)
             except (URLError, AttributeError, Exception) as err:  # pylint: disable=broad-except
                 report_warning('failed with %s' % err, fromdocname)
                 continue
@@ -117,7 +117,7 @@ class SphinxCoverityConnector():
         if not config_credentials['password']:
             config_credentials['password'] = getpass("Coverity password: ")
 
-    def get_filtered_defects(self, node):
+    def get_filtered_defects(self, node, app):
         """ Fetch defects from suds using filters stored in the given CoverityDefect object.
 
         Args:
@@ -127,7 +127,12 @@ class SphinxCoverityConnector():
             (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects.
         """
         report_info('obtaining defects... ', True)
-        defects = self.coverity_service.get_defects(self.project_name, self.stream, node['filters'])
+        defects = self.coverity_service.get_defects(
+            self.project_name,
+            node['filters'],
+            app.config.coverity_credentials['username'],
+            app.config.coverity_credentials['password']
+        )
         report_info("%d received" % (defects['totalNumberOfRecords']))
         report_info("building defects table and/or chart... ", True)
         return defects
