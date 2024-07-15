@@ -85,8 +85,10 @@ class CoverityDefectService:
 
     @base_url.setter
     def base_url(self, value):
-        if not re.fullmatch(r"https?://.+:\d\d\d\d/?", value):
-            raise ValueError(f"Invalid base URL. Expected 'http(s)://<hostname>:<port>(/)'; Got {value}")
+        if not re.fullmatch(r"https?://.+:\d\d\d\d/api/v\d+/?", value):
+            raise ValueError(
+                f"Invalid base URL. Expected 'http(s)://<hostname>:<port>/api/{self.version}(/)'; Got {value}"
+            )
         self._base_url = value
 
     @property
@@ -251,6 +253,16 @@ class CoverityDefectService:
             }
         ]
         columns = []
+        data = {
+            "filters": request_filters,
+            "columns": columns,
+            "snapshotScope": {
+                "show": {
+                    "scope": "last()",
+                    "includeOutdatedSnapshots": False
+                }
+            }
+        }
         # TODO: make dict with all matcher types and all filters
         # apply any filter on checker names
         if filters['checker']:
