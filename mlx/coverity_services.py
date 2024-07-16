@@ -321,6 +321,10 @@ class CoverityDefectService:
                 "show": {
                     "scope": "last()",
                     "includeOutdatedSnapshots": False
+                },
+                "compareTo": {
+                    "scope": "last()",
+                    "includeOutdatedSnapshots": False
                 }
             }
         }
@@ -391,21 +395,6 @@ class CoverityDefectService:
             filter_list = self.handle_attribute_filter(filters["cid"], "CID", None)
             if filter_list:
                 self.add_new_filters(request_filters, "cid", filter_list, "idMatcher")
-
-        # create page spec
-        page_spec = self.client.factory.create("pageSpecDataObj")
-        page_spec.pageSize = 9999
-        page_spec.sortAscending = True
-        page_spec.startIndex = 0
-
-        # create snapshot scope
-        snapshot_scope = self.client.factory.create("snapshotScopeSpecDataObj")
-
-        snapshot_scope.showOutdatedStreams = False
-        snapshot_scope.compareOutdatedStreams = False
-
-        snapshot_scope.showSelector = "last()"
-        snapshot_scope.compareSelector = "last()"
 
         logging.info("Running Coverity query...")
         return self.client.service.getMergedDefectsForSnapshotScope(project_id, filter_spec, page_spec, snapshot_scope)
