@@ -390,10 +390,6 @@ class CoverityDefectService:
             if filter_list:
                 self.add_new_filters(request_filters, "cid", filter_list, "idMatcher")
 
-        # if a special custom attribute value requirement
-        if custom:
-            filter_list = self.handle_custom_filter_attribute(custom)
-
         # create page spec
         page_spec = self.client.factory.create("pageSpecDataObj")
         page_spec.pageSize = 9999
@@ -441,37 +437,6 @@ class CoverityDefectService:
                 filter_list.append(field)
         self.filters += "<Components(%s)> " % (attribute_values)
         return filter_list
-
-    def handle_custom_filter_attribute(self, custom):
-        """Handles a custom attribute definition, and adds it to the filter spec if it's valid.
-
-        Args:
-            custom (str): A custom query.
-
-        Raises:
-            ValueError: Invalid custom attribute definition.
-        """
-        logging.info("Using attribute filter [%s]", custom)
-        # split the name:value[;name:value1[,value2]]
-        for fields in csv.reader([custom], delimiter=";"):
-            for i, name_value_pair in enumerate(fields):
-                name_value_pair = name_value_pair.strip()
-                valid, name, values = parse_two_part_term(name_value_pair, ":")
-                if valid:
-                    logging.info("attr (%d) [%s] = any of ...", i + 1, name)
-
-                    attribute_definition_id = self.client.factory.create("attributeDefinitionIdDataObj")
-                    attribute_definition_id.name = name
-
-                    filter_map = self.client.factory.create("attributeDefinitionValueFilterMapDataObj")
-                    filter_map.attributeDefinitionId = attribute_definition_id
-
-                    self._append_multiple_values(values, filter_map)
-
-                    filter_spec.attributeDefinitionValueFilterMap.append(filter_map)
-                else:
-                    raise ValueError("Invalid custom attribute definition [%s]" % name_value_pair)
-        self.filters += "<Attrs(%s)> " % custom
 
     def _append_multiple_values(self, values, filter_map):
         """Append multiple values if there are multiple values delimited with comma"""
