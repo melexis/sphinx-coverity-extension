@@ -7,7 +7,6 @@ import csv
 import json
 import logging
 import re
-from urllib.error import URLError
 from urllib.parse import urljoin
 
 # For Coverity - REST API
