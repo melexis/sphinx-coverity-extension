@@ -326,8 +326,10 @@ class CoverityDefectService:
         }
         # apply any filter on checker names
         if filters["checker"]:
+            # get all checker
+            checker_list = self.retrieve_checkers(username, password)
             # this should be a keyMatcher (columnKey: checker)
-            filter_list = self.handle_attribute_filter(filters["checker"], "Checker", self.checkers, allow_regex=True)
+            filter_list = self.handle_attribute_filter(filters["checker"], "Checker", checker_list, allow_regex=True)
             if filter_list:
                 self.add_new_filters(request_filters, "checker", filter_list, "keyMatcher")
 
