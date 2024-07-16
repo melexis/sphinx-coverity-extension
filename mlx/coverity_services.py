@@ -301,33 +301,9 @@ class CoverityDefectService:
                         "type": "nameMatcher"
                     }
                 ]
-            },
-            {
-                "columnKey":"classification",
-                "matchMode":"oneOrMoreMatch",
-                "matchers":[
-                    {
-                        "key":"Bug",
-                        "type":"keyMatcher"
-                    }
-                ]
             }
         ]
-        columns = []
-        data = {
-            "filters": request_filters,
-            "columns": columns,
-            "snapshotScope": {
-                "show": {
-                    "scope": "last()",
-                    "includeOutdatedSnapshots": False
-                },
-                "compareTo": {
-                    "scope": "last()",
-                    "includeOutdatedSnapshots": False
-                }
-            }
-        }
+
         # apply any filter on checker names
         if filters["checker"]:
             # get all checker
@@ -395,7 +371,21 @@ class CoverityDefectService:
             filter_list = self.handle_attribute_filter(filters["cid"], "CID", None)
             if filter_list:
                 self.add_new_filters(request_filters, "cid", filter_list, "idMatcher")
-
+        columns = []
+        data = {
+            "filters": request_filters,
+            "columns": columns,
+            "snapshotScope": {
+                "show": {
+                    "scope": "last()",
+                    "includeOutdatedSnapshots": False
+                },
+                "compareTo": {
+                    "scope": "last()",
+                    "includeOutdatedSnapshots": False
+                }
+            }
+        }
         logging.info("Running Coverity query...")
         return self.client.service.getMergedDefectsForSnapshotScope(project_id, filter_spec, page_spec, snapshot_scope)
 
