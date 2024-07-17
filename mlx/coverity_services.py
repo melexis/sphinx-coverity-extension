@@ -271,7 +271,7 @@ class CoverityDefectService:
                     }
                 )
 
-    def get_defects(self, project, filters, custom, username, password):
+    def get_defects(self, project, filters, username, password):
         """Gets a list of defects for given stream, with some query criteria.
 
         Args:
