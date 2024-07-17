@@ -7,7 +7,6 @@ import csv
 import json
 import logging
 import re
-from urllib.parse import urljoin
 
 # For Coverity - REST API
 import requests
@@ -135,7 +134,7 @@ class CoverityDefectService:
             username (str): Username to log in
             password (str): Password to log in
         """
-        url = str(urljoin(self.base_url, "/issues/search"))
+        url = f"{self.base_url.rstrip('/')}/issues/search"
         return self._post_request(url, filters, username, password)
 
     def retrieve_column_keys(self, username, password):
@@ -145,12 +144,8 @@ class CoverityDefectService:
             username (str): Username to log in
             password (str): Password to log in
         """
-        url = str(
-            urljoin(
-                self.base_url,
-                "/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true'",
-            )
-        )
+        url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true"
+        # breakpoint()
         self._column_keys = self._get_request(url, username, password)
         return self.column_keys
 
@@ -162,7 +157,7 @@ class CoverityDefectService:
             password (str): Password to log in
         """
         if not self.checkers:
-            url = str(urljoin(self.base_url, "/checkerAttributes/checker"))
+            url = f"{self.base_url.rstrip('/')}/checkerAttributes/checker"
             checkers = self._get_request(url, username, password)
             if checkers and "checkerAttributedata" in checkers:
                 self._checkers = [checker["key"] for checker in checkers["checkerAttributedata"]]
