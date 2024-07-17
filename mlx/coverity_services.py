@@ -94,7 +94,7 @@ class CoverityDefectService:
     _version = "v2"
 
     def __init__(self, transport, hostname, port):
-        self.base_url = str(urljoin(urljoin(transport, hostname), f":{port}/api/{self.version}"))
+        self.base_url = f"{transport}://{hostname.strip('/')}:{port}/api/{self.version}"
         self._checkers = None
         self._column_keys = None
         self.filters = ""
