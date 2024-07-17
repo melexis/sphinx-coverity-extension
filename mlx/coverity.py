@@ -134,10 +134,11 @@ class SphinxCoverityConnector:
         defects = self.coverity_service.get_defects(
             self.project_name,
             node["filters"],
+            node["col"],
             app.config.coverity_credentials["username"],
             app.config.coverity_credentials["password"],
         )
-        report_info("%d received" % (defects["totalNumberOfRecords"]))
+        report_info("%d received" % (defects["totalRows"]))
         report_info("building defects table and/or chart... ", True)
         return defects
 

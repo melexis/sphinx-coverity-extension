@@ -95,7 +95,7 @@ class CoverityDefectService:
     def __init__(self, transport, hostname):
         self.base_url = f"{transport}://{hostname.strip('/')}/api/{self.version}"
         self._checkers = None
-        self._column_keys = None
+        self._columns = None
         self.filters = ""
 
     @property
@@ -122,9 +122,9 @@ class CoverityDefectService:
         return self._checkers
 
     @property
-    def column_keys(self):
+    def columns(self):
         """All column keys"""
-        return self._column_keys
+        return self._columns
 
     def retrieve_issues(self, filters, username, password):
         """Retrieve the contents of the specified url in Coverity Connect.
@@ -146,8 +146,8 @@ class CoverityDefectService:
         """
         url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true"
         # breakpoint()
-        self._column_keys = self._get_request(url, username, password)
-        return self.column_keys
+        self._columns = self._get_request(url, username, password)
+        return self.columns
 
     def retrieve_checkers(self, username, password):
         """Retrieves the available checkers
@@ -271,12 +271,13 @@ class CoverityDefectService:
                     }
                 )
 
-    def get_defects(self, project, filters, username, password):
+    def get_defects(self, project, filters, column_names, username, password):
         """Gets a list of defects for given stream, with some query criteria.
 
         Args:
             project (str): Name of the project to query
             filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
+            column_names (list[str]): The column names
             custom (str): A custom query
             username (str): Username to log in
             password (str): Password to log in
@@ -301,10 +302,8 @@ class CoverityDefectService:
 
         # apply any filter on checker names
         if filters["checker"]:
-            # get all checker
-            checker_list = self.retrieve_checkers(username, password)
             # this should be a keyMatcher (columnKey: checker)
-            filter_list = self.handle_attribute_filter(filters["checker"], "Checker", checker_list, allow_regex=True)
+            filter_list = self.handle_attribute_filter(filters["checker"], "Checker", self.checkers, allow_regex=True)
             if filter_list:
                 self.add_new_filters(request_filters, "checker", filter_list, "keyMatcher")
 
@@ -366,10 +365,14 @@ class CoverityDefectService:
             filter_list = self.handle_attribute_filter(filters["cid"], "CID", None)
             if filter_list:
                 self.add_new_filters(request_filters, "cid", filter_list, "idMatcher")
-        columns = []
+        column_keys = []
+        if self.columns:
+            for column in self.columns:
+                if column["name"] in column_names:
+                    column_keys.append(column["columnKey"])
         data = {
             "filters": request_filters,
-            "columns": columns,
+            "columns": column_keys,
             "snapshotScope": {
                 "show": {
                     "scope": "last()",
@@ -382,7 +385,7 @@ class CoverityDefectService:
             }
         }
         logging.info("Running Coverity query...")
-        return self.client.service.getMergedDefectsForSnapshotScope(project_id, filter_spec, page_spec, snapshot_scope)
+        return self.retrieve_issues(data, username, password)
 
     def handle_attribute_filter(self, attribute_values, name, *args, **kwargs):
         """Applies any filter on an attribute's values.
