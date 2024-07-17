@@ -32,7 +32,7 @@ class TestCoverity(TestCase):
         suds_username_mock.return_value = MagicMock(spec=UsernameToken, return_value="bljah")
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("http", "scan.coverity.com", "8080")
+        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         coverity_conf_service.login("user", "password")
@@ -54,7 +54,7 @@ class TestCoverity(TestCase):
         suds_username_mock.return_value = MagicMock(spec=UsernameToken, return_value="bljah")
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("http", "scan.coverity.com", "8080")
+        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         # Test CoverityDefectService
@@ -84,7 +84,7 @@ class TestCoverity(TestCase):
         suds_username_mock.return_value = MagicMock(spec=UsernameToken, return_value="bljah")
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("http", "scan.coverity.com", "8080")
+        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         # Test CoverityDefectService
@@ -121,7 +121,7 @@ class TestCoverity(TestCase):
         suds_security_mock.return_value.tokens = []
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("http", "scan.coverity.com", "8080")
+        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         suds_client_mock.side_effect = Exception((401, "Unauthorized"))

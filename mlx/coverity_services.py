@@ -92,8 +92,8 @@ class CoverityDefectService:
 
     _version = "v2"
 
-    def __init__(self, transport, hostname, port):
-        self.base_url = f"{transport}://{hostname.strip('/')}:{port}/api/{self.version}"
+    def __init__(self, transport, hostname):
+        self.base_url = f"{transport}://{hostname.strip('/')}/api/{self.version}"
         self._checkers = None
         self._column_keys = None
         self.filters = ""
@@ -105,9 +105,9 @@ class CoverityDefectService:
 
     @base_url.setter
     def base_url(self, value):
-        if not re.fullmatch(r"https?://.+:\d\d\d\d/api/v\d+/?", value):
+        if not re.fullmatch(r"https?://.+/api/v\d+/?", value):
             raise ValueError(
-                f"Invalid base URL. Expected 'http(s)://<hostname>:<port>/api/{self.version}(/)'; Got {value}"
+                f"Invalid base URL. Expected 'http(s)://<hostname>/api/{self.version}(/)'; Got {value}"
             )
         self._base_url = value
 

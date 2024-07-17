@@ -56,7 +56,6 @@ class SphinxCoverityConnector:
             self.coverity_service = CoverityDefectService(
                 app.config.coverity_credentials["transport"],
                 app.config.coverity_credentials["hostname"],
-                app.config.coverity_credentials["port"],
             )
             # Get all column keys
             report_info("obtaining all column keys... ", True)
@@ -151,8 +150,7 @@ def setup(app):
         "coverity_credentials",
         {
             "hostname": "scan.coverity.com",
-            "port": "8080",
-            "transport": "http",
+            "transport": "https",
             "username": "reporter",
             "password": "coverity",
             "project_name": "some_project",
