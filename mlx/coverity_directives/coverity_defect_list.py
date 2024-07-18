@@ -68,14 +68,12 @@ class CoverityDefect(ItemElement):
         """Replaces the empty node with a fully built CoverityDefect based on the given defects.
 
         Args:
-            defects (suds.sudsobject.mergedDefectsPageDataObj): Suds mergedDefectsPageDataObj object containing filtered
-                defects.
+            defects (dict): filtered defects
             connector (SphinxCoverityConnector): Object containing the stream and CoverityDefectService object in use.
             app (sphinx.application.Sphinx): Sphinx' application object.
             fromdocname (str): Relative path to the document in which the error occured, without extension.
         """
         env = app.builder.env
-        self.stream = connector.stream
         self.coverity_service = connector.coverity_service
         top_node = self.create_top_node(self["title"])
 
@@ -87,7 +85,7 @@ class CoverityDefect(ItemElement):
 
         # Fill table and increase counters for pie chart
         try:
-            self.fill_table_and_count_attributes(defects["mergedDefects"], app, fromdocname)
+            self.fill_table_and_count_attributes(defects["rows"], app, fromdocname)
         except AttributeError as err:
             report_info("No issues matching your query or empty stream. %s" % err)
             top_node += nodes.paragraph(text="No issues matching your query or empty stream")
