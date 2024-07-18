@@ -365,8 +365,6 @@ class CoverityDefectService:
             for column in self.columns:
                 if column["name"] in column_names:
                     column_keys.append(column["columnKey"])
-        if "cid" not in column_keys:
-            column_keys.append("cid")
         if "lineNumber" not in column_keys:
             column_keys.append("lineNumber")
         if "displayFile" not in column_keys:
