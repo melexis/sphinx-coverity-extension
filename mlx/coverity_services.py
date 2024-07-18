@@ -364,6 +364,10 @@ class CoverityDefectService:
             for column in self.columns:
                 if column["name"] in column_names:
                     column_keys.append(column["columnKey"])
+        if "lineNumber" not in column_keys:
+            column_keys.append("lineNumber")
+        if "displayFile" not in column_keys:
+            column_keys.append("displayFile")
         data = {
             "filters": request_filters,
             "columns": column_keys,
