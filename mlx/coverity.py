@@ -25,7 +25,7 @@ class SphinxCoverityConnector:
     Class containing functions and variables for Sphinx to access in specific stages of the documentation build.
     """
 
-    project_name = ""
+    stream = ""
     coverity_service = None
 
     def __init__(self):
@@ -48,7 +48,7 @@ class SphinxCoverityConnector:
     \\let\@noitemerr\\relax
     \\makeatother"""
 
-        self.project_name = app.config.coverity_credentials["project_name"]
+        self.stream = app.config.coverity_credentials["stream"]
 
         # Login to Coverity and obtain stream information
         try:
@@ -132,7 +132,7 @@ class SphinxCoverityConnector:
         """
         report_info("obtaining defects... ", True)
         defects = self.coverity_service.get_defects(
-            self.project_name,
+            self.stream,
             node["filters"],
             node["col"],
             app.config.coverity_credentials["username"],
@@ -154,7 +154,7 @@ def setup(app):
             "transport": "https",
             "username": "reporter",
             "password": "coverity",
-            "project_name": "some_project",
+            "stream": "some_stream",
         },
         "env",
     )

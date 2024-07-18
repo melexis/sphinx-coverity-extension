@@ -314,7 +314,7 @@ coverity_credentials = {
     "hostname": "coverity.melexis.com",
     "username": config("COVERITY_USERNAME"),
     "password": config("COVERITY_PASSWORD"),
-    "project_name": config("COVERITY_PROJECT"),
+    "stream": config("COVERITY_STREAM"),
 }
 
 TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"

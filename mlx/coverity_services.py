@@ -266,11 +266,11 @@ class CoverityDefectService:
                 }
             )
 
-    def get_defects(self, project, filters, column_names, username, password):
+    def get_defects(self, stream, filters, column_names, username, password):
         """Gets a list of defects for given stream, with some query criteria.
 
         Args:
-            project (str): Name of the project to query
+            stream (str): Name of the stream to query
             filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
             column_names (list[str]): The column names
             custom (str): A custom query
@@ -280,15 +280,15 @@ class CoverityDefectService:
         Returns:
             (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects
         """
-        logging.info("Querying Coverity for defects in project [%s] ...", project)
+        logging.info("Querying Coverity for defects in stream [%s] ...", stream)
         request_filters = [
             {
-                "columnKey": "project",
+                "columnKey": "streams",
                 "matchMode": "oneOrMoreMatch",
                 "matchers": [
                     {
-                        "class": "Project",
-                        "name": project,
+                        "class": "Stream",
+                        "name": stream,
                         "type": "nameMatcher"
                     }
                 ]
@@ -605,15 +605,15 @@ class CoverityDefectService:
         """Get action attribute value for given defect"""
         return self.get_value_for_named_attribute(stream_defect, ACTION_ATTR_NAME)
 
-    def get_defect_url(self, project, cid):
+    def get_defect_url(self, stream, cid):
         """Get URL for given defect CID
-        http://machine1.eng.company.com/query/defects.htm?project=ProjectA&cid=1234
+        http://machine1.eng.company.com/query/defects.htm?stream=StreamA&cid=1234
 
         Args:
-            project (str): The name of the project
+            stream (str): The name of the stream
             cid (int): The cid of the given defect
         """
-        return f"{self.base_url}/query/defects.htm?project={project}&cid={cid}"
+        return f"{self.base_url}/query/defects.htm?stream={stream}&cid={cid}"
 
 
 if __name__ == "__main__":
