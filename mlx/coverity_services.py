@@ -134,7 +134,8 @@ class CoverityDefectService:
             username (str): Username to log in
             password (str): Password to log in
         """
-        url = f"{self.base_url.rstrip('/')}/issues/search"
+        url = self.base_url.rstrip('/') + \
+            f"/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
         return self._post_request(url, filters, username, password)
 
     def retrieve_column_keys(self, username, password):
