@@ -609,11 +609,15 @@ class CoverityDefectService:
         """Get action attribute value for given defect"""
         return self.get_value_for_named_attribute(stream_defect, ACTION_ATTR_NAME)
 
-    def get_defect_url(self, stream, cid):
+    def get_defect_url(self, project, cid):
         """Get URL for given defect CID
-        http://machine1.eng.company.com/query/defects.htm?stream=StreamA&cid=1234
+        http://machine1.eng.company.com/query/defects.htm?project=ProjectA&cid=1234
+
+        Args:
+            project (str): The name of the project
+            cid (int): The cid of the given defect
         """
-        return self.get_service_url("/query/defects.htm?stream=%s&cid=%s" % (stream, str(cid)), add_port=False)
+        return f"{self.base_url}/query/defects.htm?project={project}&cid={cid}"
 
 
 if __name__ == "__main__":
