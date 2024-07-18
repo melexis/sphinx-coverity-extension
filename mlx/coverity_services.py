@@ -94,8 +94,8 @@ class CoverityDefectService:
 
     def __init__(self, transport, hostname):
         self.base_url = f"{transport}://{hostname.strip('/')}/api/{self.version}"
-        self._checkers = None
-        self._columns = None
+        self._checkers = []
+        self._columns = []
         self.filters = ""
 
     @property
@@ -294,7 +294,6 @@ class CoverityDefectService:
                 ]
             }
         ]
-
         # apply any filter on checker names
         if filters["checker"]:
             # this should be a keyMatcher (columnKey: checker)
@@ -360,22 +359,21 @@ class CoverityDefectService:
             filter_list = self.handle_attribute_filter(filters["cid"], "CID", None)
             if filter_list:
                 self.add_new_filters(request_filters, "cid", filter_list, "idMatcher")
-        column_keys = []
-        if self.columns:
-            for column in self.columns:
-                if column["name"] in column_names:
-                    column_keys.append(column["columnKey"])
-        if "lineNumber" not in column_keys:
-            column_keys.append("lineNumber")
-        if "displayFile" not in column_keys:
-            column_keys.append("displayFile")
-        if "lastTriageComment" not in column_keys:
-            column_keys.append("lastTriageComment")
-        if "externalReference" not in column_keys:
-            column_keys.append("externalReference")
+        column_names = [name.lower() for name in column_names]
+        column_keys = set()
+        for column in self.columns:
+            if column["name"].lower() in column_names:
+                column_keys.add(column["columnKey"])
+        if "location" in column_names:
+            column_keys.add("lineNumber")
+            column_keys.add("displayFile")
+        if "comment" in column_names:
+            column_keys.add("lastTriageComment")
+        if "reference" in column_names:
+            column_keys.add("externalReference")
         data = {
             "filters": request_filters,
-            "columns": column_keys,
+            "columns": list(column_keys),
             "snapshotScope": {
                 "show": {
                     "scope": "last()",
