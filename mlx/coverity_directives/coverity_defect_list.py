@@ -165,11 +165,12 @@ class CoverityDefect(ItemElement):
         option is in use.
 
         Args:
-            defects (list): List of defect objects (mergedDefectDataObj).
+            defects (list[dict]): List of defect objects.
         """
         for defect in defects:
+            simplified_defect = {item["key"]: item["value"] for item in defect}
             if self["col"]:
-                self.tbody += self.get_filled_row(defect, self["col"], *args)
+                self.tbody += self.get_filled_row(simplified_defect, self["col"], *args)
 
             if isinstance(self["chart"], list):
                 self.increase_attribute_value_count(defect)
