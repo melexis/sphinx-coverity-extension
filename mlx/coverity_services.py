@@ -226,50 +226,44 @@ class CoverityDefectService:
             matcher_type (str): The type of matcher (nameMatcher, idMatcher or keyMatcher)
             matcher_class (str): The name of the column key which represents the class
         """
+        matchers = []
         # dateMatcher also exist but due to hardcoded way of working, this is skipped
         if matcher_type == "nameMatcher":
             for filter in filter_list:
-                request_filters.append(
-                    {
-                        "columnKey": column_key,
-                        "matchMode": "oneOrMoreMatch",
-                        "matchers": [
-                            {
-                                "class": matcher_class,
-                                "name": filter,
-                                "type": "nameMatcher",
-                            }
-                        ],
-                    }
-                )
+                matchers.append({
+                    "class": matcher_class,
+                    "name": filter,
+                    "type": "nameMatcher",
+                })
+            request_filters.append({
+                "columnKey": column_key,
+                "matchMode": "oneOrMoreMatch",
+                "matchers": matchers
+            })
         elif matcher_type == "idMatcher":
             for filter in filter_list:
-                request_filters.append(
-                    {
-                        "columnKey": column_key,
-                        "matchMode": "oneOrMoreMatch",
-                        "matchers": [
-                            {
-                                "id": filter,
-                                "type": "idMatcher"
-                            }
-                        ],
-                    }
-                )
+                matchers.append({
+                    "id": filter,
+                    "type": "idMatcher"
+                })
+            request_filters.append({
+                    "columnKey": column_key,
+                    "matchMode": "oneOrMoreMatch",
+                    "matchers": matchers
+            })
         else:
             for filter in filter_list:
-                request_filters.append(
-                    {
-                        "columnKey": column_key,
-                        "matchMode": "oneOrMoreMatch",
-                        "matchers": [
-                            {
-                                "key": filter,
-                                "type": "keyMatcher"
-                            }
-                        ],
-                    }
-                )
+                matchers.append({
+                    "key": filter,
+                    "type": "keyMatcher"
+                })
+            request_filters.append(
+                {
+                    "columnKey": column_key,
+                    "matchMode": "oneOrMoreMatch",
+                    "matchers": matchers
+                }
+            )
 
     def get_defects(self, project, filters, column_names, username, password):
         """Gets a list of defects for given stream, with some query criteria.
