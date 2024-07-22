@@ -371,6 +371,7 @@ class CoverityDefectService:
             column_keys.add("lastTriageComment")
         if "reference" in column_names:
             column_keys.add("externalReference")
+        column_keys.add("cid")
         data = {
             "filters": request_filters,
             "columns": list(column_keys),
