@@ -178,16 +178,16 @@ class CoverityDefectService:
         else:
             return req.raise_for_status()
 
-    def _post_request(self, url, json_data, username, password):
+    def _post_request(self, url, data, username, password):
         """POST request
 
         Args:
             url (str): The url to request data via POST request
-            json_data (json): The json data to send
+            data (dict): The data to send
             username (str): Username to log in
             password (str): Password to log in
         """
-        req = requests.post(url, json=json_data, auth=(username, password))
+        req = requests.post(url, json=data, auth=(username, password))
         if req.ok:
             return json.loads(req.content)
         else:
