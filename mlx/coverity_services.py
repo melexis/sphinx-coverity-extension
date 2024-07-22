@@ -145,7 +145,7 @@ class CoverityDefectService:
             username (str): Username to log in
             password (str): Password to log in
         """
-        url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=true"
+        url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
         # breakpoint()
         self._columns = self._get_request(url, username, password)
         return self.columns
