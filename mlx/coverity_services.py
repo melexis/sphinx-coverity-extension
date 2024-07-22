@@ -607,7 +607,7 @@ class CoverityDefectService:
 
     def get_defect_url(self, stream, cid):
         """Get URL for given defect CID
-        http://machine1.eng.company.com/query/defects.htm?stream=StreamA&cid=1234
+        https://machine1.eng.company.com/query/defects.htm?stream=StreamA&cid=1234
 
         Args:
             stream (str): The name of the stream

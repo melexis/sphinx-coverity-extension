@@ -33,7 +33,7 @@ class TestCoverity(TestCase):
 
         # Login to Coverity and obtain stream information
         coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
-        suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
+        suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         coverity_conf_service.login("user", "password")
         suds_security_mock.assert_called_once()
@@ -55,11 +55,11 @@ class TestCoverity(TestCase):
 
         # Login to Coverity and obtain stream information
         coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
-        suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
+        suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         # Test CoverityDefectService
         coverity_service = cov.CoverityDefectService(coverity_conf_service)
-        suds_client_mock.assert_called_with("http://scan.coverity.com:8080/ws/v9/defectservice?wsdl")
+        suds_client_mock.assert_called_with("https://scan.coverity.com:8080/ws/v9/defectservice?wsdl")
 
         coverity_service.login("user", "password")
         suds_security_mock.assert_called_once()
@@ -85,11 +85,11 @@ class TestCoverity(TestCase):
 
         # Login to Coverity and obtain stream information
         coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
-        suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
+        suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         # Test CoverityDefectService
         coverity_service = cov.CoverityDefectService(coverity_conf_service)
-        suds_client_mock.assert_called_with("http://scan.coverity.com:8080/ws/v9/defectservice?wsdl")
+        suds_client_mock.assert_called_with("https://scan.coverity.com:8080/ws/v9/defectservice?wsdl")
 
         coverity_service.login("user", "password")
         suds_security_mock.assert_called_once()
@@ -122,7 +122,7 @@ class TestCoverity(TestCase):
 
         # Login to Coverity and obtain stream information
         coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
-        suds_client_mock.assert_called_once_with("http://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
+        suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         suds_client_mock.side_effect = Exception((401, "Unauthorized"))
         coverity_conf_service.login("", "")
