@@ -25,7 +25,7 @@ class TestCoverity(TestCase):
     def test_configuration_service_login(self, suds_client_mock, suds_security_mock, suds_username_mock):
         """Test login function of CoverityConfigurationService"""
         suds_client_mock.return_value = MagicMock(spec=Client)
-        suds_client_mock.return_value.service = MagicMock(spec=covservices.Service)
+        suds_client_mock.return_value.service = MagicMock(spec=covservices.CoverityDefectService)
         suds_client_mock.return_value.service.getVersion = MagicMock()
         suds_security_mock.return_value = MagicMock(spec=Security)
         suds_security_mock.return_value.tokens = []
@@ -47,7 +47,7 @@ class TestCoverity(TestCase):
     def test_defect_service_login(self, suds_client_mock, suds_security_mock, suds_username_mock):
         """Test login function of CoverityDefectService"""
         suds_client_mock.return_value = MagicMock(spec=Client)
-        suds_client_mock.return_value.service = MagicMock(spec=covservices.Service)
+        suds_client_mock.return_value.service = MagicMock(spec=covservices.CoverityDefectService)
         suds_client_mock.return_value.service.getVersion = MagicMock()
         suds_security_mock.return_value = MagicMock(spec=Security)
         suds_security_mock.return_value.tokens = []
@@ -71,7 +71,7 @@ class TestCoverity(TestCase):
     def test_defect_service_defects(self, suds_client_mock, suds_security_mock, suds_username_mock):
         """Test login function of CoverityDefectService"""
         suds_client_mock.return_value = MagicMock(spec=Client)
-        suds_client_mock.return_value.service = MagicMock(spec=covservices.Service)
+        suds_client_mock.return_value.service = MagicMock(spec=covservices.CoverityDefectService)
         suds_client_mock.return_value.service.getVersion = MagicMock()
         with open("tests/defect_soap.xml", "rb") as xmlfile:
             defect_soap = objectify.fromstring(xmlfile.read())
@@ -115,7 +115,7 @@ class TestCoverity(TestCase):
     ):
         """Test login function of CoverityConfigurationService when error occurs"""
         suds_client_mock.return_value = MagicMock(spec=Client)
-        suds_client_mock.return_value.service = MagicMock(spec=covservices.Service)
+        suds_client_mock.return_value.service = MagicMock(spec=covservices.CoverityDefectService)
         suds_client_mock.return_value.service.getVersion = MagicMock()
         suds_security_mock.return_value = MagicMock(spec=Security)
         suds_security_mock.return_value.tokens = []
