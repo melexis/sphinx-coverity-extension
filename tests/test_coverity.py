@@ -23,7 +23,7 @@ class TestCoverity(TestCase):
     @patch("mlx.coverity_services.Security")
     @patch("mlx.coverity_services.Client")
     def test_configuration_service_login(self, suds_client_mock, suds_security_mock, suds_username_mock):
-        """Test login function of CoverityConfigurationService"""
+        """Test login function of CoverityDefectService"""
         suds_client_mock.return_value = MagicMock(spec=Client)
         suds_client_mock.return_value.service = MagicMock(spec=covservices.CoverityDefectService)
         suds_client_mock.return_value.service.getVersion = MagicMock()
@@ -32,7 +32,7 @@ class TestCoverity(TestCase):
         suds_username_mock.return_value = MagicMock(spec=UsernameToken, return_value="bljah")
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
+        coverity_conf_service = cov.CoverityDefectService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         coverity_conf_service.login("user", "password")
@@ -54,7 +54,7 @@ class TestCoverity(TestCase):
         suds_username_mock.return_value = MagicMock(spec=UsernameToken, return_value="bljah")
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
+        coverity_conf_service = cov.CoverityDefectService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         # Test CoverityDefectService
@@ -84,7 +84,7 @@ class TestCoverity(TestCase):
         suds_username_mock.return_value = MagicMock(spec=UsernameToken, return_value="bljah")
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
+        coverity_conf_service = cov.CoverityDefectService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         # Test CoverityDefectService
@@ -113,7 +113,7 @@ class TestCoverity(TestCase):
     def test_configuration_service_login_no_username_error(
         self, suds_client_mock, suds_security_mock, suds_username_mock
     ):
-        """Test login function of CoverityConfigurationService when error occurs"""
+        """Test login function of CoverityDefectService when error occurs"""
         suds_client_mock.return_value = MagicMock(spec=Client)
         suds_client_mock.return_value.service = MagicMock(spec=covservices.CoverityDefectService)
         suds_client_mock.return_value.service.getVersion = MagicMock()
@@ -121,7 +121,7 @@ class TestCoverity(TestCase):
         suds_security_mock.return_value.tokens = []
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityConfigurationService("https", "scan.coverity.com")
+        coverity_conf_service = cov.CoverityDefectService("https", "scan.coverity.com")
         suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
 
         suds_client_mock.side_effect = Exception((401, "Unauthorized"))
