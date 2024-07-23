@@ -97,7 +97,7 @@ class CoverityDefect(ItemElement):
             top_node += table
 
         if isinstance(self["chart"], list):
-            self._prepare_labels_and_values(combined_labels, defects["totalNumberOfRecords"])
+            self._prepare_labels_and_values(combined_labels, defects["totalRows"])
             top_node += self.build_pie_chart(env)
 
         report_info("done")
@@ -173,7 +173,7 @@ class CoverityDefect(ItemElement):
                 self.tbody += self.get_filled_row(simplified_defect, self["col"], valid_columns, *args)
 
             if isinstance(self["chart"], list):
-                self.increase_attribute_value_count(defect)
+                self.increase_attribute_value_count(simplified_defect, valid_columns)
 
     def get_filled_row(self, defect, columns, valid_columns, *args):
         """Goes through each column and decides if it is there or prints empty cell.
@@ -274,16 +274,23 @@ class CoverityDefect(ItemElement):
         image_node["candidates"] = "*"  # look at uri value for source path, relative to the srcdir folder
         return image_node
 
-    def increase_attribute_value_count(self, defect):
+    def increase_attribute_value_count(self, defect, valid_columns):
         """Increases the counter for a chart attribute value belonging to the defect.
 
         Args:
-            defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
+            defect (dict): The defect.
+            valid_columns (list[dict]): All available valid columns with the column names and respectively column keys
         """
+        # breakpoint()
         if self["chart_attribute"].upper() in self.column_map:
             attribute_value = str(defect[self.column_map[self["chart_attribute"].upper()]])
         else:
-            col = self.cov_attribute_value_to_col(defect, self["chart_attribute"])
+            for valid_column in valid_columns:
+                if valid_column["name"].upper() == self["chart_attribute"].upper():
+                    col = self.cov_attribute_value_to_col(defect, valid_column["columnKey"])
+                    break
+            else:
+                col = self.create_cell("")
             attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
 
         if attribute_value in self.chart_labels:
