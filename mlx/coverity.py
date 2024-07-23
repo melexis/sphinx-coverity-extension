@@ -43,7 +43,7 @@ class SphinxCoverityConnector:
         # LaTeX-support: since we generate empty tags, we need to relax the verbosity of that error
         if "preamble" not in app.config.latex_elements:
             app.config.latex_elements["preamble"] = ""
-        app.config.latex_elements["preamble"] += """\
+        app.config.latex_elements["preamble"] += r"""
     \\makeatletter
     \\let\@noitemerr\\relax
     \\makeatother"""
