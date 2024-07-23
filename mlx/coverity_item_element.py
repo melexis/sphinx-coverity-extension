@@ -85,14 +85,10 @@ class ItemElement(nodes.General, nodes.Element):
         """
         Search defects array and return value for name
         """
-        col = self.create_cell(" ")
-
-        for attribute in defect["defectStateAttributeValues"]:
-            if attribute["attributeDefinitionId"][0] == name:
-                try:
-                    col = self.create_cell(attribute["attributeValueId"][0])
-                except (AttributeError, IndexError):
-                    col = self.create_cell(" ")
+        if name in defect:
+            col = self.create_cell(defect[name])
+        else:
+            col = self.create_cell(" ")
         return col
 
     def create_paragraph_with_links(self, defect, col_name, *args):
@@ -108,10 +104,9 @@ class ItemElement(nodes.General, nodes.Element):
             (nodes.paragraph) Paragraph node filled with column contents for the given defect. Item IDs and hyperlinks
                 have been made interactive.
         """
-        text = str(self.cov_attribute_value_to_col(defect, col_name).children[0].children[0])
+        remaining_text = str(defect[col_name])
         cid = str(defect["cid"])
         contents = nodes.paragraph()
-        remaining_text = text
         self.link_to_urls(contents, remaining_text, cid, *args)
         return contents
 

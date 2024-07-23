@@ -53,15 +53,15 @@ class CoverityDefect(ItemElement):
         "IMPACT": "displayImpact",
         "ISSUE": "displayIssueKind",
         "TYPE": "displayType",
-        "CHECKER": "checkerName",
-        "COMPONENT": "componentName",
+        "CHECKER": "checker",
+        "COMPONENT": "displayComponent",
     }
     defect_states_map = {
-        "COMMENT": "Comment",
-        "REFERENCE": "Ext. Reference",
-        "CLASSIFICATION": "Classification",
-        "ACTION": "Action",
-        "STATUS": "DefectStatus",
+        "COMMENT": "lastTriageComment",
+        "REFERENCE": "externalReference",
+        "CLASSIFICATION": "classification",
+        "ACTION": "action",
+        "STATUS": "status",
     }
 
     def perform_replacement(self, defects, connector, app, fromdocname):
@@ -85,7 +85,7 @@ class CoverityDefect(ItemElement):
 
         # Fill table and increase counters for pie chart
         try:
-            self.fill_table_and_count_attributes(defects["rows"], app, fromdocname)
+            self.fill_table_and_count_attributes(defects["rows"], connector.coverity_service.columns, app, fromdocname)
         except AttributeError as err:
             report_info("No issues matching your query or empty stream. %s" % err)
             top_node += nodes.paragraph(text="No issues matching your query or empty stream")
@@ -159,7 +159,7 @@ class CoverityDefect(ItemElement):
                 combined_labels[label] = attr_values
         return combined_labels
 
-    def fill_table_and_count_attributes(self, defects, *args):
+    def fill_table_and_count_attributes(self, defects, valid_columns, *args):
         """
         Fills the table body of the col option is in use, and counts the amount of each attribute value of the chart
         option is in use.
@@ -170,12 +170,12 @@ class CoverityDefect(ItemElement):
         for defect in defects:
             simplified_defect = {item["key"]: item["value"] for item in defect}
             if self["col"]:
-                self.tbody += self.get_filled_row(simplified_defect, self["col"], *args)
+                self.tbody += self.get_filled_row(simplified_defect, self["col"], valid_columns, *args)
 
             if isinstance(self["chart"], list):
                 self.increase_attribute_value_count(defect)
 
-    def get_filled_row(self, defect, columns, *args):
+    def get_filled_row(self, defect, columns, valid_columns, *args):
         """Goes through each column and decides if it is there or prints empty cell.
 
         Args:
@@ -191,25 +191,33 @@ class CoverityDefect(ItemElement):
             if item_col == "CID":
                 # CID is default and even if it is in disregard
                 row += self.create_cell(
-                    str(defect["cid"]),
-                    url=self.coverity_service.get_defect_url(self.stream, str(defect["cid"])),
+                    str(defect["cid"])
                 )
             elif item_col == "LOCATION":
-                info = self.coverity_service.get_defect(str(defect["cid"]), self.stream)
-                linenum = info[-1]["defectInstances"][-1]["events"][-1]["lineNumber"]
-                row += self.create_cell("{}#L{}".format(defect["filePathname"], linenum))
+                linenum = defect["lineNumber"]
+                row += self.create_cell("{}#L{}".format(defect["displayFile"], linenum))
             elif item_col in self.column_map:
-                row += self.create_cell(defect[self.column_map[item_col]])
-            elif item_col in ("COMMENT", "REFERENCE"):
+                row += self.cov_attribute_value_to_col(defect, self.column_map[item_col])
+            elif item_col == "COMMENT":
                 row += nodes.entry(
                     "",
-                    self.create_paragraph_with_links(defect, self.defect_states_map[item_col], *args),
+                    self.create_paragraph_with_links(defect, "lastTriageComment", *args),
+                )
+            elif item_col == "REFERENCE":
+                row += nodes.entry(
+                    "",
+                    self.create_paragraph_with_links(defect, "externalReference", *args),
                 )
             elif item_col in self.defect_states_map:
                 row += self.cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
             else:
                 # generic check which, if it is missing, prints empty cell anyway
-                row += self.cov_attribute_value_to_col(defect, item_col)
+                for valid_column in valid_columns:
+                    if valid_column["name"].upper() == item_col:
+                        row += self.cov_attribute_value_to_col(defect, valid_column["columnKey"])
+                        break
+                else:
+                    row += self.create_cell("")
         return row
 
     def _prepare_labels_and_values(self, combined_labels, total_count):
