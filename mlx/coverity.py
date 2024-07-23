@@ -53,23 +53,21 @@ class SphinxCoverityConnector:
         # Login to Coverity and obtain stream information
         try:
             self.input_credentials(app.config.coverity_credentials)
+            report_info('Login to Coverity server... ', True)
             self.coverity_service = CoverityDefectService(
                 app.config.coverity_credentials["transport"],
                 app.config.coverity_credentials["hostname"],
             )
+            self.coverity_service.login(app.config.coverity_credentials['username'],
+                                        app.config.coverity_credentials['password'])
+            report_info('done')
             # Get all column keys
             report_info("obtaining all column keys... ", True)
-            self.coverity_service.retrieve_column_keys(
-                app.config.coverity_credentials["username"],
-                app.config.coverity_credentials["password"],
-            )
+            self.coverity_service.retrieve_column_keys()
             report_info("done")
             # Get all checkers
             report_info("obtaining all checkers... ", True)
-            self.coverity_service.retrieve_checkers(
-                app.config.coverity_credentials["username"],
-                app.config.coverity_credentials["password"],
-            )
+            self.coverity_service.retrieve_checkers()
             report_info("done")
         except (URLError, HTTPError, Exception, ValueError) as error_info:  # pylint: disable=broad-except
             if isinstance(error_info, EOFError):
@@ -134,9 +132,7 @@ class SphinxCoverityConnector:
         defects = self.coverity_service.get_defects(
             self.stream,
             node["filters"],
-            node["col"],
-            app.config.coverity_credentials["username"],
-            app.config.coverity_credentials["password"],
+            node["col"]
         )
         report_info("%d received" % (defects["totalRows"]))
         report_info("building defects table and/or chart... ", True)

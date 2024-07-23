@@ -126,68 +126,61 @@ class CoverityDefectService:
         """All column keys"""
         return self._columns
 
-    def retrieve_issues(self, filters, username, password):
+    def login(self, username, password):
+        """Login in session
+        Args:
+            username (str): Username to log in
+            password (str): Password to log in
+        """
+        self.session = requests.Session()
+        self.session.auth = (username, password)
+
+    def retrieve_issues(self, filters):
         """Retrieve the contents of the specified url in Coverity Connect.
 
         Args:
             filters (json): The filters as json
-            username (str): Username to log in
-            password (str): Password to log in
         """
         url = self.base_url.rstrip('/') + \
             f"/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
-        return self._post_request(url, filters, username, password)
+        return self._post_request(url, filters)
 
-    def retrieve_column_keys(self, username, password):
-        """Retrieves the set of column keys and associated display names
-
-        Args:
-            username (str): Username to log in
-            password (str): Password to log in
-        """
+    def retrieve_column_keys(self):
+        """Retrieves the set of column keys and associated display names."""
         url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
         # breakpoint()
-        self._columns = self._get_request(url, username, password)
+        self._columns = self._get_request(url)
         return self.columns
 
-    def retrieve_checkers(self, username, password):
-        """Retrieves the available checkers
-
-        Args:
-            username (str): Username to log in
-            password (str): Password to log in
-        """
+    def retrieve_checkers(self):
+        """Retrieves the available checkers."""
         if not self.checkers:
             url = f"{self.base_url.rstrip('/')}/checkerAttributes/checker"
-            checkers = self._get_request(url, username, password)
+            checkers = self._get_request(url)
             if checkers and "checkerAttributedata" in checkers:
                 self._checkers = [checker["key"] for checker in checkers["checkerAttributedata"]]
         return self.checkers
 
-    def _get_request(self, url, username, password):
+    def _get_request(self, url):
         """GET request
 
         Args:
             url (str): The url to request data via GET request
-            username (str): Username to log in
-            password (str): Password to log in
         """
-        req = requests.get(url, auth=(username, password))
+        req = self.session.get(url)
         if req.ok:
             return json.loads(req.content)
         else:
             return req.raise_for_status()
 
-    def _post_request(self, url, data, username, password):
+    def _post_request(self, url, data):
         """POST request
 
         Args:
             url (str): The url to request data via POST request
             data (dict): The data to send
-            username (str): Username to log in
-            password (str): Password to log in
         """
-        req = requests.post(url, json=data, auth=(username, password))
+        req = self.session.post(url, json=data)
         if req.ok:
             return json.loads(req.content)
         else:
@@ -266,7 +259,7 @@ class CoverityDefectService:
                 }
             )
 
-    def get_defects(self, stream, filters, column_names, username, password):
+    def get_defects(self, stream, filters, column_names):
         """Gets a list of defects for given stream, with some query criteria.
 
         Args:
@@ -274,8 +267,6 @@ class CoverityDefectService:
             filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
             column_names (list[str]): The column names
             custom (str): A custom query
-            username (str): Username to log in
-            password (str): Password to log in
 
         Returns:
             (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects
@@ -387,7 +378,7 @@ class CoverityDefectService:
             }
         }
         logging.info("Running Coverity query...")
-        return self.retrieve_issues(data, username, password)
+        return self.retrieve_issues(data)
 
     def handle_attribute_filter(self, attribute_values, name, *args, **kwargs):
         """Applies any filter on an attribute's values.
