@@ -7,39 +7,25 @@ except ImportError:
     from mock import MagicMock, patch
     # from mock import call
 import mlx.coverity as cov
-import mlx.coverity_services as covservices
-
-# For Coverity - SOAP
-from suds.client import Client
-from suds.wsse import Security, UsernameToken
-from lxml import objectify
-
+import mlx.coverity_services
+import requests
 
 class TestCoverity(TestCase):
     def setUp(self):
         """SetUp to be run before each test to provide clean working env"""
 
-    @patch("mlx.coverity_services.UsernameToken")
-    @patch("mlx.coverity_services.Security")
-    @patch("mlx.coverity_services.Client")
-    def test_configuration_service_login(self, suds_client_mock, suds_security_mock, suds_username_mock):
-        """Test login function of CoverityDefectService"""
-        suds_client_mock.return_value = MagicMock(spec=Client)
-        suds_client_mock.return_value.service = MagicMock(spec=covservices.CoverityDefectService)
-        suds_client_mock.return_value.service.getVersion = MagicMock()
-        suds_security_mock.return_value = MagicMock(spec=Security)
-        suds_security_mock.return_value.tokens = []
-        suds_username_mock.return_value = MagicMock(spec=UsernameToken, return_value="bljah")
+    @patch("mlx.coverity_services.requests")
+    def test_session_login(self, mock_requests):
+        """Test "login" by  retrieving all column keys (CoverityDefectService)"""
+        mock_requests.return_value = MagicMock(spec=requests)
+
+        # Get the base url
+        coverity_conf_service = mlx.coverity_services.CoverityDefectService("https", "scan.coverity.com/")
+        self.assertEqual("https://scan.coverity.com/api/v2", coverity_conf_service.base_url)
 
         # Login to Coverity and obtain stream information
-        coverity_conf_service = cov.CoverityDefectService("https", "scan.coverity.com")
-        suds_client_mock.assert_called_once_with("https://scan.coverity.com:8080/ws/v9/configurationservice?wsdl")
-
         coverity_conf_service.login("user", "password")
-        suds_security_mock.assert_called_once()
-        suds_username_mock.assert_called_once_with("user", "password")
-        # suds_security_mock.tokens.assert_called_once_with("bljah")
-        # suds_client_mock.set_options.assert_called_once_with(wsse=suds_security_mock)
+        mock_requests.Session.assert_called_once()
 
     @patch("mlx.coverity_services.UsernameToken")
     @patch("mlx.coverity_services.Security")
