@@ -1,0 +1,178 @@
+[
+    {
+        "columnKey": "cid",
+        "name": "CID"
+    },
+    {
+        "columnKey": "checker",
+        "name": "Checker"
+    },
+    {
+        "columnKey": "displayImpact",
+        "name": "Impact"
+    },
+    {
+        "columnKey": "displayCategory",
+        "name": "Category"
+    },
+    {
+        "columnKey": "displayType",
+        "name": "Type"
+    },
+    {
+        "columnKey": "cwe",
+        "name": "CWE"
+    },
+    {
+        "columnKey": "displayIssueKind",
+        "name": "Issue Kind"
+    },
+    {
+        "columnKey": "status",
+        "name": "Status"
+    },
+    {
+        "columnKey": "firstDetected",
+        "name": "First Detected"
+    },
+    {
+        "columnKey": "owner",
+        "name": "Owner"
+    },
+    {
+        "columnKey": "ownerFullName",
+        "name": "Owner Name"
+    },
+    {
+        "columnKey": "externalReference",
+        "name": "External Reference"
+    },
+    {
+        "columnKey": "classification",
+        "name": "Classification"
+    },
+    {
+        "columnKey": "severity",
+        "name": "Severity"
+    },
+    {
+        "columnKey": "action",
+        "name": "Action"
+    },
+    {
+        "columnKey": "fixTarget",
+        "name": "Fix Target"
+    },
+    {
+        "columnKey": "legacy",
+        "name": "Legacy"
+    },
+    {
+        "columnKey": "displayComponent",
+        "name": "Component"
+    },
+    {
+        "columnKey": "displayFile",
+        "name": "File"
+    },
+    {
+        "columnKey": "displayFunction",
+        "name": "Function"
+    },
+    {
+        "columnKey": "functionMergeName",
+        "name": "Function Merge Name"
+    },
+    {
+        "columnKey": "mergeExtra",
+        "name": "Merge Extra"
+    },
+    {
+        "columnKey": "mergeKey",
+        "name": "Merge Key"
+    },
+    {
+        "columnKey": "fileLanguage",
+        "name": "Language"
+    },
+    {
+        "columnKey": "lastTriaged",
+        "name": "Last Triaged"
+    },
+    {
+        "columnKey": "lastTriagedUser",
+        "name": "Last Triaged User"
+    },
+    {
+        "columnKey": "occurrenceCount",
+        "name": "Count"
+    },
+    {
+        "columnKey": "displayComparison",
+        "name": "Comparison"
+    },
+    {
+        "columnKey": "firstSnapshotDate",
+        "name": "First Snapshot Date"
+    },
+    {
+        "columnKey": "firstSnapshotId",
+        "name": "First Snapshot"
+    },
+    {
+        "columnKey": "firstSnapshotVersion",
+        "name": "First Snapshot Version"
+    },
+    {
+        "columnKey": "firstSnapshotTarget",
+        "name": "First Snapshot Target"
+    },
+    {
+        "columnKey": "firstSnapshotDescription",
+        "name": "First Snapshot Description"
+    },
+    {
+        "columnKey": "firstSnapshotStream",
+        "name": "First Snapshot Stream"
+    },
+    {
+        "columnKey": "lastDetected",
+        "name": "Last Snapshot Date"
+    },
+    {
+        "columnKey": "lastDetectedId",
+        "name": "Last Snapshot"
+    },
+    {
+        "columnKey": "lastDetectedVersion",
+        "name": "Last Snapshot Version"
+    },
+    {
+        "columnKey": "lastDetectedTarget",
+        "name": "Last Snapshot Target"
+    },
+    {
+        "columnKey": "lastDetectedDescription",
+        "name": "Last Snapshot Description"
+    },
+    {
+        "columnKey": "lastDetectedStream",
+        "name": "Last Snapshot Stream"
+    },
+    {
+        "columnKey": "score",
+        "name": "Score"
+    },
+    {
+        "columnKey": "lineNumber",
+        "name": "Line Number"
+    },
+    {
+        "columnKey": "lastTriageComment",
+        "name": "Last Triage Comment"
+    },
+    {
+        "columnKey": "project",
+        "name": "Project"
+    }
+]
