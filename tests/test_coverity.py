@@ -6,9 +6,9 @@ try:
 except ImportError:
     from mock import MagicMock, patch
     # from mock import call
-import mlx.coverity as cov
 import mlx.coverity_services
 import requests
+
 
 class TestCoverity(TestCase):
     def setUp(self):

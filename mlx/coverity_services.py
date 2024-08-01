@@ -142,7 +142,7 @@ class CoverityDefectService:
             filters (json): The filters as json
         """
         url = self.base_url.rstrip('/') + \
-            f"/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
+            "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
         return self._post_request(url, filters)
 
     def retrieve_column_keys(self):
@@ -241,9 +241,9 @@ class CoverityDefectService:
                     "type": "idMatcher"
                 })
             request_filters.append({
-                    "columnKey": column_key,
-                    "matchMode": "oneOrMoreMatch",
-                    "matchers": matchers
+                "columnKey": column_key,
+                "matchMode": "oneOrMoreMatch",
+                "matchers": matchers
             })
         else:
             for filter in filter_list:
