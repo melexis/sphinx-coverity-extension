@@ -100,7 +100,7 @@ class CoverityDefectService:
 
     @property
     def base_url(self):
-        """The base URL"""
+        """str: The base URL of the service."""
         return self._base_url
 
     @base_url.setter
@@ -113,21 +113,25 @@ class CoverityDefectService:
 
     @property
     def version(self):
-        """The API version"""
+        """str: The API version"""
         return self._version
 
     @property
     def checkers(self):
-        """All checkers available"""
+        """list[str]: All valid checkers available"""
         return self._checkers
 
     @property
     def columns(self):
-        """All column keys"""
+        """list[dict]: A list of dictionaries where the keys of each dictionary:
+            - columnKey: The key of the column
+            - name: The name of the column
+        """
         return self._columns
 
     def login(self, username, password):
-        """Login in session
+        """Authenticate a session using the given username and password .
+
         Args:
             username (str): Username to log in
             password (str): Password to log in
@@ -136,24 +140,34 @@ class CoverityDefectService:
         self.session.auth = (username, password)
 
     def retrieve_issues(self, filters):
-        """Retrieve the contents of the specified url in Coverity Connect.
+        """Retrieve issues from the server (Coverity Connect).
 
         Args:
             filters (json): The filters as json
+
+        Returns:
+            dict: The response
         """
         url = self.base_url.rstrip('/') + \
             "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
         return self._post_request(url, filters)
 
     def retrieve_column_keys(self):
-        """Retrieves the set of column keys and associated display names."""
+        """Retrieves the column keys and associated display names.
+
+        Returns:
+            list[dict]: A list of dictionaries where the keys of each dictionary are 'columnKey' and 'name'
+        """
         url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
-        # breakpoint()
         self._columns = self._get_request(url)
         return self.columns
 
     def retrieve_checkers(self):
-        """Retrieves the available checkers."""
+        """Retrieve the list of checkers from the server.
+
+        Returns:
+            list[str]: The list of valid checkers
+        """
         if not self.checkers:
             url = f"{self.base_url.rstrip('/')}/checkerAttributes/checker"
             checkers = self._get_request(url)
@@ -162,10 +176,13 @@ class CoverityDefectService:
         return self.checkers
 
     def _get_request(self, url):
-        """GET request
+        """Make a GET request to the API.
 
         Args:
             url (str): The url to request data via GET request
+
+        Returns:
+            dict: the content of server's response
         """
         req = self.session.get(url)
         if req.ok:
@@ -174,11 +191,14 @@ class CoverityDefectService:
             return req.raise_for_status()
 
     def _post_request(self, url, data):
-        """POST request
+        """Perform a POST request to the specified url.
 
         Args:
             url (str): The url to request data via POST request
             data (dict): The data to send
+
+        Returns:
+            dict: the content of server's response
         """
         req = self.session.post(url, json=data)
         if req.ok:
@@ -188,7 +208,20 @@ class CoverityDefectService:
 
     @staticmethod
     def add_filter_rqt(name, req_csv, valid_list, allow_regex=False):
-        """Lookup the list of given filter possibility, add to filter spec and return a validated list"""
+        """Add filter when the attribute is valid. If `valid_list` is not defined,
+        all attributes of the CSV list are valid.
+        The CSV list can allow regular expressions when `allow_regex` is set to True.
+
+        Args:
+            name (str): String representation of the attribute.
+            req_csv (str): A CSV list of attribute values to query.
+            valid_list (list/dict): The valid attributes.
+            allow_regex (bool, optional): True when regular expressions are allowed. Defaults to False.
+
+        Returns:
+            str: The validated CSV list
+            list[str]: The list of valid attributes
+        """
         logging.info("Validate required %s [%s]", name, req_csv)
         validated = ""
         delim = ""
@@ -260,16 +293,24 @@ class CoverityDefectService:
             )
 
     def get_defects(self, stream, filters, column_names):
-        """Gets a list of defects for given stream, with some query criteria.
+        """Gets a list of defects for given stream, filters and column names.
+        If a column name does not match the name of the `columns` property, the column can not be obtained because
+        it need the correct corresponding column key.
+        Column key `cid` is always obtained to use later in other functions.
 
         Args:
             stream (str): Name of the stream to query
             filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
             column_names (list[str]): The column names
-            custom (str): A custom query
 
         Returns:
-            (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects
+            dict: The content of the request. This has a structure like:
+                {
+                    "offset": 0,
+                    "totalRows": 2720,
+                    "columns": [list of column keys]
+                    "rows": [list of dictionaries {"key": <key>, "value": <value>}]
+                }
         """
         logging.info("Querying Coverity for defects in stream [%s] ...", stream)
         request_filters = [
@@ -386,6 +427,9 @@ class CoverityDefectService:
         Args:
             attribute_values (str): A CSV list of attribute values to query.
             name (str): String representation of the attribute.
+
+        Returns:
+            list[str]: The list of valid attributes
         """
         logging.info("Using %s filter [%s]", name, attribute_values)
         validated, filter_list = self.add_filter_rqt(name, attribute_values, *args, **kwargs)
@@ -399,6 +443,9 @@ class CoverityDefectService:
 
         Args:
             attribute_values (str): A CSV list of attribute values to query.
+
+        Returns:
+            list[str]: The list of attributes
         """
         logging.info("Using Component filter [%s]", attribute_values)
         parser = csv.reader([attribute_values])
