@@ -10,7 +10,6 @@ requires = [
     "setuptools_scm",
     "matplotlib",
     "mlx.traceability",
-    "suds-py3",
     "urlextract",
 ]
 
