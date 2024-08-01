@@ -38,21 +38,6 @@ ACTION_LIST = {
     "For Interest Only",
 }
 
-ISSUE_KIND_2_LABEL = {
-    "QUALITY": "Quality",
-    "SECURITY": "Security",
-    "Various": "Quality/Security",
-    "TEST": "Testing",
-}
-
-
-# names of Coverity Triage/Attribute fields
-EXT_REFERENCE_ATTR_NAME = "Ext. Reference"
-DEFECT_STATUS_ATTR_NAME = "DefectStatus"
-CLASSIFICATION_ATTR_NAME = "Classification"
-ACTION_ATTR_NAME = "Action"
-COMMENT_ATTR_NAME = "Comment"
-
 
 def parse_two_part_term(term, delim=","):
     """Parse a term assuming [ [part1],[part2] ]"""
