@@ -1,0 +1,19 @@
+sphinx:
+  enabled: true
+  min: 0
+  max: 0
+  exclude:
+    - 'WARNING: Connection failed: HTTPSConnectionPool\(host=.+, port=\d+\): Max retries exceeded with url: /api/v2/issues/columns\?queryType=bySnapshot&retrieveGroupByColumns=false \(Caused by NameResolutionError\(\"<urllib3\.connection\.HTTPSConnection object at [0-9a-z]+>: Failed to resolve .+ \(\[Errno -2\] Name or service not known\)\"\)\)'
+    - 'WARNING: CID \d+: Could not find item ID .+ in traceability collection.'
+doxygen:
+  enabled: false
+junit:
+  enabled: false
+xmlrunner:
+  enabled: false
+coverity:
+  enabled: false
+robot:
+  enabled: false
+polyspace:
+  enabled: false
