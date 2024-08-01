@@ -17,7 +17,6 @@ requires = [
 
 setup(
     name="mlx.coverity",
-    setup_requires=["setuptools-scm"],
     use_scm_version=True,
     url=project_url,
     license="GNU General Public License v3 (GPLv3)",
