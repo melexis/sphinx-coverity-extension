@@ -146,7 +146,6 @@ def setup(app):
         "coverity_credentials",
         {
             "hostname": "scan.coverity.com",
-            "transport": "https",
             "username": "reporter",
             "password": "coverity",
             "stream": "some_stream",
