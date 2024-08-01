@@ -118,14 +118,20 @@ class SphinxCoverityConnector:
         if not config_credentials["password"]:
             config_credentials["password"] = getpass("Coverity password: ")
 
-    def get_filtered_defects(self, node, app):
-        """Fetch defects from suds using filters stored in the given CoverityDefect object.
+    def get_filtered_defects(self, node):
+        """Fetch defects from REST API using filters stored in the given CoverityDefect object.
 
         Args:
             node (CoverityDefect): CoverityDefect object with zero or more filters stored.
 
         Returns:
-            (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects.
+            dict: The content of the request to retrieve defects. This has a structure like:
+                {
+                    "offset": 0,
+                    "totalRows": 2720,
+                    "columns": [list of column keys]
+                    "rows": [list of dictionaries {"key": <key>, "value": <value>}]
+                }
         """
         report_info("obtaining defects... ", True)
         defects = self.coverity_service.get_defects(

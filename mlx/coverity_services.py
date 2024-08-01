@@ -300,7 +300,7 @@ class CoverityDefectService:
                     "offset": 0,
                     "totalRows": 2720,
                     "columns": [list of column keys]
-                    "rows": [list of dictionaries {"key": <key>, "value": <value>}]
+                    "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
         logging.info("Querying Coverity for defects in stream [%s] ...", stream)

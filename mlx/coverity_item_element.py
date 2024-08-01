@@ -91,20 +91,20 @@ class ItemElement(nodes.General, nodes.Element):
             col = self.create_cell(" ")
         return col
 
-    def create_paragraph_with_links(self, defect, col_name, *args):
+    def create_paragraph_with_links(self, defect, col_key, *args):
         """
         Create a paragraph with the provided text. Hyperlinks are made interactive, and traceability item IDs get linked
         to their definition.
 
         Args:
-            defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
-            col_name (str): Column name according to suds.
+            defect (dict): The defect where the keys are column keys and the values are the corresponding defect values
+            col_key (str): Column key according to Coverity Connect.
 
         Returns:
             (nodes.paragraph) Paragraph node filled with column contents for the given defect. Item IDs and hyperlinks
                 have been made interactive.
         """
-        remaining_text = str(defect[col_name])
+        remaining_text = str(defect[col_key])
         cid = str(defect["cid"])
         contents = nodes.paragraph()
         self.link_to_urls(contents, remaining_text, cid, *args)

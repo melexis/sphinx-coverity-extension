@@ -166,7 +166,8 @@ class CoverityDefect(ItemElement):
         option is in use.
 
         Args:
-            defects (list[dict]): List of defect objects.
+            defects (list[list[dict]]): List of defects (rows).
+            valid_columns (list[dict]): All available valid columns with the column names and respectively column keys
         """
         for defect in defects:
             simplified_defect = {item["key"]: item["value"] for item in defect}
@@ -180,8 +181,9 @@ class CoverityDefect(ItemElement):
         """Goes through each column and decides if it is there or prints empty cell.
 
         Args:
-            defect (suds.sudsobject.mergedDefectDataObj): Defect object from suds.
+            defect (dict): The defect where the keys are column keys and the values are the corresponding defect values
             columns (list): List of column names (str).
+            valid_columns (list[dict]): All available valid columns with the column names and respectively column keys
 
         Returns:
             (nodes.row) Filled row node.
