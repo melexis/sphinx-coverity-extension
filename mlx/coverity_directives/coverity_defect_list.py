@@ -74,6 +74,7 @@ class CoverityDefect(ItemElement):
             fromdocname (str): Relative path to the document in which the error occured, without extension.
         """
         env = app.builder.env
+        self.stream = connector.stream
         self.coverity_service = connector.coverity_service
         top_node = self.create_top_node(self["title"])
 
@@ -192,7 +193,7 @@ class CoverityDefect(ItemElement):
                 # CID is default and even if it is in disregard
                 row += self.create_cell(
                     str(defect["cid"]),
-                    url=self.coverity_service.get_defect_url(self.stream, str(defect["cid"]))
+                    url=self.coverity_service.defect_url(self.stream, str(defect["cid"]))
                 )
             elif item_col == "LOCATION":
                 linenum = defect["lineNumber"]

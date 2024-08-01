@@ -93,11 +93,16 @@ class CoverityDefectService:
     _version = "v2"
 
     def __init__(self, hostname):
-    def __init__(self, transport, hostname):
+        self._hostname = hostname
         self.base_url = f"https://{hostname.strip('/')}/api/{self.version}"
         self._checkers = []
         self._columns = []
         self.filters = ""
+
+    @property
+    def hostname(self):
+        """str: The hostname"""
+        return self._hostname
 
     @property
     def base_url(self):
@@ -458,15 +463,18 @@ class CoverityDefectService:
         self.filters += "<Components(%s)> " % (attribute_values)
         return filter_list
 
-    def get_defect_url(self, stream, cid):
+    def defect_url(self, stream, cid):
         """Get URL for given defect CID
         https://machine1.eng.company.com/query/defects.htm?stream=StreamA&cid=1234
 
         Args:
             stream (str): The name of the stream
             cid (int): The cid of the given defect
+
+        Returns:
+            str: The url to the defect with given CID
         """
-        return f"{self.base_url}/query/defects.htm?stream={stream}&cid={cid}"
+        return f"https://{self.hostname.strip('/')}/query/defects.htm?stream={stream}&cid={cid}"
 
 
 if __name__ == "__main__":
