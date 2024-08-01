@@ -92,7 +92,6 @@ Example of custom credentials for the plugin:
 
     coverity_credentials = {
         'hostname': 'scan.coverity.com',
-        'transport': 'https',
         'username': 'reporter',
         'password': 'coverity',
         'stream': 'some_coverity_stream',
@@ -133,7 +132,6 @@ The plugin itself holds a default config that can be used for any Coverity proje
 
     coverity_credentials = {
         'hostname': 'scan.coverity.com',
-        'transport': 'https',
         'username': 'reporter',
         'password': 'coverity',
         'stream': 'some_coverity_stream',

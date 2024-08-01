@@ -55,7 +55,6 @@ class SphinxCoverityConnector:
             self.input_credentials(app.config.coverity_credentials)
             report_info('Login to Coverity server... ', True)
             self.coverity_service = CoverityDefectService(
-                app.config.coverity_credentials["transport"],
                 app.config.coverity_credentials["hostname"],
             )
             self.coverity_service.login(app.config.coverity_credentials['username'],

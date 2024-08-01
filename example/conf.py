@@ -309,8 +309,6 @@ intersphinx_mapping = {"http://docs.python.org/": None}
 
 # -- Options for coverity extension ----------------------------------------
 coverity_credentials = {
-    "transport": "https",
-    "port": "8080",
     "hostname": "coverity.melexis.com",
     "username": config("COVERITY_USERNAME"),
     "password": config("COVERITY_PASSWORD"),
