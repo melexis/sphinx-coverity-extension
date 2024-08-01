@@ -191,7 +191,8 @@ class CoverityDefect(ItemElement):
             if item_col == "CID":
                 # CID is default and even if it is in disregard
                 row += self.create_cell(
-                    str(defect["cid"])
+                    str(defect["cid"]),
+                    url=self.coverity_service.get_defect_url(self.stream, str(defect["cid"]))
                 )
             elif item_col == "LOCATION":
                 linenum = defect["lineNumber"]
@@ -281,7 +282,6 @@ class CoverityDefect(ItemElement):
             defect (dict): The defect.
             valid_columns (list[dict]): All available valid columns with the column names and respectively column keys
         """
-        # breakpoint()
         if self["chart_attribute"].upper() in self.column_map:
             attribute_value = str(defect[self.column_map[self["chart_attribute"].upper()]])
         else:
