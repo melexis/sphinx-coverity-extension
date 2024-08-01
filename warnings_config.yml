@@ -5,6 +5,7 @@ sphinx:
   exclude:
     - 'WARNING: Connection failed: HTTPSConnectionPool\(host=.+, port=\d+\): Max retries exceeded with url: /api/v2/issues/columns\?queryType=bySnapshot&retrieveGroupByColumns=false \(Caused by NameResolutionError\(\"<urllib3\.connection\.HTTPSConnection object at [0-9a-z]+>: Failed to resolve .+ \(\[Errno -2\] Name or service not known\)\"\)\)'
     - 'WARNING: CID \d+: Could not find item ID .+ in traceability collection.'
+    - "WARNING: cannot cache unpickable configuration value: 'traceability_attributes_sort' (because it contains a function, class, or module object)"
 doxygen:
   enabled: false
 junit:
