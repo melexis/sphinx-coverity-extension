@@ -4,9 +4,7 @@
         "min": 0,
         "max": 0,
         "exclude": [
-            "WARNING: Connection failed: <urlopen error \\[Errno -2\\] Name or service not known>",
-            "WARNING: Connection failed: <urlopen error \\[Errno -3\\] Temporary failure in name resolution>",
-            "CRITICAL:root:No such Coverity Configuration Service",
+            "WARNING: Connection failed: HTTPSConnectionPool\\(host='coverity\\.melexis\\.com', port=\\d+\\): Max retries exceeded with url: /api/v2/issues/columns\\?queryType=bySnapshot&retrieveGroupByColumns=false \\(Caused by NameResolutionError\\(\"<urllib3\\.connection\\.HTTPSConnection object at [0-9a-z]>: Failed to resolve 'coverity\\.melexis\\.com' \\(\\[Errno -2\\] Name or service not known\\)\"\\)\\)",
             "WARNING: CID \\d+: Could not find item ID '[A-Z-_\\d]+' in traceability collection."
         ]
     }
