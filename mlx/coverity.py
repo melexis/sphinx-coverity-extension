@@ -53,12 +53,15 @@ class SphinxCoverityConnector:
         # Login to Coverity and obtain stream information
         try:
             self.input_credentials(app.config.coverity_credentials)
-            report_info('Login to Coverity server... ', True)
+            report_info('Initialize a session on Coverity server... ', True)
             self.coverity_service = CoverityDefectService(
                 app.config.coverity_credentials["hostname"],
             )
             self.coverity_service.login(app.config.coverity_credentials['username'],
                                         app.config.coverity_credentials['password'])
+            report_info('done')
+            report_info('Verify the given stream name... ', True)
+            self.coverity_service.validate_stream(self.stream)
             report_info('done')
             # Get all column keys
             report_info("obtaining all column keys... ", True)

@@ -304,8 +304,6 @@ class CoverityDefectService:
                     "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
-        logging.info("Validate stream [%s] ...", stream)
-        self.validate_stream(stream)
         logging.info("Querying Coverity for defects in stream [%s] ...", stream)
         request_filters = [
             {
