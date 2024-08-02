@@ -11,6 +11,8 @@ import re
 # For Coverity - REST API
 import requests
 
+from mlx.coverity_logging import report_info
+
 # Coverity built in Impact statuses
 IMPACT_LIST = {"High", "Medium", "Low"}
 
@@ -174,11 +176,15 @@ class CoverityDefectService:
 
         Returns:
             dict: the content of server's response
+
+        Raises:
+            requests.HTTPError
         """
         req = self.session.get(url)
         if req.ok:
             return json.loads(req.content)
         else:
+            report_info(json.loads(req.content)["message"])
             return req.raise_for_status()
 
     def _post_request(self, url, data):
@@ -190,11 +196,15 @@ class CoverityDefectService:
 
         Returns:
             dict: the content of server's response
+
+        Raises:
+            requests.HTTPError
         """
         req = self.session.post(url, json=data)
         if req.ok:
             return json.loads(req.content)
         else:
+            report_info(json.loads(req.content)["message"])
             return req.raise_for_status()
 
     @staticmethod
