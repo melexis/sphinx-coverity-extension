@@ -41,37 +41,6 @@ ACTION_LIST = {
 }
 
 
-def parse_two_part_term(term, delim=","):
-    """Parse a term assuming [ [part1],[part2] ]"""
-    valid = False
-    part1 = ""
-    part2 = ""
-    if term.find(delim) != -1:
-        valid = True
-        field1 = term.split(delim, 1)[0]
-        if bool(field1):
-            part1 = field1
-        field2 = term.rsplit(delim, 1)[-1]
-        if bool(field2):
-            part2 = field2
-    return valid, part1, part2
-
-
-def compare_strings(str_a, str_b):
-    """Compare strings for equivalence
-
-    some leniency allowed such as spaces and casing
-    """
-    if re.match(str_b, str_a, flags=re.IGNORECASE):
-        return True
-    # ignore embedded spaces and some odd punctuation characters ("todo" = "To-Do")
-    str_a2 = re.sub(r"[.:\-_ ]", "", str_a)
-    str_b2 = re.sub(r"[:\-_ ]", "", str_b)  # don't remove dot (part of regex?)
-    if re.match(str_b2, str_a2, flags=re.IGNORECASE):
-        return True
-    return False
-
-
 class CoverityDefectService:
     """
     Coverity Defect Service (WebServices)
