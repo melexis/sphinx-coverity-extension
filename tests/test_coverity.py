@@ -90,6 +90,8 @@ class TestCoverity(TestCase):
             mocker.get(stream_url, json = {"stream": "valid"})
             mocker.post(issues_url, json = fake_json)
 
+            # Validate stream name
+            coverity_conf_service.validate_stream(fake_stream)
             # Retrieve column keys
             assert coverity_conf_service.retrieve_column_keys() == column_keys
             # Retrieve checkers
@@ -100,7 +102,7 @@ class TestCoverity(TestCase):
             assert mocker.call_count == 4
 
             # check get requests
-            get_urls = [column_keys_url, checkers_url, stream_url]
+            get_urls = [stream_url, column_keys_url, checkers_url]
             for index in range(len(get_urls)):
                 mock_req = mocker.request_history[index]
                 assert mock_req.url == get_urls[index]
