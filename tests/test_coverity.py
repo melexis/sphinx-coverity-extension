@@ -5,6 +5,7 @@ try:
 except ImportError:
     from mock import MagicMock, patch
 
+import json
 import requests
 import requests_mock
 
@@ -62,8 +63,8 @@ class TestCoverity(TestCase):
             },
             "checkerAttributedata": [
                 {
-                "key": "test_key",
-                "value": "test_value"
+                "key": "checker_key",
+                "value": "checker_value"
                 }
             ]
         }
@@ -74,19 +75,39 @@ class TestCoverity(TestCase):
         coverity_conf_service.login("user", "password")
 
         # urls that are used in GET or POST requests
-        stream_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
-        issue_url = coverity_conf_service.base_url.rstrip("/") + \
-            "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
         column_keys_url = coverity_conf_service.base_url.rstrip("/") + \
             "/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
         checkers_url = f"{coverity_conf_service.base_url.rstrip('/')}/checkerAttributes/checker"
+        stream_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
+        issues_url = coverity_conf_service.base_url.rstrip("/") + \
+            "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
 
         with requests_mock.mock() as mocker:
-            mocker.get(stream_url, json={"stream": "valid"})
-            with open("tests/column_keys.json", "rb") as content:
-                mocker.get(column_keys_url, json=content.read())
-            mocker.get(checkers_url, json=fake_checkers)
-            mocker.post(issue_url, json=fake_json)
+            with open("tests/column_keys.json", "r") as content:
+                column_keys = json.loads(content.read())
+            mocker.get(column_keys_url, json = column_keys)
+            mocker.get(checkers_url, json = fake_checkers)
+            mocker.get(stream_url, json = {"stream": "valid"})
+            mocker.post(issues_url, json = fake_json)
 
+            # Retrieve column keys
+            assert coverity_conf_service.retrieve_column_keys() == column_keys
+            # Retrieve checkers
+            assert coverity_conf_service.retrieve_checkers() == ["checker_key"]
+            # Get defects
             assert coverity_conf_service.get_defects(fake_stream, filters, column_names=["CID"]) == fake_json
-            assert mocker.called
+            # Total amount of request are 4 => column keys, checkers, stream and defects/issues
+            assert mocker.call_count == 4
+
+            # check get requests
+            get_urls = [column_keys_url, checkers_url, stream_url]
+            for index in range(len(get_urls)):
+                mock_req = mocker.request_history[index]
+                assert mock_req.url == get_urls[index]
+                assert mock_req.verify
+                assert mock_req.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
+            # check post request (last request)
+            assert mocker.last_request.url == issues_url
+            assert mocker.last_request.verify
+            assert mocker.last_request.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
+
