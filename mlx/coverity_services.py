@@ -7,6 +7,7 @@ import csv
 import json
 import logging
 import re
+from sphinx.util.logging import getLogger
 
 # For Coverity - REST API
 import requests
@@ -164,7 +165,12 @@ class CoverityDefectService:
         if req.ok:
             return json.loads(req.content)
         else:
-            report_info(json.loads(req.content)["message"])
+            try:
+                message = json.loads(req.content)["message"]
+            except:
+                message = req.content.decode()
+            logger = getLogger("coverity_logging")
+            logger.warning(message)
             return req.raise_for_status()
 
     def _post_request(self, url, data):
@@ -184,7 +190,12 @@ class CoverityDefectService:
         if req.ok:
             return json.loads(req.content)
         else:
-            report_info(json.loads(req.content)["message"])
+            try:
+                message = json.loads(req.content)["message"]
+            except:
+                message = req.content.decode()
+            logger = getLogger("coverity_logging")
+            logger.warning(message)
             return req.raise_for_status()
 
     @staticmethod
