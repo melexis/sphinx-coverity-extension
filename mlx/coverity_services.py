@@ -101,6 +101,16 @@ class CoverityDefectService:
         self.session = requests.Session()
         self.session.auth = (username, password)
 
+    def validate_stream(self, stream):
+        """Validate stream by retrieving the specified stream.
+        When the request fails, the stream does not exist or the user does not have acces to it.
+
+        Args:
+            stream (str): The stream name
+        """
+        url = self.base_url.rstrip('/') + f"/streams/{stream}"
+        self._get_request(url)
+
     def retrieve_issues(self, filters):
         """Retrieve issues from the server (Coverity Connect).
 
@@ -282,6 +292,8 @@ class CoverityDefectService:
                     "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
+        logging.info("Validate stream [%s] ...", stream)
+        self.validate_stream(stream)
         logging.info("Querying Coverity for defects in stream [%s] ...", stream)
         request_filters = [
             {
