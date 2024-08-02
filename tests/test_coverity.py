@@ -113,3 +113,18 @@ class TestCoverity(TestCase):
             assert mocker.last_request.verify
             assert mocker.last_request.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
 
+    def test_failed_login(self):
+        fake_stream = "test_stream"
+
+        coverity_conf_service = mlx.coverity.CoverityDefectService("scan.coverity.com/")
+        stream_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
+
+        with requests_mock.mock() as mocker:
+            mocker.get(stream_url, headers={"Authorization": "Basic fail"}, status_code = 401)
+            # Login to Coverity
+            coverity_conf_service.login("user", "password")
+            # Validate stream name
+            with self.assertRaises(requests.HTTPError) as err:
+                coverity_conf_service.validate_stream(fake_stream)
+            self.assertEqual(err.exception.response.status_code,401)
+
