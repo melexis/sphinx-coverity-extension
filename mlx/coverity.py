@@ -98,7 +98,7 @@ class SphinxCoverityConnector:
         for node in doctree.traverse(CoverityDefect):
             # Get items from server
             try:
-                defects = self.get_filtered_defects(node, app)
+                defects = self.get_filtered_defects(node)
             except (URLError, AttributeError, Exception) as err:  # pylint: disable=broad-except
                 report_warning("failed with %s" % err, fromdocname)
                 continue
