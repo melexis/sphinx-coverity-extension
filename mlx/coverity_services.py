@@ -130,8 +130,9 @@ class CoverityDefectService:
         Returns:
             list[dict]: A list of dictionaries where the keys of each dictionary are 'columnKey' and 'name'
         """
-        url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
-        self._columns = self._get_request(url)
+        if not self._columns:
+            url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
+            self._columns = self._get_request(url)
         return self.columns
 
     def retrieve_checkers(self):
