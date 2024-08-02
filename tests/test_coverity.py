@@ -74,7 +74,7 @@ class TestCoverity(TestCase):
         coverity_conf_service.login("user", "password")
 
         # urls that are used in GET or POST requests
-        steam_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
+        stream_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
         issue_url = coverity_conf_service.base_url.rstrip("/") + \
             "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
         column_keys_url = coverity_conf_service.base_url.rstrip("/") + \
@@ -82,7 +82,7 @@ class TestCoverity(TestCase):
         checkers_url = f"{coverity_conf_service.base_url.rstrip('/')}/checkerAttributes/checker"
 
         with requests_mock.mock() as mocker:
-            mocker.get(steam_url, json={"stream": "valid"})
+            mocker.get(stream_url, json={"stream": "valid"})
             with open("tests/column_keys.json", "rb") as content:
                 mocker.get(column_keys_url, json=content.read())
             mocker.get(checkers_url, json=fake_checkers)
