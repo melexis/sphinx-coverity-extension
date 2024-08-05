@@ -154,8 +154,8 @@ class CoverityDefectService:
         Uses a GET request when data is `None`, uses a POST request otherwise
 
         Args:
-            url (str): The url to request data via GET request
-            data (dict): The data to send (optional)
+            url (str): The URL for the request
+            data (dict): Optional data to send
 
         Returns:
             dict: the content of server's response
