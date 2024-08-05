@@ -155,6 +155,7 @@ class CoverityDefectService:
 
         Args:
             url (str): The url to request data via GET request
+            data (dict): The data to send (optional)
 
         Returns:
             dict: the content of server's response
