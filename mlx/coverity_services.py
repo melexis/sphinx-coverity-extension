@@ -161,17 +161,16 @@ class CoverityDefectService:
         Raises:
             requests.HTTPError
         """
-        req = self.session.get(url)
-        if req.ok:
-            return json.loads(req.content)
-        else:
-            try:
-                message = json.loads(req.content)["message"]
-            except:
-                message = req.content.decode()
-            logger = getLogger("coverity_logging")
-            logger.warning(message)
-            return req.raise_for_status()
+        response= self.session.get(url)
+        if response.ok:
+            return response.json()
+        try:
+            err_msg= response.json()["message"]
+        except (requests.exceptions.JSONDecodeError, KeyError):
+            err_msg= response.content.decode()
+        logger = getLogger("coverity_logging")
+        logger.warning(err_msg)
+        return response.raise_for_status()
 
     def _post_request(self, url, data):
         """Perform a POST request to the specified url.
