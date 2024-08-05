@@ -110,7 +110,7 @@ class CoverityDefectService:
             stream (str): The stream name
         """
         url = self.base_url.rstrip('/') + f"/streams/{stream}"
-        self._get_request(url)
+        self._request(url)
 
     def retrieve_issues(self, filters):
         """Retrieve issues from the server (Coverity Connect).
@@ -123,7 +123,7 @@ class CoverityDefectService:
         """
         url = self.base_url.rstrip('/') + \
             "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
-        return self._post_request(url, filters)
+        return self._request(url, filters)
 
     def retrieve_column_keys(self):
         """Retrieves the column keys and associated display names.
@@ -133,7 +133,7 @@ class CoverityDefectService:
         """
         if not self._columns:
             url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
-            self._columns = self._get_request(url)
+            self._columns = self._request(url)
         return self.columns
 
     def retrieve_checkers(self):
@@ -144,13 +144,14 @@ class CoverityDefectService:
         """
         if not self.checkers:
             url = f"{self.base_url.rstrip('/')}/checkerAttributes/checker"
-            checkers = self._get_request(url)
+            checkers = self._request(url)
             if checkers and "checkerAttributedata" in checkers:
                 self._checkers = [checker["key"] for checker in checkers["checkerAttributedata"]]
         return self.checkers
 
-    def _get_request(self, url):
-        """Make a GET request to the API.
+    def _request(self, url, data=None):
+        """Perform a POST or GET request to the specified url.
+        Uses a GET request when data is `None`, uses a POST request otherwise
 
         Args:
             url (str): The url to request data via GET request
@@ -161,7 +162,10 @@ class CoverityDefectService:
         Raises:
             requests.HTTPError
         """
-        response= self.session.get(url)
+        if data:
+            response = self.session.post(url, json=data)
+        else:
+            response= self.session.get(url)
         if response.ok:
             return response.json()
         try:
@@ -171,31 +175,6 @@ class CoverityDefectService:
         logger = getLogger("coverity_logging")
         logger.warning(err_msg)
         return response.raise_for_status()
-
-    def _post_request(self, url, data):
-        """Perform a POST request to the specified url.
-
-        Args:
-            url (str): The url to request data via POST request
-            data (dict): The data to send
-
-        Returns:
-            dict: the content of server's response
-
-        Raises:
-            requests.HTTPError
-        """
-        req = self.session.post(url, json=data)
-        if req.ok:
-            return json.loads(req.content)
-        else:
-            try:
-                message = json.loads(req.content)["message"]
-            except:
-                message = req.content.decode()
-            logger = getLogger("coverity_logging")
-            logger.warning(message)
-            return req.raise_for_status()
 
     @staticmethod
     def add_filter_rqt(name, req_csv, valid_list, allow_regex=False):
