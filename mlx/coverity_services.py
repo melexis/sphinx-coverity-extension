@@ -4,15 +4,12 @@
 
 # General
 import csv
-import json
 import logging
 import re
 from sphinx.util.logging import getLogger
 
 # For Coverity - REST API
 import requests
-
-from mlx.coverity_logging import report_info
 
 # Coverity built in Impact statuses
 IMPACT_LIST = {"High", "Medium", "Low"}
@@ -166,13 +163,13 @@ class CoverityDefectService:
         if data:
             response = self.session.post(url, json=data)
         else:
-            response= self.session.get(url)
+            response = self.session.get(url)
         if response.ok:
             return response.json()
         try:
-            err_msg= response.json()["message"]
+            err_msg = response.json()["message"]
         except (requests.exceptions.JSONDecodeError, KeyError):
-            err_msg= response.content.decode()
+            err_msg = response.content.decode()
         logger = getLogger("coverity_logging")
         logger.warning(err_msg)
         return response.raise_for_status()

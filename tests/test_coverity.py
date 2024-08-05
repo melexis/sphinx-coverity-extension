@@ -63,8 +63,8 @@ class TestCoverity(TestCase):
             },
             "checkerAttributedata": [
                 {
-                "key": "checker_key",
-                "value": "checker_value"
+                    "key": "checker_key",
+                    "value": "checker_value"
                 }
             ]
         }
@@ -85,10 +85,10 @@ class TestCoverity(TestCase):
         with requests_mock.mock() as mocker:
             with open("tests/column_keys.json", "r") as content:
                 column_keys = json.loads(content.read())
-            mocker.get(column_keys_url, json = column_keys)
-            mocker.get(checkers_url, json = fake_checkers)
-            mocker.get(stream_url, json = {"stream": "valid"})
-            mocker.post(issues_url, json = fake_json)
+            mocker.get(column_keys_url, json=column_keys)
+            mocker.get(checkers_url, json=fake_checkers)
+            mocker.get(stream_url, json={"stream": "valid"})
+            mocker.post(issues_url, json=fake_json)
 
             # Validate stream name
             coverity_conf_service.validate_stream(fake_stream)
@@ -120,11 +120,11 @@ class TestCoverity(TestCase):
         stream_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
 
         with requests_mock.mock() as mocker:
-            mocker.get(stream_url, headers={"Authorization": "Basic fail"}, status_code = 401)
+            mocker.get(stream_url, headers={"Authorization": "Basic fail"}, status_code=401)
             # Login to Coverity
             coverity_conf_service.login("user", "password")
             # Validate stream name
             with self.assertRaises(requests.HTTPError) as err:
                 coverity_conf_service.validate_stream(fake_stream)
-            self.assertEqual(err.exception.response.status_code,401)
+            self.assertEqual(err.exception.response.status_code, 401)
 
