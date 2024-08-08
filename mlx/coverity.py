@@ -10,6 +10,7 @@ See README.rst for more details.
 from getpass import getpass
 from urllib.error import URLError, HTTPError
 
+from docutils import nodes
 import pkg_resources
 
 from mlx.coverity_logging import report_info, report_warning
@@ -102,10 +103,14 @@ class SphinxCoverityConnector:
             # Get items from server
             try:
                 defects = self.get_filtered_defects(node)
+                node.perform_replacement(defects, self, app, fromdocname)
             except (URLError, AttributeError, Exception) as err:  # pylint: disable=broad-except
-                report_warning("failed with %s" % err, fromdocname)
+                error_message = f"failed to process coverity-list with {err!r}"
+                report_warning(error_message, fromdocname, lineno=node["line"])
+                top_node = node.create_top_node(node["title"])
+                top_node += nodes.paragraph(text=error_message)
+                node.replace_self(top_node)
                 continue
-            node.perform_replacement(defects, self, app, fromdocname)
 
     # -----------------------------------------------------------------------------
     # Helper functions of event handlers

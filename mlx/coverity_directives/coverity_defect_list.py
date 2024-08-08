@@ -346,7 +346,11 @@ class CoverityDefectListDirective(Directive):
         """
         Processes the contents of the directive
         """
+        env = self.state.document.settings.env
+
         item_list_node = CoverityDefect()
+        item_list_node['document'] = env.docname
+        item_list_node['line'] = self.lineno
 
         # Process title (optional argument)
         item_list_node["title"] = self.arguments[0] if self.arguments else "Coverity report"
