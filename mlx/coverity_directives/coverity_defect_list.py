@@ -167,7 +167,7 @@ class CoverityDefect(ItemElement):
 
         Args:
             defects (list[list[dict]]): List of defects (rows).
-            valid_columns (list[dict]): All available valid columns with the column names and respectively column keys
+            valid_columns (list[dict]): All valid/available columns: each with keys  'name' and 'columnKey'
         """
         for defect in defects:
             simplified_defect = {item["key"]: item["value"] for item in defect}
@@ -183,7 +183,7 @@ class CoverityDefect(ItemElement):
         Args:
             defect (dict): The defect where the keys are column keys and the values are the corresponding defect values
             columns (list): List of column names (str).
-            valid_columns (list[dict]): All available valid columns with the column names and respectively column keys
+            valid_columns (list[dict]): All valid/available columns: each with keys  'name' and 'columnKey'
 
         Returns:
             (nodes.row) Filled row node.
@@ -283,7 +283,7 @@ class CoverityDefect(ItemElement):
 
         Args:
             defect (dict): The defect.
-            valid_columns (list[dict]): All available valid columns with the column names and respectively column keys
+            valid_columns (list[dict]): All valid/available columns: each with keys  'name' and 'columnKey'
         """
         if self["chart_attribute"].upper() in self.column_map:
             attribute_value = str(defect[self.column_map[self["chart_attribute"].upper()]])
