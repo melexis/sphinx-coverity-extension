@@ -134,7 +134,7 @@ class ItemElement(nodes.General, nodes.Element):
             link_to_item_ids(contents, text, *args)
 
 
-def link_to_item_ids(contents, text, cid, app, docname):
+def link_to_item_ids(contents, text, cid, app):
     """
     Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
     """
@@ -150,7 +150,7 @@ def link_to_item_ids(contents, text, cid, app, docname):
 
         if item in app.config.TRACEABILITY_ITEM_RELINK:
             item = app.config.TRACEABILITY_ITEM_RELINK[item]
-        ref_node = make_internal_item_ref(app, docname, item, cid)
+        ref_node = make_internal_item_ref(app, item, cid)
         if ref_node is None:  # no link could be made
             ref_node = nodes.Text(item)
         contents.append(ref_node)
@@ -159,7 +159,7 @@ def link_to_item_ids(contents, text, cid, app, docname):
         contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
 
 
-def make_internal_item_ref(app, fromdocname, item, cid):
+def make_internal_item_ref(app, item, cid):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
     collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
@@ -171,13 +171,14 @@ def make_internal_item_ref(app, fromdocname, item, cid):
     if not item_info:
         report_warning(
             "CID %s: Could not find item ID '%s' in traceability collection." % (cid, item),
-            fromdocname,
+            item["docname"],
+            lineno=item["line"]
         )
         return None
     ref_node = nodes.reference("", "")
     ref_node["refdocname"] = item_info.docname
     try:
-        ref_node["refuri"] = app.builder.get_relative_uri(fromdocname, item_info.docname) + "#" + item
+        ref_node["refuri"] = app.builder.get_relative_uri(item["docname"], item_info.docname) + "#" + item
     except NoUri:
         return None
     ref_node.append(nodes.Text(item))
