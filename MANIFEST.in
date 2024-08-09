@@ -17,6 +17,7 @@ recursive-include example Makefile
 recursive-include tests *.py
 recursive-include tests *.rst
 recursive-include tests *.txt
+recursive-include tests *.json
 
 exclude example/.env.example
 exclude .pylintrc
@@ -30,6 +31,3 @@ recursive-include tests *.xml
 
 # added by check-manifest
 include *.json
-
-# added by check-manifest
-recursive-include tests *.json
