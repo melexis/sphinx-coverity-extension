@@ -431,10 +431,10 @@ class CoverityDefectService:
 
         Args:
             stream (str): The name of the stream
-            cid (int): The cid of the given defect
+            cid (int): The CID of the given defect
 
         Returns:
-            str: The url to the defect with given CID
+            str: The URL to the requested defect
         """
         return f"https://{self.hostname.strip('/')}/query/defects.htm?stream={stream}&cid={cid}"
 
