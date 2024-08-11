@@ -83,7 +83,14 @@ class ItemElement(nodes.General, nodes.Element):
 
     def cov_attribute_value_to_col(self, defect, name):
         """
-        Search defects array and return value for name
+        Create cell with the value in the defect for the given name.
+
+        Args:
+            defect (dict): The defect where the keys are column keys and the values are the corresponding defect values
+            name (str): The key name of the attribute
+
+        Returns:
+            (nodes.entry) Entry node containing a paragraph with the given contents
         """
         if name in defect:
             col = self.create_cell(defect[name])
