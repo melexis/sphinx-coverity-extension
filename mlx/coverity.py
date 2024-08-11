@@ -32,7 +32,6 @@ class SphinxCoverityConnector:
         """
         self.coverity_login_error = False
         self.coverity_login_error_msg = ""
-        self.stream = ""
 
     def initialize_environment(self, app):
         """
