@@ -6,6 +6,7 @@
 import csv
 import logging
 import re
+from urllib.parse import urlencode
 from sphinx.util.logging import getLogger
 
 # For Coverity - REST API
@@ -436,7 +437,8 @@ class CoverityDefectService:
         Returns:
             str: The URL to the requested defect
         """
-        return f"https://{self.hostname.strip('/')}/query/defects.htm?stream={stream}&cid={cid}"
+        params = {'stream': stream, 'cid': cid}
+        return f"https://{self.hostname.strip('/')}/query/defects.htm?" + urlencode(params)
 
 
 if __name__ == "__main__":
