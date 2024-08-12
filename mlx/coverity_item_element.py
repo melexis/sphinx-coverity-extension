@@ -121,6 +121,10 @@ class ItemElement(nodes.General, nodes.Element):
     def link_to_urls(contents, text, *args):
         """
         Makes URLs interactive and passes other text to link_to_item_ids, which treats the item IDs.
+
+        Args:
+            contents (nodes.paragraph): The paragraph
+            text (str): The text to parse
         """
         remaining_text = text
         extractor = URLExtract()
@@ -144,6 +148,13 @@ class ItemElement(nodes.General, nodes.Element):
 def link_to_item_ids(contents, text, cid, app, docname):
     """
     Makes a link of item IDs when they are found in a traceability collection and adds all other text to the paragraph.
+
+    Args:
+        contents (nodes.paragraph): The paragraph
+        text (str): The text to parse
+        cid (str): CID of the item
+        app (sphinx.application.Sphinx): Sphinx' application object.
+        docname (str): Relative path to the document in which the error occured, without extension.
     """
     if not app.config.TRACEABILITY_ITEM_ID_REGEX:
         return  # empty string as regex to disable traceability link generation
@@ -170,6 +181,16 @@ def make_internal_item_ref(app, fromdocname, item, cid):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
     collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
+
+    Args:
+        app (sphinx.application.Sphinx): Sphinx' application object.
+        fromdocname (str): Relative path to the document in which the error occured, without extension.
+        item (str): Item ID
+        cid (str): CID of the item
+
+    Returns:
+        (nodes.reference/None): The reference node for the given item.
+                                None if the given item cannot be found in the traceablity collection.
     """
     env = app.builder.env
     if not hasattr(env, "traceability_collection"):
