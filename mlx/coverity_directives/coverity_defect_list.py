@@ -166,7 +166,7 @@ class CoverityDefect(ItemElement):
         option is in use.
 
         Args:
-            rows (list[dict]): Data rows, each with a defect
+            rows (list[list]): Data rows, each with a defect
             valid_columns (list[dict]): All valid/available columns: each with keys  'name' and 'columnKey'
         """
         for defect in defects:
