@@ -8,6 +8,7 @@ except ImportError:
 import json
 import requests
 import requests_mock
+from urllib.parse import urlencode
 
 import mlx.coverity
 import mlx.coverity_services
@@ -67,16 +68,22 @@ class TestCoverity(TestCase):
         coverity_conf_service.login("user", "password")
 
         # urls that are used in GET or POST requests
-        column_keys_url = (
-            coverity_conf_service.api_endpoint +
-            "/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
-        )
-        checkers_url = f"{coverity_conf_service.api_endpoint}/checkerAttributes/checker"
-        stream_url = f"{coverity_conf_service.api_endpoint}/streams/{fake_stream}"
-        issues_url = (
-            coverity_conf_service.api_endpoint +
-            "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
-        )
+        endpoint = coverity_conf_service.api_endpoint
+        params = {
+                "queryType": "bySnapshot",
+                "retrieveGroupByColumns": "false"
+            }
+        column_keys_url = f"{endpoint}/issues/columns?{urlencode(params)}"
+        checkers_url = f"{endpoint}/checkerAttributes/checker"
+        stream_url = f"{endpoint}/streams/{fake_stream}"
+        params = {
+            "includeColumnLabels": "true",
+            "offset": 0,
+            "queryType": "bySnapshot",
+            "rowCount": -1,
+            "sortOrder": "asc",
+        }
+        issues_url = f"{endpoint}/issues/search?{urlencode(params)}"
 
         with requests_mock.mock() as mocker:
             with open("tests/columns_keys.json", "r") as content:
