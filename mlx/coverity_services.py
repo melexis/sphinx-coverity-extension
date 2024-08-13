@@ -52,7 +52,6 @@ class CoverityDefectService:
         self._api_endpoint = f"https://{hostname.strip('/')}/api/{self.version}"
         self._checkers = []
         self._columns = []
-        self.filters = ""
 
     @property
     def base_url(self):
@@ -374,8 +373,6 @@ class CoverityDefectService:
         logging.info("Using %s filter [%s]", name, attribute_values)
         validated, filter_values = self.add_filter_rqt(name, attribute_values, *args, **kwargs)
         logging.info("Resolves to [%s]", validated)
-        if validated:
-            self.filters += "<%s(%s)> " % (name, validated)
         return filter_values
 
     def handle_component_filter(self, attribute_values):
@@ -394,7 +391,6 @@ class CoverityDefectService:
             for _, field in enumerate(fields):
                 field = field.strip()
                 filter_values.append(field)
-        self.filters += "<Components(%s)> " % (attribute_values)
         return filter_values
 
     def defect_url(self, stream, cid):
