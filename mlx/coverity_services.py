@@ -49,7 +49,7 @@ class CoverityDefectService:
 
     def __init__(self, hostname):
         self._hostname = hostname
-        self.base_url = f"https://{hostname.strip('/')}/api/{self.version}"
+        self._base_url = f"https://{hostname.strip('/')}/api/{self.version}"
         self._checkers = []
         self._columns = []
         self.filters = ""
@@ -63,14 +63,6 @@ class CoverityDefectService:
     def base_url(self):
         """str: The base URL of the service."""
         return self._base_url
-
-    @base_url.setter
-    def base_url(self, value):
-        if not re.fullmatch(r"https://.+/api/v\d+/?", value):
-            raise ValueError(
-                f"Invalid base URL. Expected 'http(s)://<hostname>/api/{self.version}(/)'; Got {value}"
-            )
-        self._base_url = value
 
     @property
     def version(self):
