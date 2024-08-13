@@ -188,7 +188,7 @@ class CoverityDefectService:
             name (str): String representation of the attribute.
             req_csv (str): A CSV list of attribute values to query.
             valid_list (list/dict): The valid attributes.
-            allow_regex (bool, optional): True when regular expressions are allowed. Defaults to False.
+            allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
 
         Returns:
             list[str]: The list of valid attributes
