@@ -86,7 +86,7 @@ class CoverityDefect(ItemElement):
 
         # Fill table and increase counters for pie chart
         try:
-            self.fill_table_and_count_attributes(defects["rows"], connector.coverity_service.columns, app, fromdocname)
+            self.fill_table_and_count_attributes(defects["rows"], self.coverity_service.columns, app, fromdocname)
         except AttributeError as err:
             report_info("No issues matching your query or empty stream. %s" % err)
             top_node += nodes.paragraph(text="No issues matching your query or empty stream")
