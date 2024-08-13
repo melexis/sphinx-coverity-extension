@@ -70,9 +70,9 @@ class TestCoverity(TestCase):
         # urls that are used in GET or POST requests
         endpoint = coverity_conf_service.api_endpoint
         params = {
-                "queryType": "bySnapshot",
-                "retrieveGroupByColumns": "false"
-            }
+            "queryType": "bySnapshot",
+            "retrieveGroupByColumns": "false"
+        }
         column_keys_url = f"{endpoint}/issues/columns?{urlencode(params)}"
         checkers_url = f"{endpoint}/checkerAttributes/checker"
         stream_url = f"{endpoint}/streams/{fake_stream}"
