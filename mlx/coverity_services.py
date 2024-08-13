@@ -333,7 +333,7 @@ class CoverityDefectService:
             if filter_values:
                 query_filters.append(self.assemble_query_filter("cid", filter_values, "idMatcher"))
         column_names = [name.lower() for name in column_names]
-        column_keys = set()
+        column_keys = {"cid"}
         for column in self.columns:
             if column["name"].lower() in column_names:
                 column_keys.add(column["columnKey"])
@@ -344,7 +344,6 @@ class CoverityDefectService:
             column_keys.add("lastTriageComment")
         if "reference" in column_names:
             column_keys.add("externalReference")
-        column_keys.add("cid")
         data = {
             "filters": query_filters,
             "columns": list(column_keys),
