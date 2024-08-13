@@ -180,7 +180,7 @@ class CoverityDefectService:
 
     @staticmethod
     def validate_filter_option(name, req_csv, valid_list, allow_regex=False):
-        """Add filter when the attribute is valid. If `valid_list` is not defined,
+        """Add filter when the attribute is valid. If `valid_list` is empty or falsy,
         all attributes of the CSV list are valid.
         The CSV list can allow regular expressions when `allow_regex` is set to True.
 
@@ -188,7 +188,7 @@ class CoverityDefectService:
             name (str): String representation of the attribute.
             req_csv (str): A CSV list of attribute values to query.
             valid_list (list/dict): The valid attributes.
-            allow_regex (bool, optional): True when regular expressions are allowed. Defaults to False.
+            allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
 
         Returns:
             list[str]: The list of valid attributes
