@@ -194,72 +194,52 @@ class CoverityDefectService:
         logging.info("Validate required %s [%s]", name, req_csv)
         validated = ""
         delim = ""
-        filter_list = []
+        filter_values = []
         for field in req_csv.split(","):
             if not valid_list or field in valid_list:
                 logging.info("Classification [%s] is valid", field)
-                filter_list.append(field)
+                filter_values.append(field)
                 validated += delim + field
                 delim = ","
             elif allow_regex:
                 pattern = re.compile(field)
                 for element in valid_list:
-                    if pattern.search(element) and element not in filter_list:
-                        filter_list.append(element)
+                    if pattern.search(element) and element not in filter_values:
+                        filter_values.append(element)
                         validated += delim + element
                         delim = ","
             else:
                 logging.error("Invalid %s filter: %s", name, field)
-        return validated, filter_list
+        return validated, filter_values
 
-    def add_new_filters(self, request_filters, column_key, filter_list, matcher_type, matcher_class=None):
-        """Add new filter to the filters list of the JSON request data
+    def assemble_query_filter(self, column_key, filter_values, matcher_type):
+        """Assemble a filter for a specific column
 
         Args:
-            request_filters (list[dict]): The list of all filters of the JSON request data
             column_key (str): The column key
-            filter_list (list[str]): The list of validated filters
-            matcher_type (str): The type of matcher (nameMatcher, idMatcher or keyMatcher)
-            matcher_class (str): The name of the column key which represents the class
+            filter_values (list[str]): The list of valid values to filter on
+            matcher_type (str): The type of the matcher (nameMatcher, idMatcher or keyMatcher)
+
+        Returns:
+            dict: New filter for API queries
         """
         matchers = []
-        # dateMatcher also exist but due to hardcoded way of working, this is skipped
-        if matcher_type == "nameMatcher":
-            for filter in filter_list:
-                matchers.append({
-                    "class": matcher_class,
-                    "name": filter,
-                    "type": "nameMatcher",
-                })
-            request_filters.append({
-                "columnKey": column_key,
-                "matchMode": "oneOrMoreMatch",
-                "matchers": matchers
-            })
-        elif matcher_type == "idMatcher":
-            for filter in filter_list:
-                matchers.append({
-                    "id": filter,
-                    "type": "idMatcher"
-                })
-            request_filters.append({
-                "columnKey": column_key,
-                "matchMode": "oneOrMoreMatch",
-                "matchers": matchers
-            })
-        else:
-            for filter in filter_list:
-                matchers.append({
-                    "key": filter,
-                    "type": "keyMatcher"
-                })
-            request_filters.append(
-                {
-                    "columnKey": column_key,
-                    "matchMode": "oneOrMoreMatch",
-                    "matchers": matchers
-                }
-            )
+        for filter_ in filter_values:
+            matcher = {"type": matcher_type}
+            if matcher_type == "nameMatcher":
+                matcher["name"] = filter_
+                matcher["class"] = "Component"
+                assert column_key == "displayComponent"
+            elif matcher_type == "idMatcher":
+                matcher["id"] = filter_
+            else:
+                matcher["key"] = filter_
+            matchers.append(matcher)
+        return {
+            "columnKey": column_key,
+            "matchMode": "oneOrMoreMatch",
+            "matchers": matchers
+        }
 
     def get_defects(self, stream, filters, column_names):
         """Gets a list of defects for given stream, filters and column names.
@@ -282,7 +262,7 @@ class CoverityDefectService:
                 }
         """
         logging.info("Querying Coverity for defects in stream [%s] ...", stream)
-        request_filters = [
+        query_filters = [
             {
                 "columnKey": "streams",
                 "matchMode": "oneOrMoreMatch",
@@ -298,68 +278,58 @@ class CoverityDefectService:
         # apply any filter on checker names
         if filters["checker"]:
             # this should be a keyMatcher (columnKey: checker)
-            filter_list = self.handle_attribute_filter(filters["checker"], "Checker", self.checkers, allow_regex=True)
-            if filter_list:
-                self.add_new_filters(request_filters, "checker", filter_list, "keyMatcher")
+            filter_values = self.handle_attribute_filter(filters["checker"], "Checker", self.checkers, allow_regex=True)
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("checker", filter_values, "keyMatcher"))
 
         # apply any filter on impact status
         if filters["impact"]:
             # this should be a keyMatcher (columnKey: displayImpact)
-            filter_list = self.handle_attribute_filter(filters["impact"], "Impact", IMPACT_LIST)
-            if filter_list:
-                self.add_new_filters(request_filters, "displayImpact", filter_list, "keyMatcher")
+            filter_values = self.handle_attribute_filter(filters["impact"], "Impact", IMPACT_LIST)
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("displayImpact", filter_values, "keyMatcher"))
 
         # apply any filter on issue kind
         if filters["kind"]:
             # this should be a keyMatcher (columnKey: displayIssueKind)
-            filter_list = self.handle_attribute_filter(filters["kind"], "displayIssueKind", KIND_LIST)
-            if filter_list:
-                self.add_new_filters(request_filters, "displayIssueKind", filter_list, "keyMatcher")
+            filter_values = self.handle_attribute_filter(filters["kind"], "displayIssueKind", KIND_LIST)
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("displayIssueKind", filter_values, "keyMatcher"))
 
         # apply any filter on classification
         if filters["classification"]:
             # this should be a keyMatcher (columnKey: classification)
-            filter_list = self.handle_attribute_filter(
-                filters["classification"],
-                "Classification",
-                CLASSIFICATION_LIST,
-            )
-            if filter_list:
-                self.add_new_filters(request_filters, "classification", filter_list, "keyMatcher")
+            filter_values = self.handle_attribute_filter(filters["classification"], "Classification", CLASSIFICATION_LIST)
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("classification", filter_values, "keyMatcher"))
 
         # apply any filter on action
         if filters["action"]:
             # this should be a keyMatcher (columnKey: action)
-            filter_list = self.handle_attribute_filter(filters["action"], "Action", ACTION_LIST)
-            if filter_list:
-                self.add_new_filters(request_filters, "action", filter_list, "keyMatcher")
+            filter_values = self.handle_attribute_filter(filters["action"], "Action", ACTION_LIST)
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("action", filter_values, "keyMatcher"))
 
         # apply any filter on Components
         if filters["component"]:
             # this should be a nameMatcher (columnKey: displayComponent)
-            filter_list = self.handle_component_filter(filters["component"])
-            if filter_list:
-                self.add_new_filters(
-                    request_filters,
-                    "displayComponent",
-                    filter_list,
-                    "nameMatcher",
-                    "Component",
-                )
+            filter_values = self.handle_component_filter(filters["component"])
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("displayComponent", filter_values, "nameMatcher"))
 
         # apply any filter on CWE values
         if filters["cwe"]:
             # this should be a idMatcher (columnKey: cwe)
-            filter_list = self.handle_attribute_filter(filters["cwe"], "CWE", None)
-            if filter_list:
-                self.add_new_filters(request_filters, "cwe", filter_list, "idMatcher")
+            filter_values = self.handle_attribute_filter(filters["cwe"], "CWE", None)
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("cwe", filter_values, "idMatcher"))
 
         # apply any filter on CID values
         if filters["cid"]:
             # this should be a idMatcher (columnKey: cid)
-            filter_list = self.handle_attribute_filter(filters["cid"], "CID", None)
-            if filter_list:
-                self.add_new_filters(request_filters, "cid", filter_list, "idMatcher")
+            filter_values = self.handle_attribute_filter(filters["cid"], "CID", None)
+            if filter_values:
+                query_filters.append(self.assemble_query_filter("cid", filter_values, "idMatcher"))
         column_names = [name.lower() for name in column_names]
         column_keys = set()
         for column in self.columns:
@@ -374,7 +344,7 @@ class CoverityDefectService:
             column_keys.add("externalReference")
         column_keys.add("cid")
         data = {
-            "filters": request_filters,
+            "filters": query_filters,
             "columns": list(column_keys),
             "snapshotScope": {
                 "show": {
@@ -401,11 +371,11 @@ class CoverityDefectService:
             list[str]: The list of valid attributes
         """
         logging.info("Using %s filter [%s]", name, attribute_values)
-        validated, filter_list = self.add_filter_rqt(name, attribute_values, *args, **kwargs)
+        validated, filter_values = self.add_filter_rqt(name, attribute_values, *args, **kwargs)
         logging.info("Resolves to [%s]", validated)
         if validated:
             self.filters += "<%s(%s)> " % (name, validated)
-        return filter_list
+        return filter_values
 
     def handle_component_filter(self, attribute_values):
         """Applies any filter on the component attribute's values.
@@ -418,13 +388,13 @@ class CoverityDefectService:
         """
         logging.info("Using Component filter [%s]", attribute_values)
         parser = csv.reader([attribute_values])
-        filter_list = []
+        filter_values = []
         for fields in parser:
             for _, field in enumerate(fields):
                 field = field.strip()
-                filter_list.append(field)
+                filter_values.append(field)
         self.filters += "<Components(%s)> " % (attribute_values)
-        return filter_list
+        return filter_values
 
     def defect_url(self, stream, cid):
         """Get URL for given defect CID
