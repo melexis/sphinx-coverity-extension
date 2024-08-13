@@ -207,15 +207,15 @@ class CoverityDefectService:
         return response.raise_for_status()
 
     @staticmethod
-    def validate_filter_option(name, req_csv, valid_list, allow_regex=False):
-        """Add filter when the attribute is valid. If `valid_list` is empty or falsy,
+    def validate_filter_option(name, req_csv, valid_attributes, allow_regex=False):
+        """Add filter when the attribute is valid. If `valid_attributes` is empty or falsy,
         all attributes of the CSV list are valid.
         The CSV list can allow regular expressions when `allow_regex` is set to True.
 
         Args:
             name (str): String representation of the attribute.
             req_csv (str): A CSV list of attribute values to query.
-            valid_list (list/dict): The valid attributes.
+            valid_attributes (list/dict): The valid attributes.
             allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
 
         Returns:
@@ -224,12 +224,12 @@ class CoverityDefectService:
         logging.info("Validate required %s [%s]", name, req_csv)
         filter_values = []
         for field in req_csv.split(","):
-            if not valid_list or field in valid_list:
+            if not valid_attributes or field in valid_attributes:
                 logging.info("Classification [%s] is valid", field)
                 filter_values.append(field)
             elif allow_regex:
                 pattern = re.compile(field)
-                for element in valid_list:
+                for element in valid_attributes:
                     if pattern.search(element) and element not in filter_values:
                         filter_values.append(element)
             else:
