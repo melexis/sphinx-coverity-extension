@@ -111,8 +111,14 @@ class CoverityDefectService:
         Returns:
             dict: The response
         """
-        url = self.api_endpoint.rstrip('/') + \
-            "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
+        params = {
+            "includeColumnLabels": "true",
+            "offset": 0,
+            "queryType": "bySnapshot",
+            "rowCount": -1,
+            "sortOrder": "asc"
+        }
+        url = f"{self.api_endpoint.rstrip('/')}/issues/search?{urlencode(params)}"
         return self._request(url, filters)
 
     def retrieve_column_keys(self):
@@ -122,7 +128,11 @@ class CoverityDefectService:
             list[dict]: A list of dictionaries where the keys of each dictionary are 'columnKey' and 'name'
         """
         if not self._columns:
-            url = f"{self.api_endpoint.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
+            params = {
+                "queryType": "bySnapshot",
+                "retrieveGroupByColumns": "false"
+            }
+            url = f"{self.api_endpoint.rstrip('/')}/issues/columns?{urlencode(params)}"
             self._columns = self._request(url)
         return self.columns
 
@@ -399,8 +409,11 @@ class CoverityDefectService:
         Returns:
             str: The URL to the requested defect
         """
-        params = {'stream': stream, 'cid': cid}
-        return f"{self.base_url}/query/defects.htm?" + urlencode(params)
+        params = {
+            'stream': stream,
+            'cid': cid
+        }
+        return f"{self.base_url}/query/defects.htm?{urlencode(params)}"
 
 
 if __name__ == "__main__":
