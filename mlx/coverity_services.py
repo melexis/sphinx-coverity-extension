@@ -51,7 +51,8 @@ class CoverityDefectService:
         self._base_url = f"https://{hostname.strip('/')}"
         self._api_endpoint = f"https://{hostname.strip('/')}/api/{self.version}"
         self._checkers = []
-        self._columns = []
+        self._columns = {}
+        self.logger = getLogger("coverity_logging")
 
     @property
     def base_url(self):
@@ -132,7 +133,9 @@ class CoverityDefectService:
                 "retrieveGroupByColumns": "false"
             }
             url = f"{self.api_endpoint.rstrip('/')}/issues/columns?{urlencode(params)}"
-            self._columns = self._request(url)
+            columns = self._request(url)
+            if columns:
+                self._columns = {column["name"].lower(): column["columnKey"] for column in columns}
         return self.columns
 
     def retrieve_checkers(self):
@@ -172,8 +175,7 @@ class CoverityDefectService:
             err_msg = response.json()["message"]
         except (requests.exceptions.JSONDecodeError, KeyError):
             err_msg = response.content.decode()
-        logger = getLogger("coverity_logging")
-        logger.warning(err_msg)
+        self.logger.warning(err_msg)
         return response.raise_for_status()
 
     @staticmethod
@@ -326,16 +328,22 @@ class CoverityDefectService:
                 query_filters.append(self.assemble_query_filter("cid", filter_values, "idMatcher"))
         column_names = [name.lower() for name in column_names]
         column_keys = {"cid"}
-        for column in self.columns:
-            if column["name"].lower() in column_names:
-                column_keys.add(column["columnKey"])
-        if "location" in column_names:
-            column_keys.add("lineNumber")
-            column_keys.add("displayFile")
-        if "comment" in column_names:
-            column_keys.add("lastTriageComment")
-        if "reference" in column_names:
-            column_keys.add("externalReference")
+        for column_name in column_names:
+            if column_name.lower() == "location":
+                column_keys.add("lineNumber")
+                column_keys.add("displayFile")
+                continue
+            if column_name.lower() == "comment":
+                column_keys.add("lastTriageComment")
+                continue
+            if column_name.lower() == "reference":
+                column_keys.add("externalReference")
+                continue
+            if column_name.lower() in self.columns:
+                column_keys.add(self.columns[column_name.lower()])
+            else:
+                self.logger.warning(f"Invalid column name {column_name!r}")
+
         data = {
             "filters": query_filters,
             "columns": list(column_keys),

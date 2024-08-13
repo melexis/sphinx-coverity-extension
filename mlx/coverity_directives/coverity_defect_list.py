@@ -167,7 +167,7 @@ class CoverityDefect(ItemElement):
 
         Args:
             rows (list[list]): Data rows, each with a defect
-            valid_columns (list[dict]): All valid/available columns: each with keys  'name' and 'columnKey'
+            valid_columns (dict): All valid/available columns. The name of the column as key and column key as value.
         """
         for defect in defects:
             simplified_defect = {item["key"]: item["value"] for item in defect}
@@ -183,7 +183,7 @@ class CoverityDefect(ItemElement):
         Args:
             defect (dict): The defect where the keys are column keys and the values are the corresponding defect values
             columns (list): List of column names (str).
-            valid_columns (list[dict]): All valid/available columns: each with keys  'name' and 'columnKey'
+            valid_columns (dict): All valid/available columns. The name of the column as key and column key as value.
 
         Returns:
             (nodes.row) Filled row node.
@@ -216,10 +216,9 @@ class CoverityDefect(ItemElement):
                 row += self.cov_attribute_value_to_col(defect, self.defect_states_map[item_col])
             else:
                 # generic check which, if it is missing, prints empty cell anyway
-                for valid_column in valid_columns:
-                    if valid_column["name"].upper() == item_col:
-                        row += self.cov_attribute_value_to_col(defect, valid_column["columnKey"])
-                        break
+                if item_col.lower() in valid_columns:
+                    row += self.cov_attribute_value_to_col(defect, valid_columns[item_col.lower()])
+                    break
                 else:
                     row += self.create_cell("")
         return row
@@ -283,15 +282,13 @@ class CoverityDefect(ItemElement):
 
         Args:
             defect (dict): The defect.
-            valid_columns (list[dict]): All valid/available columns: each with keys  'name' and 'columnKey'
+            valid_columns (dict): All valid/available columns. The name of the column as key and column key as value.
         """
         if self["chart_attribute"].upper() in self.column_map:
             attribute_value = str(defect[self.column_map[self["chart_attribute"].upper()]])
         else:
-            for valid_column in valid_columns:
-                if valid_column["name"].upper() == self["chart_attribute"].upper():
-                    col = self.cov_attribute_value_to_col(defect, valid_column["columnKey"])
-                    break
+            if self["chart_attribute"].lower() in valid_columns:
+                col = self.cov_attribute_value_to_col(defect, valid_columns[self["chart_attribute"].lower()])
             else:
                 col = self.create_cell("")
             attribute_value = str(col.children[0].children[0])  # get text in paragraph of column
