@@ -83,7 +83,7 @@ class TestCoverity(TestCase):
             "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
 
         with requests_mock.mock() as mocker:
-            with open("tests/column_keys.json", "r") as content:
+            with open("tests/columns.json", "r") as content:
                 column_keys = json.loads(content.read())
             mocker.get(column_keys_url, json=column_keys)
             mocker.get(checkers_url, json=fake_checkers)
