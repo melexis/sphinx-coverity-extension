@@ -77,8 +77,8 @@ class CoverityDefectService:
     @property
     def columns(self):
         """list[dict]: A list of dictionaries where the keys of each dictionary:
-            - columnKey: The key of the column
-            - name: The name of the column
+        - columnKey: The key of the column
+        - name: The name of the column
         """
         return self._columns
 
@@ -116,7 +116,7 @@ class CoverityDefectService:
             "offset": 0,
             "queryType": "bySnapshot",
             "rowCount": -1,
-            "sortOrder": "asc"
+            "sortOrder": "asc",
         }
         url = f"{self.api_endpoint.rstrip('/')}/issues/search?{urlencode(params)}"
         return self._request(url, filters)
@@ -295,7 +295,9 @@ class CoverityDefectService:
         # apply any filter on classification
         if filters["classification"]:
             # this should be a keyMatcher (columnKey: classification)
-            filter_values = self.handle_attribute_filter(filters["classification"], "Classification", CLASSIFICATION_LIST)
+            filter_values = self.handle_attribute_filter(
+                filters["classification"], "Classification", CLASSIFICATION_LIST
+            )
             if filter_values:
                 query_filters.append(self.assemble_query_filter("classification", filter_values, "keyMatcher"))
 

@@ -194,8 +194,7 @@ class CoverityDefect(ItemElement):
             if item_col == "CID":
                 # CID is default and even if it is in disregard
                 row += self.create_cell(
-                    str(defect["cid"]),
-                    url=self.coverity_service.defect_url(self.stream, str(defect["cid"]))
+                    str(defect["cid"]), url=self.coverity_service.defect_url(self.stream, str(defect["cid"]))
                 )
             elif item_col == "LOCATION":
                 linenum = defect["lineNumber"]
@@ -346,8 +345,8 @@ class CoverityDefectListDirective(Directive):
         env = self.state.document.settings.env
 
         item_list_node = CoverityDefect()
-        item_list_node['document'] = env.docname
-        item_list_node['line'] = self.lineno
+        item_list_node["document"] = env.docname
+        item_list_node["line"] = self.lineno
 
         # Process title (optional argument)
         item_list_node["title"] = self.arguments[0] if self.arguments else "Coverity report"
