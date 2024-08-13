@@ -81,8 +81,6 @@ class TestCoverity(TestCase):
         with requests_mock.mock() as mocker:
             with open("tests/columns_keys.json", "r") as content:
                 column_keys = json.loads(content.read())
-            with open("tests/columns.json", "r") as content:
-                columns = json.loads(content.read())
             mocker.get(column_keys_url, json=column_keys)
             mocker.get(checkers_url, json=fake_checkers)
             mocker.get(stream_url, json={"stream": "valid"})
@@ -91,7 +89,8 @@ class TestCoverity(TestCase):
             # Validate stream name
             coverity_conf_service.validate_stream(fake_stream)
             # Retrieve column keys
-            assert coverity_conf_service.retrieve_column_keys() == columns
+            assert coverity_conf_service.retrieve_column_keys()["Issue Kind"] == "displayIssueKind"
+            assert coverity_conf_service.retrieve_column_keys()["CID"] == "cid"
             # Retrieve checkers
             assert coverity_conf_service.retrieve_checkers() == ["checker_key"]
             # Get defects

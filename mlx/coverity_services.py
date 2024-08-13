@@ -136,7 +136,7 @@ class CoverityDefectService:
             url = f"{self.api_endpoint}/issues/columns?{urlencode(params)}"
             columns = self._request(url)
             if columns:
-                self._columns = {column["name"].lower(): column["columnKey"] for column in columns}
+                self._columns = {column["name"]: column["columnKey"] for column in columns}
         return self.columns
 
     def retrieve_checkers(self):
@@ -272,78 +272,63 @@ class CoverityDefectService:
                 ]
             }
         ]
-        # apply any filter on checker names
+
         if filters["checker"]:
-            # this should be a keyMatcher (columnKey: checker)
             filter_values = self.handle_attribute_filter(filters["checker"], "Checker", self.checkers, allow_regex=True)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("checker", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("Checker", filter_values, "keyMatcher"))
 
-        # apply any filter on impact status
         if filters["impact"]:
-            # this should be a keyMatcher (columnKey: displayImpact)
             filter_values = self.handle_attribute_filter(filters["impact"], "Impact", IMPACT_LIST)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("impact", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("Impact", filter_values, "keyMatcher"))
 
-        # apply any filter on issue kind
         if filters["kind"]:
-            # this should be a keyMatcher (columnKey: displayIssueKind)
             filter_values = self.handle_attribute_filter(filters["kind"], "Issue Kind", KIND_LIST)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("issue kind", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("Issue Kind", filter_values, "keyMatcher"))
 
-        # apply any filter on classification
         if filters["classification"]:
-            # this should be a keyMatcher (columnKey: classification)
             filter_values = self.handle_attribute_filter(
                 filters["classification"], "Classification", CLASSIFICATION_LIST
             )
             if filter_values:
-                query_filters.append(self.assemble_query_filter("classification", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("Classification", filter_values, "keyMatcher"))
 
-        # apply any filter on action
         if filters["action"]:
-            # this should be a keyMatcher (columnKey: action)
             filter_values = self.handle_attribute_filter(filters["action"], "Action", ACTION_LIST)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("action", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("Action", filter_values, "keyMatcher"))
 
-        # apply any filter on Components
         if filters["component"]:
-            # this should be a nameMatcher (columnKey: displayComponent)
             filter_values = self.handle_component_filter(filters["component"])
             if filter_values:
-                query_filters.append(self.assemble_query_filter("component", filter_values, "nameMatcher"))
+                query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
-        # apply any filter on CWE values
         if filters["cwe"]:
-            # this should be a idMatcher (columnKey: cwe)
             filter_values = self.handle_attribute_filter(filters["cwe"], "CWE", None)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("cwe", filter_values, "idMatcher"))
+                query_filters.append(self.assemble_query_filter("CWE", filter_values, "idMatcher"))
 
-        # apply any filter on CID values
         if filters["cid"]:
-            # this should be a idMatcher (columnKey: cid)
             filter_values = self.handle_attribute_filter(filters["cid"], "CID", None)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("cid", filter_values, "idMatcher"))
-        column_names = [name.lower() for name in column_names]
+                query_filters.append(self.assemble_query_filter("CID", filter_values, "idMatcher"))
         column_keys = {"cid"}
         for column_name in column_names:
-            if column_name.lower() == "location":
+            column_name_lower = column_name.lower()
+            if column_name_lower == "location":
                 column_keys.add("lineNumber")
                 column_keys.add("displayFile")
                 continue
-            if column_name.lower() == "comment":
+            if column_name_lower == "comment":
                 column_keys.add("lastTriageComment")
                 continue
-            if column_name.lower() == "reference":
+            if column_name_lower == "reference":
                 column_keys.add("externalReference")
                 continue
-            if column_name.lower() in self.columns:
-                column_keys.add(self.columns[column_name.lower()])
+            if column_name_lower in (name.lower for name in self.columns):
+                column_keys.add(self.columns[column_name])
             else:
                 self.logger.warning(f"Invalid column name {column_name!r}")
 
