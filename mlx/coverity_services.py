@@ -99,7 +99,7 @@ class CoverityDefectService:
         Args:
             stream (str): The stream name
         """
-        url = self.api_endpoint.rstrip('/') + f"/streams/{stream}"
+        url = f"{self.api_endpoint.rstrip('/')}/streams/{stream}"
         self._request(url)
 
     def retrieve_issues(self, filters):
