@@ -24,7 +24,7 @@ class TestCoverity(TestCase):
 
         # Get the base url
         coverity_conf_service = mlx.coverity_services.CoverityDefectService("scan.coverity.com/")
-        self.assertEqual("https://scan.coverity.com/api/v2", coverity_conf_service.base_url)
+        self.assertEqual("https://scan.coverity.com/api/v2", coverity_conf_service.api_endpoint)
 
         # Login to Coverity
         coverity_conf_service.login("user", "password")
@@ -75,11 +75,11 @@ class TestCoverity(TestCase):
         coverity_conf_service.login("user", "password")
 
         # urls that are used in GET or POST requests
-        column_keys_url = coverity_conf_service.base_url.rstrip("/") + \
+        column_keys_url = coverity_conf_service.api_endpoint.rstrip("/") + \
             "/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
-        checkers_url = f"{coverity_conf_service.base_url.rstrip('/')}/checkerAttributes/checker"
-        stream_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
-        issues_url = coverity_conf_service.base_url.rstrip("/") + \
+        checkers_url = f"{coverity_conf_service.api_endpoint.rstrip('/')}/checkerAttributes/checker"
+        stream_url = f"{coverity_conf_service.api_endpoint.rstrip('/')}/streams/{fake_stream}"
+        issues_url = coverity_conf_service.api_endpoint.rstrip("/") + \
             "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
 
         with requests_mock.mock() as mocker:
@@ -117,7 +117,7 @@ class TestCoverity(TestCase):
         fake_stream = "test_stream"
 
         coverity_conf_service = mlx.coverity.CoverityDefectService("scan.coverity.com/")
-        stream_url = f"{coverity_conf_service.base_url.rstrip('/')}/streams/{fake_stream}"
+        stream_url = f"{coverity_conf_service.api_endpoint.rstrip('/')}/streams/{fake_stream}"
 
         with requests_mock.mock() as mocker:
             mocker.get(stream_url, headers={"Authorization": "Basic fail"}, status_code=401)

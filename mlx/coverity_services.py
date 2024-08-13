@@ -48,21 +48,21 @@ class CoverityDefectService:
     _version = "v2"
 
     def __init__(self, hostname):
-        self._hostname = hostname
-        self._base_url = f"https://{hostname.strip('/')}/api/{self.version}"
+        self._base_url = f"https://{hostname.strip('/')}"
+        self._api_endpoint = f"https://{hostname.strip('/')}/api/{self.version}"
         self._checkers = []
         self._columns = []
         self.filters = ""
 
     @property
-    def hostname(self):
-        """str: The hostname"""
-        return self._hostname
-
-    @property
     def base_url(self):
         """str: The base URL of the service."""
         return self._base_url
+
+    @property
+    def api_endpoint(self):
+        """str: The API endpoint of the service."""
+        return self._api_endpoint
 
     @property
     def version(self):
@@ -99,7 +99,7 @@ class CoverityDefectService:
         Args:
             stream (str): The stream name
         """
-        url = self.base_url.rstrip('/') + f"/streams/{stream}"
+        url = self.api_endpoint.rstrip('/') + f"/streams/{stream}"
         self._request(url)
 
     def retrieve_issues(self, filters):
@@ -111,7 +111,7 @@ class CoverityDefectService:
         Returns:
             dict: The response
         """
-        url = self.base_url.rstrip('/') + \
+        url = self.api_endpoint.rstrip('/') + \
             "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
         return self._request(url, filters)
 
@@ -122,7 +122,7 @@ class CoverityDefectService:
             list[dict]: A list of dictionaries where the keys of each dictionary are 'columnKey' and 'name'
         """
         if not self._columns:
-            url = f"{self.base_url.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
+            url = f"{self.api_endpoint.rstrip('/')}/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
             self._columns = self._request(url)
         return self.columns
 
@@ -133,7 +133,7 @@ class CoverityDefectService:
             list[str]: The list of valid checkers
         """
         if not self.checkers:
-            url = f"{self.base_url.rstrip('/')}/checkerAttributes/checker"
+            url = f"{self.api_endpoint.rstrip('/')}/checkerAttributes/checker"
             checkers = self._request(url)
             if checkers and "checkerAttributedata" in checkers:
                 self._checkers = [checker["key"] for checker in checkers["checkerAttributedata"]]
@@ -400,7 +400,7 @@ class CoverityDefectService:
             str: The URL to the requested defect
         """
         params = {'stream': stream, 'cid': cid}
-        return f"https://{self.hostname.strip('/')}/query/defects.htm?" + urlencode(params)
+        return f"{self.base_url}/query/defects.htm?" + urlencode(params)
 
 
 if __name__ == "__main__":
