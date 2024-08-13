@@ -3,10 +3,12 @@
 """Services and other utilities for Coverity scripting"""
 
 # General
+from collections import namedtuple
 import csv
 import logging
 import re
 from urllib.parse import urlencode
+import requests.structures
 from sphinx.util.logging import getLogger
 
 # For Coverity - REST API
@@ -83,6 +85,29 @@ class CoverityDefectService:
         """
         return self._columns
 
+    def column_keys(self, column_names):
+        """The column keys corresponding to the given column names in the `col` option
+
+        Args:
+            column_names (list[str]): The column names given by the `col` option
+        """
+        special_columns = {
+            "location": {"lineNumber", "displayFile"},
+            "comment": {"lastTriageComment"},
+            "reference": {"externalReference"}
+        }
+        column_keys = {"cid"}
+
+        for column_name in column_names:
+            column_name_lower = column_name.lower()
+            if column_name_lower in special_columns:
+                column_keys.update(special_columns[column_name_lower])
+            elif column_name_lower in self.columns:
+                column_keys.add(self.columns[column_name_lower])
+            else:
+                self.logger.warning(f"Invalid column name {column_name!r}")
+        return column_keys
+
     def login(self, username, password):
         """Authenticate a session using the given username and password .
 
@@ -136,7 +161,9 @@ class CoverityDefectService:
             url = f"{self.api_endpoint}/issues/columns?{urlencode(params)}"
             columns = self._request(url)
             if columns:
-                self._columns = {column["name"]: column["columnKey"] for column in columns}
+                self._columns = requests.structures.CaseInsensitiveDict(
+                    ((column["name"], column["columnKey"]) for column in columns)
+                )
         return self.columns
 
     def retrieve_checkers(self):
@@ -314,27 +341,10 @@ class CoverityDefectService:
             filter_values = self.handle_attribute_filter(filters["cid"], "CID", None)
             if filter_values:
                 query_filters.append(self.assemble_query_filter("CID", filter_values, "idMatcher"))
-        column_keys = {"cid"}
-        for column_name in column_names:
-            column_name_lower = column_name.lower()
-            if column_name_lower == "location":
-                column_keys.add("lineNumber")
-                column_keys.add("displayFile")
-                continue
-            if column_name_lower == "comment":
-                column_keys.add("lastTriageComment")
-                continue
-            if column_name_lower == "reference":
-                column_keys.add("externalReference")
-                continue
-            if column_name_lower in (name.lower for name in self.columns):
-                column_keys.add(self.columns[column_name])
-            else:
-                self.logger.warning(f"Invalid column name {column_name!r}")
 
         data = {
             "filters": query_filters,
-            "columns": list(column_keys),
+            "columns": list(self.column_keys(column_names)),
             "snapshotScope": {
                 "show": {
                     "scope": "last()",
