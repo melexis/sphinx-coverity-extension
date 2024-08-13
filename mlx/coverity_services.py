@@ -15,12 +15,12 @@ from sphinx.util.logging import getLogger
 import requests
 
 # Coverity built in Impact statuses
-IMPACT_LIST = {"High", "Medium", "Low"}
+IMPACT_LIST = ["High", "Medium", "Low"]
 
-KIND_LIST = {"QUALITY", "SECURITY", "TEST"}
+KIND_LIST = ["QUALITY", "SECURITY", "TEST"]
 
 # Coverity built in Classifications
-CLASSIFICATION_LIST = {
+CLASSIFICATION_LIST = [
     "Unclassified",
     "Pending",
     "False Positive",
@@ -28,10 +28,10 @@ CLASSIFICATION_LIST = {
     "Bug",
     "Untested",
     "No Test Needed",
-}
+]
 
 # Coverity built in Actions
-ACTION_LIST = {
+ACTION_LIST = [
     "Undecided",
     "Fix Required",
     "Fix Submitted",
@@ -39,7 +39,7 @@ ACTION_LIST = {
     "Ignore",
     "On hold",
     "For Interest Only",
-}
+]
 
 
 class CoverityDefectService:
