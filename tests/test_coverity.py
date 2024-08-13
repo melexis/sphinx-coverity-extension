@@ -38,7 +38,7 @@ class TestCoverity(TestCase):
         # Login to Coverity
         coverity_conf_service.login("user", "password")
 
-        with open("tests/columns.json", "rb") as content:
+        with open("tests/columns_keys.json", "rb") as content:
             mock_get.return_value.content = content.read()
         mock_get.return_value.ok = True
         coverity_conf_service.retrieve_checkers()
