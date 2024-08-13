@@ -300,47 +300,27 @@ class CoverityDefectService:
             }
         ]
 
-        if filters["checker"]:
-            filter_values = self.handle_attribute_filter(filters["checker"], "Checker", self.checkers, allow_regex=True)
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("Checker", filter_values, "keyMatcher"))
+        Filter = namedtuple("Filter", "name matcher_type list allow_regex", defaults=[None, False])
+        filter_options = {
+            "checker": Filter("Checker", "keyMatcher", self.checkers, True),
+            "impact": Filter("Impact", "keyMatcher", IMPACT_LIST),
+            "kind": Filter("Issue Kind", "keyMatcher", KIND_LIST),
+            "classification": Filter("Classification", "keyMatcher", CLASSIFICATION_LIST),
+            "action": Filter("Action", "keyMatcher", ACTION_LIST),
+            "cwe": Filter("CWE", "idMatcher"),
+            "cid": Filter("CID", "idMatcher")
+        }
 
-        if filters["impact"]:
-            filter_values = self.handle_attribute_filter(filters["impact"], "Impact", IMPACT_LIST)
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("Impact", filter_values, "keyMatcher"))
-
-        if filters["kind"]:
-            filter_values = self.handle_attribute_filter(filters["kind"], "Issue Kind", KIND_LIST)
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("Issue Kind", filter_values, "keyMatcher"))
-
-        if filters["classification"]:
-            filter_values = self.handle_attribute_filter(
-                filters["classification"], "Classification", CLASSIFICATION_LIST
-            )
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("Classification", filter_values, "keyMatcher"))
-
-        if filters["action"]:
-            filter_values = self.handle_attribute_filter(filters["action"], "Action", ACTION_LIST)
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("Action", filter_values, "keyMatcher"))
+        for option, filter in filter_options.items():
+            if filters[option]:
+                filter_values = self.handle_attribute_filter(filters[option], filter.name, filter.list, filter.allow_regex)
+                if filter_values:
+                    query_filters.append(self.assemble_query_filter(filter.name, filter_values, filter.matcher_type))
 
         if filters["component"]:
             filter_values = self.handle_component_filter(filters["component"])
             if filter_values:
                 query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
-
-        if filters["cwe"]:
-            filter_values = self.handle_attribute_filter(filters["cwe"], "CWE", None)
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("CWE", filter_values, "idMatcher"))
-
-        if filters["cid"]:
-            filter_values = self.handle_attribute_filter(filters["cid"], "CID", None)
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("CID", filter_values, "idMatcher"))
 
         data = {
             "filters": query_filters,
@@ -356,6 +336,7 @@ class CoverityDefectService:
                 }
             }
         }
+
         logging.info("Running Coverity query...")
         return self.retrieve_issues(data)
 
