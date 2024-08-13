@@ -288,9 +288,9 @@ class CoverityDefectService:
         # apply any filter on issue kind
         if filters["kind"]:
             # this should be a keyMatcher (columnKey: displayIssueKind)
-            filter_values = self.handle_attribute_filter(filters["kind"], "Kind", KIND_LIST)
+            filter_values = self.handle_attribute_filter(filters["kind"], "Issue Kind", KIND_LIST)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("kind", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("issue kind", filter_values, "keyMatcher"))
 
         # apply any filter on classification
         if filters["classification"]:
