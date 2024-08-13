@@ -177,7 +177,7 @@ class CoverityDefectService:
         return response.raise_for_status()
 
     @staticmethod
-    def add_filter_rqt(name, req_csv, valid_list, allow_regex=False):
+    def validate_filter_option(name, req_csv, valid_list, allow_regex=False):
         """Add filter when the attribute is valid. If `valid_list` is not defined,
         all attributes of the CSV list are valid.
         The CSV list can allow regular expressions when `allow_regex` is set to True.
@@ -189,29 +189,22 @@ class CoverityDefectService:
             allow_regex (bool, optional): True when regular expressions are allowed. Defaults to False.
 
         Returns:
-            str: The validated CSV list
             list[str]: The list of valid attributes
         """
         logging.info("Validate required %s [%s]", name, req_csv)
-        validated = ""
-        delim = ""
         filter_values = []
         for field in req_csv.split(","):
             if not valid_list or field in valid_list:
                 logging.info("Classification [%s] is valid", field)
                 filter_values.append(field)
-                validated += delim + field
-                delim = ","
             elif allow_regex:
                 pattern = re.compile(field)
                 for element in valid_list:
                     if pattern.search(element) and element not in filter_values:
                         filter_values.append(element)
-                        validated += delim + element
-                        delim = ","
             else:
                 logging.error("Invalid %s filter: %s", name, field)
-        return validated, filter_values
+        return filter_values
 
     def assemble_query_filter(self, column_key, filter_values, matcher_type):
         """Assemble a filter for a specific column
@@ -371,8 +364,7 @@ class CoverityDefectService:
             list[str]: The list of valid attributes
         """
         logging.info("Using %s filter [%s]", name, attribute_values)
-        validated, filter_values = self.add_filter_rqt(name, attribute_values, *args, **kwargs)
-        logging.info("Resolves to [%s]", validated)
+        filter_values = self.validate_filter_option(name, attribute_values, *args, **kwargs)
         return filter_values
 
     def handle_component_filter(self, attribute_values):
