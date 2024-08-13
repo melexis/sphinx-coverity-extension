@@ -208,11 +208,11 @@ class CoverityDefectService:
                 logging.error("Invalid %s filter: %s", name, field)
         return filter_values
 
-    def assemble_query_filter(self, column_key, filter_values, matcher_type):
+    def assemble_query_filter(self, column_name, filter_values, matcher_type):
         """Assemble a filter for a specific column
 
         Args:
-            column_key (str): The column key
+            column_name (str): The column name in lowercase
             filter_values (list[str]): The list of valid values to filter on
             matcher_type (str): The type of the matcher (nameMatcher, idMatcher or keyMatcher)
 
@@ -225,14 +225,14 @@ class CoverityDefectService:
             if matcher_type == "nameMatcher":
                 matcher["name"] = filter_
                 matcher["class"] = "Component"
-                assert column_key == "displayComponent"
+                assert column_name == "component"
             elif matcher_type == "idMatcher":
                 matcher["id"] = filter_
             else:
                 matcher["key"] = filter_
             matchers.append(matcher)
         return {
-            "columnKey": column_key,
+            "columnKey": self.columns[column_name],
             "matchMode": "oneOrMoreMatch",
             "matchers": matchers
         }
@@ -283,14 +283,14 @@ class CoverityDefectService:
             # this should be a keyMatcher (columnKey: displayImpact)
             filter_values = self.handle_attribute_filter(filters["impact"], "Impact", IMPACT_LIST)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("displayImpact", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("impact", filter_values, "keyMatcher"))
 
         # apply any filter on issue kind
         if filters["kind"]:
             # this should be a keyMatcher (columnKey: displayIssueKind)
-            filter_values = self.handle_attribute_filter(filters["kind"], "displayIssueKind", KIND_LIST)
+            filter_values = self.handle_attribute_filter(filters["kind"], "Kind", KIND_LIST)
             if filter_values:
-                query_filters.append(self.assemble_query_filter("displayIssueKind", filter_values, "keyMatcher"))
+                query_filters.append(self.assemble_query_filter("kind", filter_values, "keyMatcher"))
 
         # apply any filter on classification
         if filters["classification"]:
@@ -311,7 +311,7 @@ class CoverityDefectService:
             # this should be a nameMatcher (columnKey: displayComponent)
             filter_values = self.handle_component_filter(filters["component"])
             if filter_values:
-                query_filters.append(self.assemble_query_filter("displayComponent", filter_values, "nameMatcher"))
+                query_filters.append(self.assemble_query_filter("component", filter_values, "nameMatcher"))
 
         # apply any filter on CWE values
         if filters["cwe"]:
