@@ -44,7 +44,7 @@ ACTION_LIST = {
 
 class CoverityDefectService:
     """
-    Coverity Defect Service (WebServices)
+    Convenience class for retrieving data from the Coverity REST API
     """
 
     _version = "v2"
