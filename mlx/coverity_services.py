@@ -48,8 +48,9 @@ class CoverityDefectService:
     _version = "v2"
 
     def __init__(self, hostname):
-        self._base_url = f"https://{hostname.strip('/')}"
-        self._api_endpoint = f"https://{hostname.strip('/')}/api/{self.version}"
+        hostname = hostname.strip('/')
+        self._base_url = f"https://{hostname}"
+        self._api_endpoint = f"https://{hostname}/api/{self.version}"
         self._checkers = []
         self._columns = {}
         self.logger = getLogger("coverity_logging")
@@ -99,7 +100,7 @@ class CoverityDefectService:
         Args:
             stream (str): The stream name
         """
-        url = f"{self.api_endpoint.rstrip('/')}/streams/{stream}"
+        url = f"{self.api_endpoint}/streams/{stream}"
         self._request(url)
 
     def retrieve_issues(self, filters):
@@ -118,7 +119,7 @@ class CoverityDefectService:
             "rowCount": -1,
             "sortOrder": "asc",
         }
-        url = f"{self.api_endpoint.rstrip('/')}/issues/search?{urlencode(params)}"
+        url = f"{self.api_endpoint}/issues/search?{urlencode(params)}"
         return self._request(url, filters)
 
     def retrieve_column_keys(self):
@@ -132,7 +133,7 @@ class CoverityDefectService:
                 "queryType": "bySnapshot",
                 "retrieveGroupByColumns": "false"
             }
-            url = f"{self.api_endpoint.rstrip('/')}/issues/columns?{urlencode(params)}"
+            url = f"{self.api_endpoint}/issues/columns?{urlencode(params)}"
             columns = self._request(url)
             if columns:
                 self._columns = {column["name"].lower(): column["columnKey"] for column in columns}
@@ -145,7 +146,7 @@ class CoverityDefectService:
             list[str]: The list of valid checkers
         """
         if not self.checkers:
-            url = f"{self.api_endpoint.rstrip('/')}/checkerAttributes/checker"
+            url = f"{self.api_endpoint}/checkerAttributes/checker"
             checkers = self._request(url)
             if checkers and "checkerAttributedata" in checkers:
                 self._checkers = [checker["key"] for checker in checkers["checkerAttributedata"]]
