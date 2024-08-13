@@ -125,7 +125,7 @@ class CoverityDefectService:
         """Retrieves the column keys and associated display names.
 
         Returns:
-            list[dict]: A list of dictionaries where the keys of each dictionary are 'columnKey' and 'name'
+            dict: All available column names with respective column keys.
         """
         if not self._columns:
             params = {
