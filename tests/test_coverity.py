@@ -68,14 +68,14 @@ class TestCoverity(TestCase):
 
         # urls that are used in GET or POST requests
         column_keys_url = (
-            coverity_conf_service.api_endpoint
-            + "/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
+            coverity_conf_service.api_endpoint +
+            "/issues/columns?queryType=bySnapshot&retrieveGroupByColumns=false"
         )
         checkers_url = f"{coverity_conf_service.api_endpoint}/checkerAttributes/checker"
         stream_url = f"{coverity_conf_service.api_endpoint}/streams/{fake_stream}"
         issues_url = (
-            coverity_conf_service.api_endpoint
-            + "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
+            coverity_conf_service.api_endpoint +
+            "/issues/search?includeColumnLabels=true&offset=0&queryType=bySnapshot&rowCount=-1&sortOrder=asc"
         )
 
         with requests_mock.mock() as mocker:
