@@ -177,7 +177,7 @@ def link_to_item_ids(contents, text, cid, app, docname):
         contents.append(nodes.Text(remaining_text))  # no URL or item ID in this text
 
 
-def make_internal_item_ref(app, fromdocname, item, cid):
+def make_internal_item_ref(app, fromdocname, item_id, cid):
     """
     Creates and returns a reference node for an item or returns None when the item cannot be found in the traceability
     collection. A warning is raised when a traceability collection exists, but an item ID cannot be found in it.
@@ -185,7 +185,7 @@ def make_internal_item_ref(app, fromdocname, item, cid):
     Args:
         app (sphinx.application.Sphinx): Sphinx' application object.
         fromdocname (str): Relative path to the document in which the error occured, without extension.
-        item (str): Item ID
+        item_id (str): Item ID
         cid (str): CID of the item
 
     Returns:
@@ -195,18 +195,18 @@ def make_internal_item_ref(app, fromdocname, item, cid):
     env = app.builder.env
     if not hasattr(env, "traceability_collection"):
         return None
-    item_info = env.traceability_collection.get_item(item)
+    item_info = env.traceability_collection.get_item(item_id)
     if not item_info:
         report_warning(
-            "CID %s: Could not find item ID '%s' in traceability collection." % (cid, item),
+            "CID %s: Could not find item ID '%s' in traceability collection." % (cid, item_id),
             fromdocname
         )
         return None
     ref_node = nodes.reference("", "")
     ref_node["refdocname"] = item_info.docname
     try:
-        ref_node["refuri"] = app.builder.get_relative_uri(fromdocname, item_info.docname) + "#" + item
+        ref_node["refuri"] = app.builder.get_relative_uri(fromdocname, item_info.docname) + "#" + item_id
     except NoUri:
         return None
-    ref_node.append(nodes.Text(item))
+    ref_node.append(nodes.Text(item_id))
     return ref_node
