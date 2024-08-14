@@ -10,7 +10,7 @@ __all__ = [
     "SphinxCoverityConnector",
 ]
 
-from .__coverity_verion__ import __version__
+from .__coverity_version__ import __version__
 from .coverity_logging import report_info, report_warning
 from .coverity import SphinxCoverityConnector
 from .coverity_services import CoverityDefectService
