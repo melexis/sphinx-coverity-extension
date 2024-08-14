@@ -206,36 +206,6 @@ class CoverityDefectService:
         self.logger.warning(err_msg)
         return response.raise_for_status()
 
-    @staticmethod
-    def validate_filter_option(name, req_csv, valid_attributes, allow_regex=False):
-        """Add filter when the attribute is valid. If `valid_attributes` is empty or falsy,
-        all attributes of the CSV list are valid.
-        The CSV list can allow regular expressions when `allow_regex` is set to True.
-
-        Args:
-            name (str): String representation of the attribute.
-            req_csv (str): A CSV list of attribute values to query.
-            valid_attributes (list/dict): The valid attributes.
-            allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
-
-        Returns:
-            list[str]: The list of valid attributes
-        """
-        logging.info("Validate required %s [%s]", name, req_csv)
-        filter_values = []
-        for field in req_csv.split(","):
-            if not valid_attributes or field in valid_attributes:
-                logging.info("Classification [%s] is valid", field)
-                filter_values.append(field)
-            elif allow_regex:
-                pattern = re.compile(field)
-                for element in valid_attributes:
-                    if pattern.search(element) and element not in filter_values:
-                        filter_values.append(element)
-            else:
-                logging.error("Invalid %s filter: %s", name, field)
-        return filter_values
-
     def assemble_query_filter(self, column_name, filter_values, matcher_type):
         """Assemble a filter for a specific column
 
@@ -342,18 +312,33 @@ class CoverityDefectService:
         logging.info("Running Coverity query...")
         return self.retrieve_issues(data)
 
-    def handle_attribute_filter(self, attribute_values, name, *args, **kwargs):
-        """Applies any filter on an attribute's values.
+    def handle_attribute_filter(self, attribute_values, name, valid_attributes, allow_regex=False):
+        """Add filter when the attribute is valid. If `valid_attributes` is empty or falsy,
+        all attributes of the CSV list are valid.
+        The CSV list can allow regular expressions when `allow_regex` is set to True.
 
         Args:
             attribute_values (str): A CSV list of attribute values to query.
             name (str): String representation of the attribute.
+            valid_attributes (list/dict): The valid attributes.
+            allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
 
         Returns:
             list[str]: The list of valid attributes
         """
         logging.info("Using %s filter [%s]", name, attribute_values)
-        filter_values = self.validate_filter_option(name, attribute_values, *args, **kwargs)
+        filter_values = []
+        for field in attribute_values.split(","):
+            if not valid_attributes or field in valid_attributes:
+                logging.info("Classification [%s] is valid", field)
+                filter_values.append(field)
+            elif allow_regex:
+                pattern = re.compile(field)
+                for element in valid_attributes:
+                    if pattern.search(element) and element not in filter_values:
+                        filter_values.append(element)
+            else:
+                logging.error("Invalid %s filter: %s", name, field)
         return filter_values
 
     def handle_component_filter(self, attribute_values):
