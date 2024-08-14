@@ -1,3 +1,6 @@
 [build-system]
 requires = ["setuptools-scm", "setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "mlx/coverity/__coverity_version__.py"

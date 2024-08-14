@@ -16,8 +16,6 @@ requires = [
 
 setup(
     name="mlx.coverity",
-    use_scm_version={
-        "write_to": "mlx/coverity/__coverity_version__.py"},
     url=project_url,
     license="GNU General Public License v3 (GPLv3)",
     author="Crt Mori",
