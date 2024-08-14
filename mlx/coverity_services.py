@@ -313,7 +313,7 @@ class CoverityDefectService:
         return self.retrieve_issues(data)
 
     def handle_attribute_filter(self, attribute_values, name, valid_attributes, allow_regex=False):
-        """Add filter when the attribute is valid. If `valid_attributes` is empty or falsy,
+        """Add filter when the attribute is valid. If `valid_attributes` is empty,
         all attributes of the CSV list are valid.
         The CSV list can allow regular expressions when `allow_regex` is set to True.
 
