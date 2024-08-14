@@ -18,4 +18,4 @@ from .coverity_item_element import ItemElement
 from .coverity_directives.coverity_defect_list import CoverityDefect, CoverityDefectListDirective
 
 # provide setup function here for Sphinx
-from .coverity import setup  # noqa: unused-import
+from .coverity import setup  # noqa: F401
