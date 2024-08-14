@@ -15,11 +15,11 @@ import os
 import sys
 
 import mlx.coverity
+from mlx.coverity import __version__
 import mlx.traceability
 from decouple import config
-from pkg_resources import get_distribution
 
-pkg_version = get_distribution("mlx.coverity").version
+pkg_version = __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

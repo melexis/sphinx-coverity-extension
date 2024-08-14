@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 project_url = "https://github.com/melexis/sphinx-coverity-extension"
 
@@ -16,7 +16,8 @@ requires = [
 
 setup(
     name="mlx.coverity",
-    use_scm_version=True,
+    use_scm_version={
+        "write_to": "mlx/coverity/__coverity_version__.py"},
     url=project_url,
     license="GNU General Public License v3 (GPLv3)",
     author="Crt Mori",
@@ -44,7 +45,7 @@ setup(
         "Topic :: Utilities",
     ],
     platforms="any",
-    packages=find_packages(exclude=["tests", "example"]),
+    packages=find_namespace_packages(include=["mlx.*"]),
     include_package_data=True,
     install_requires=requires,
     namespace_packages=["mlx"],

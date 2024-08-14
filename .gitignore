@@ -14,3 +14,4 @@ tests/docs/autodoc/docs/_build
 .coverage
 coverage.xml
 .env
+mlx/coverity/__coverity_version__.py

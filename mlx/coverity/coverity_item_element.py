@@ -6,7 +6,7 @@ from docutils import nodes
 from sphinx.errors import NoUri
 from urlextract import URLExtract
 
-from mlx.coverity_logging import report_warning
+from .coverity_logging import report_warning
 
 
 class ItemElement(nodes.General, nodes.Element):

@@ -10,8 +10,8 @@ import requests
 import requests_mock
 from urllib.parse import urlencode
 
-import mlx.coverity
-import mlx.coverity_services
+import mlx.coverity.coverity
+import mlx.coverity.coverity_services
 
 
 class TestCoverity(TestCase):

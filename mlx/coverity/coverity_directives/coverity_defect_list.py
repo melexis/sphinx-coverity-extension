@@ -12,8 +12,8 @@ if not environ.get("DISPLAY"):
     mpl.use("Agg")
 import matplotlib.pyplot as plt
 
-from mlx.coverity_logging import report_info, report_warning
-from mlx.coverity_item_element import ItemElement
+from ..coverity_logging import report_info, report_warning
+from ..coverity_item_element import ItemElement
 
 
 def pct_wrapper(sizes):
