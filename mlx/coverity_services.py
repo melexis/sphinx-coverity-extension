@@ -327,16 +327,16 @@ class CoverityDefectService:
             list[str]: The list of valid attributes
         """
         logging.info("Using %s filter [%s]", name, attribute_values)
-        filter_values = []
+        filter_values = set()
         for field in attribute_values.split(","):
             if not valid_attributes or field in valid_attributes:
                 logging.info("Classification [%s] is valid", field)
-                filter_values.append(field)
+                filter_values.add(field)
             elif allow_regex:
                 pattern = re.compile(field)
                 for element in valid_attributes:
-                    if pattern.search(element) and element not in filter_values:
-                        filter_values.append(element)
+                    if pattern.search(element):
+                        filter_values.add(element)
             else:
                 logging.error("Invalid %s filter: %s", name, field)
         return filter_values
