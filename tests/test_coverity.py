@@ -10,31 +10,31 @@ import requests
 import requests_mock
 from urllib.parse import urlencode
 
-import mlx.coverity.coverity as coverity
-import mlx.coverity.coverity_services as coverity_services
+import mlx.coverity.coverity
+import mlx.coverity.coverity_services
 
 
 class TestCoverity(TestCase):
     def setUp(self):
         """SetUp to be run before each test to provide clean working env"""
 
-    @patch("coverity_services.requests")
+    @patch("mlx.coverity.coverity_services.requests")
     def test_session_login(self, mock_requests):
         """Test login function of CoverityDefectService"""
         mock_requests.return_value = MagicMock(spec=requests)
 
         # Get the base url
-        coverity_conf_service = coverity_services.CoverityDefectService("scan.coverity.com/")
+        coverity_conf_service = mlx.coverity.coverity_services.CoverityDefectService("scan.coverity.com/")
         self.assertEqual("https://scan.coverity.com/api/v2", coverity_conf_service.api_endpoint)
 
         # Login to Coverity
         coverity_conf_service.login("user", "password")
         mock_requests.Session.assert_called_once()
 
-    @patch.object(coverity_services.requests.Session, "get")
+    @patch.object(mlx.coverity.coverity_services.requests.Session, "get")
     def test_retrieve_checkers(self, mock_get):
         """Test retrieving checkers (CoverityDefectService)"""
-        coverity_conf_service = coverity_services.CoverityDefectService("scan.coverity.com/")
+        coverity_conf_service = mlx.coverity.coverity_services.CoverityDefectService("scan.coverity.com/")
 
         # Login to Coverity
         coverity_conf_service.login("user", "password")
@@ -62,7 +62,7 @@ class TestCoverity(TestCase):
             "checkerAttributedata": [{"key": "checker_key", "value": "checker_value"}],
         }
         fake_stream = "test_stream"
-        coverity_conf_service = coverity.CoverityDefectService("scan.coverity.com/")
+        coverity_conf_service = mlx.coverity.coverity.CoverityDefectService("scan.coverity.com/")
 
         # Login to Coverity
         coverity_conf_service.login("user", "password")
@@ -120,7 +120,7 @@ class TestCoverity(TestCase):
     def test_failed_login(self):
         fake_stream = "test_stream"
 
-        coverity_conf_service = coverity.CoverityDefectService("scan.coverity.com/")
+        coverity_conf_service = mlx.coverity.coverity.CoverityDefectService("scan.coverity.com/")
         stream_url = f"{coverity_conf_service.api_endpoint.rstrip('/')}/streams/{fake_stream}"
 
         with requests_mock.mock() as mocker:
