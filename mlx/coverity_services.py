@@ -270,7 +270,7 @@ class CoverityDefectService:
             }
         ]
 
-        Filter = namedtuple("Filter", "name matcher_type values allow_regex", defaults=[None, False])
+        Filter = namedtuple("Filter", "name matcher_type values allow_regex", defaults=[[], False])
         filter_options = {
             "checker": Filter("Checker", "keyMatcher", self.checkers, True),
             "impact": Filter("Impact", "keyMatcher", IMPACT_LIST),
