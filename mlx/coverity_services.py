@@ -300,7 +300,7 @@ class CoverityDefectService:
             }
         ]
 
-        Filter = namedtuple("Filter", "name matcher_type list allow_regex", defaults=[None, False])
+        Filter = namedtuple("Filter", "name matcher_type values allow_regex", defaults=[None, False])
         filter_options = {
             "checker": Filter("Checker", "keyMatcher", self.checkers, True),
             "impact": Filter("Impact", "keyMatcher", IMPACT_LIST),
@@ -314,7 +314,7 @@ class CoverityDefectService:
         for option, filter in filter_options.items():
             if filters[option]:
                 filter_values = self.handle_attribute_filter(
-                    filters[option], filter.name, filter.list, filter.allow_regex
+                    filters[option], filter.name, filter.values, filter.allow_regex
                 )
                 if filter_values:
                     query_filters.append(self.assemble_query_filter(filter.name, filter_values, filter.matcher_type))
