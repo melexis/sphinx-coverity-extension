@@ -229,6 +229,10 @@ class CoverityDefectService:
             else:
                 matcher["key"] = filter_
             matchers.append(matcher)
+
+        if column_name not in self.columns:
+            self.logger.warning(f"Invalid column name {column_name!r}; Retrieve column keys first.")
+
         return {
             "columnKey": self.columns[column_name],
             "matchMode": "oneOrMoreMatch",
