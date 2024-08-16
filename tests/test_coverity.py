@@ -102,8 +102,6 @@ class TestCoverity(TestCase):
         coverity_service = self.initialize_coverity_service(login=True)
 
         with requests_mock.mock() as mocker:
-            with open("tests/columns_keys.json", "r") as content:
-                column_keys = json.loads(content.read())
             mocker.get(self.column_keys_url, json=column_keys)
             mocker.get(self.checkers_url, json=self.fake_checkers)
             mocker.get(self.stream_url, json={"stream": "valid"})
@@ -132,6 +130,64 @@ class TestCoverity(TestCase):
             assert mocker.last_request.url == self.issues_url
             assert mocker.last_request.verify
             assert mocker.last_request.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
+
+    def test_get_filtered_defects(self):
+        with open("tests/columns_keys.json", "r") as content:
+            column_keys = json.loads(content.read())
+
+        with open("tests/fake_json.json", "r") as content:
+            self.fake_json = json.loads(content.read())
+
+        self.fake_checkers = {
+            "checkerAttribute": {
+                "name": "checker",
+                "displayName": "Checker"
+            },
+            "checkerAttributedata": [
+                {
+                    "key": "MISRA 1",
+                    "value": "MISRA 1"
+                },
+                {
+                    "key": "MISRA 2",
+                    "value": "MISRA 2"
+                },
+                {
+                    "key": "MISRA 3",
+                    "value": "MISRA 3"
+                },
+                {
+                    "key": "CHECK",
+                    "value": "CHECK"
+                }
+            ]
+        }
+        self.fake_stream = "test_stream"
+
+        # initialize what needed for the REST API
+        coverity_service = self.initialize_coverity_service(login=True)
+
+        with requests_mock.mock() as mocker:
+            mocker.get(self.column_keys_url, json=column_keys)
+            mocker.get(self.checkers_url, json=self.fake_checkers)
+            mocker.get(self.stream_url, json={"stream": "valid"})
+            test_post = mocker.post(self.issues_url, json=self.fake_json)
+
+            coverity_service.retrieve_checkers()
+            coverity_service.retrieve_column_keys()
+
+            sphinx_coverity_connector = mlx.coverity.SphinxCoverityConnector()
+            sphinx_coverity_connector.coverity_service = coverity_service
+            sphinx_coverity_connector.stream = self.fake_stream
+            node_filters = {'checker': 'MISRA', 'impact': None, 'kind': None,
+                            'classification': 'Intentional,Bug,Pending,Unclassified', 'action': None,
+                            'component': None, 'cwe': None, 'cid': None}
+            column_names =  {'Comment', 'Checker', 'Classification', 'CID'}
+            fake_node = {"col": column_names,
+                         "filters": node_filters}
+            defects = sphinx_coverity_connector.get_filtered_defects(fake_node)
+            breakpoint()
+            assert defects == self.fake_json
 
     def test_failed_login(self):
         fake_stream = "test_stream"

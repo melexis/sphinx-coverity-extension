@@ -1,0 +1,148 @@
+{
+    "offset": 0,
+    "totalRows": 4,
+    "columns": [
+        "lastTriageComment",
+        "classification",
+        "checker",
+        "cid"
+    ],
+    "rows": [
+        [
+            {
+                "key": "lastTriageComment",
+                "value": ""
+            },
+            {
+                "key": "classification",
+                "value": "Intentional"
+            },
+            {
+                "key": "checker",
+                "value": "MISRA 1"
+            },
+            {
+                "key": "cid",
+                "value": "189049"
+            },
+            {
+                "key": "lineNumber",
+                "value": "25"
+            },
+            {
+                "key": "displayFile",
+                "value": "/some/fake/file.c"
+            },
+            {
+                "key": "externalReference",
+                "value": "REFERENCE1"
+            },
+            {
+                "key": "status",
+                "value": "Triaged"
+            }
+        ],
+        [
+            {
+                "key": "lastTriageComment",
+                "value": "Some fake comment"
+            },
+            {
+                "key": "classification",
+                "value": "Intentional"
+            },
+            {
+                "key": "checker",
+                "value": "MISRA 2"
+            },
+            {
+                "key": "cid",
+                "value": "189050"
+            },
+            {
+                "key": "lineNumber",
+                "value": "89"
+            },
+            {
+                "key": "displayFile",
+                "value": "/some/fake/file.c"
+            },
+            {
+                "key": "externalReference",
+                "value": ""
+            },
+            {
+                "key": "status",
+                "value": "Dismissed"
+            }
+        ],
+        [
+            {
+                "key": "lastTriageComment",
+                "value": "Some fake comment"
+            },
+            {
+                "key": "classification",
+                "value": "Pending"
+            },
+            {
+                "key": "checker",
+                "value": "MISRA 3"
+            },
+            {
+                "key": "cid",
+                "value": "367264"
+            },
+            {
+                "key": "lineNumber",
+                "value": "10"
+            },
+            {
+                "key": "displayFile",
+                "value": "/fake/file.c"
+            },
+            {
+                "key": "externalReference",
+                "value": "REFERENCE3"
+            },
+            {
+                "key": "status",
+                "value": "Dismissed"
+            }
+        ],
+        [
+            {
+                "key": "lastTriageComment",
+                "value": "Another comment"
+            },
+            {
+                "key": "classification",
+                "value": "Pending"
+            },
+            {
+                "key": "checker",
+                "value": "CHECK"
+            },
+            {
+                "key": "cid",
+                "value": "367265"
+            },
+            {
+                "key": "lineNumber",
+                "value": "34"
+            },
+            {
+                "key": "displayFile",
+                "value": "/fake/file.c"
+            },
+            {
+                "key": "externalReference",
+                "value": ""
+            },
+            {
+                "key": "status",
+                "value": "Triaged"
+            }
+        ]
+    ]
+}
