@@ -6,7 +6,8 @@
         "exclude": [
             "WARNING: Connection failed: <urlopen error \\[Errno -2\\] Name or service not known>",
             "WARNING: Connection failed: <urlopen error \\[Errno -3\\] Temporary failure in name resolution>",
-            "CRITICAL:root:No such Coverity Configuration Service"
+            "CRITICAL:root:No such Coverity Configuration Service",
+            "WARNING: cannot cache unpickable configuration value: 'traceability_attributes_sort' \\(because it contains a function, class, or module object\\)"
         ]
     }
 }
