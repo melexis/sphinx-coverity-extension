@@ -324,7 +324,7 @@ class CoverityDefectService:
             allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
 
         Returns:
-            list[str]: The list of valid attributes
+            set[str]: The attributes values to query with
         """
         logging.info("Using %s filter [%s]", name, attribute_values)
         filter_values = set()
