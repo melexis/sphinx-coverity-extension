@@ -42,6 +42,7 @@ setup(
     packages=find_packages(exclude=['tests', 'example']),
     include_package_data=True,
     install_requires=requires,
+    python_requires='>=3.8',
     namespace_packages=['mlx'],
     keywords=[
         'coverity',
