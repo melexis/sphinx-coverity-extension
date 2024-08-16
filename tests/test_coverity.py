@@ -78,6 +78,8 @@ class TestCoverity(TestCase):
         mock_get.assert_called_once()
 
     def test_get_defects_call(self):
+        with open("tests/columns_keys.json", "r") as content:
+            column_keys = json.loads(content.read())
 
         self.filters = {
             "checker": None,
