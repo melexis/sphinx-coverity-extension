@@ -282,10 +282,8 @@ class CoverityDefectService:
         }
 
         for option, filter in filter_options.items():
-            if filters[option]:
-                filter_values = self.handle_attribute_filter(
-                    filters[option], filter.name, filter.values, filter.allow_regex
-                )
+            if (filter_option := filters[option]) and (filter_values := self.handle_attribute_filter(
+                filter_option, filter.name, filter.values, filter.allow_regex)):
                 if filter_values:
                     query_filters.append(self.assemble_query_filter(filter.name, filter_values, filter.matcher_type))
 
