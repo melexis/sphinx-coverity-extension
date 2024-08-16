@@ -44,7 +44,7 @@ setup(
     ],
     platforms="any",
     packages=find_namespace_packages(where="."),
-    package_dir={"":"."},
+    package_dir={"": "."},
     include_package_data=True,
     install_requires=requires,
     keywords=[
