@@ -289,7 +289,7 @@ class CoverityDefectService:
                 if filter_values:
                     query_filters.append(self.assemble_query_filter(filter.name, filter_values, filter.matcher_type))
 
-        if filter := filters["component"] and filter_values := self.handle_component_filter(filter):
+        if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
             query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
         data = {
