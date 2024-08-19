@@ -1,16 +1,13 @@
 from unittest import TestCase
-
-try:
-    from unittest.mock import MagicMock, patch
-except ImportError:
-    from mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import json
 import requests
 import requests_mock
 from urllib.parse import urlencode
 
-import mlx.coverity
+from mlx.coverity import SphinxCoverityConnector
+from mlx.coverity_services import CoverityDefectService
 import mlx.coverity_services
 
 
@@ -22,9 +19,9 @@ class TestCoverity(TestCase):
         """Logs in Coverity Service and initializes the urls used for REST API.
 
         Returns:
-            CoverityDefectService: The coveritye defect service
+            CoverityDefectService: The coverity defect service
         """
-        coverity_conf_service = mlx.coverity.CoverityDefectService("scan.coverity.com/")
+        coverity_conf_service = CoverityDefectService("scan.coverity.com/")
 
         if login:
             # Login to Coverity
@@ -56,7 +53,7 @@ class TestCoverity(TestCase):
         mock_requests.return_value = MagicMock(spec=requests)
 
         # Get the base url
-        coverity_conf_service = mlx.coverity_services.CoverityDefectService("scan.coverity.com/")
+        coverity_conf_service = CoverityDefectService("scan.coverity.com/")
         self.assertEqual("https://scan.coverity.com/api/v2", coverity_conf_service.api_endpoint)
 
         # Login to Coverity
@@ -66,7 +63,7 @@ class TestCoverity(TestCase):
     @patch.object(mlx.coverity_services.requests.Session, "get")
     def test_retrieve_checkers(self, mock_get):
         """Test retrieving checkers (CoverityDefectService)"""
-        coverity_conf_service = mlx.coverity_services.CoverityDefectService("scan.coverity.com/")
+        coverity_conf_service = CoverityDefectService("scan.coverity.com/")
 
         # Login to Coverity
         coverity_conf_service.login("user", "password")
@@ -91,7 +88,6 @@ class TestCoverity(TestCase):
             "cwe": None,
             "cid": None,
         }
-        self.fake_json = {"test": "succes"}
         self.fake_checkers = {
             "checkerAttribute": {"name": "checker", "displayName": "Checker"},
             "checkerAttributedata": [{"key": "checker_key", "value": "checker_value"}],
@@ -105,17 +101,21 @@ class TestCoverity(TestCase):
             mocker.get(self.column_keys_url, json=column_keys)
             mocker.get(self.checkers_url, json=self.fake_checkers)
             mocker.get(self.stream_url, json={"stream": "valid"})
-            mocker.post(self.issues_url, json=self.fake_json)
+            mocker.post(self.issues_url, json={})
 
             # Validate stream name
             coverity_service.validate_stream(self.fake_stream)
             # Retrieve column keys
-            assert coverity_service.retrieve_column_keys()["Issue Kind"] == "displayIssueKind"
-            assert coverity_service.retrieve_column_keys()["CID"] == "cid"
+            coverity_service.retrieve_column_keys()
+            assert coverity_service.columns["Issue Kind"] == "displayIssueKind"
+            assert coverity_service.columns["CID"] == "cid"
             # Retrieve checkers
-            assert coverity_service.retrieve_checkers() == ["checker_key"]
+            coverity_service.retrieve_checkers()
+            assert coverity_service.checkers == ["checker_key"]
             # Get defects
-            assert coverity_service.get_defects(self.fake_stream, self.filters, column_names=["CID"]) == self.fake_json
+            with patch.object(CoverityDefectService, "retrieve_issues") as mock_method:
+                coverity_service.get_defects(self.fake_stream, self.filters, column_names=["CID"])
+                mock_method.assert_called_once_with('hi')
             # Total amount of request are 4 => column keys, checkers, stream and defects/issues
             assert mocker.call_count == 4
 
@@ -176,7 +176,7 @@ class TestCoverity(TestCase):
             coverity_service.retrieve_checkers()
             coverity_service.retrieve_column_keys()
 
-            sphinx_coverity_connector = mlx.coverity.SphinxCoverityConnector()
+            sphinx_coverity_connector = SphinxCoverityConnector()
             sphinx_coverity_connector.coverity_service = coverity_service
             sphinx_coverity_connector.stream = self.fake_stream
             node_filters = {
@@ -188,14 +188,13 @@ class TestCoverity(TestCase):
             fake_node = {"col": column_names,
                          "filters": node_filters}
             defects = sphinx_coverity_connector.get_filtered_defects(fake_node)
-
             assert defects == self.fake_json
 
     def test_failed_login(self):
         fake_stream = "test_stream"
 
-        coverity_conf_service = mlx.coverity.CoverityDefectService("scan.coverity.com/")
-        stream_url = f"{coverity_conf_service.api_endpoint.rstrip('/')}/streams/{fake_stream}"
+        coverity_conf_service = CoverityDefectService("scan.coverity.com/")
+        stream_url = f"{coverity_conf_service.api_endpoint}/streams/{fake_stream}"
 
         with requests_mock.mock() as mocker:
             mocker.get(stream_url, headers={"Authorization": "Basic fail"}, status_code=401)
