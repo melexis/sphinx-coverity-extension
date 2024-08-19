@@ -171,7 +171,7 @@ class TestCoverity(TestCase):
             mocker.get(self.column_keys_url, json=column_keys)
             mocker.get(self.checkers_url, json=self.fake_checkers)
             mocker.get(self.stream_url, json={"stream": "valid"})
-            test_post = mocker.post(self.issues_url, json=self.fake_json)
+            mocker.post(self.issues_url, json=self.fake_json)
 
             coverity_service.retrieve_checkers()
             coverity_service.retrieve_column_keys()
