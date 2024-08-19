@@ -2,17 +2,14 @@
 
 """Services and other utilities for Coverity scripting"""
 
-# General
-from collections import namedtuple
 import csv
 import logging
 import re
+from collections import namedtuple
 from urllib.parse import urlencode
-import requests.structures
-from sphinx.util.logging import getLogger
 
-# For Coverity - REST API
 import requests
+from sphinx.util.logging import getLogger
 
 # Coverity built in Impact statuses
 IMPACT_LIST = ["High", "Medium", "Low"]
