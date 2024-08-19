@@ -179,10 +179,12 @@ class TestCoverity(TestCase):
             sphinx_coverity_connector = mlx.coverity.SphinxCoverityConnector()
             sphinx_coverity_connector.coverity_service = coverity_service
             sphinx_coverity_connector.stream = self.fake_stream
-            node_filters = {'checker': 'MISRA', 'impact': None, 'kind': None,
-                            'classification': 'Intentional,Bug,Pending,Unclassified', 'action': None,
-                            'component': None, 'cwe': None, 'cid': None}
-            column_names =  {'Comment', 'Checker', 'Classification', 'CID'}
+            node_filters = {
+                'checker': 'MISRA', 'impact': None, 'kind': None,
+                'classification': 'Intentional,Bug,Pending,Unclassified', 'action': None, 'component': None,
+                'cwe': None, 'cid': None
+            }
+            column_names = {'Comment', 'Checker', 'Classification', 'CID'}
             fake_node = {"col": column_names,
                          "filters": node_filters}
             defects = sphinx_coverity_connector.get_filtered_defects(fake_node)
