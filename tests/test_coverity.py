@@ -5,11 +5,22 @@ import json
 import requests
 import requests_mock
 from urllib.parse import urlencode
+from parameterized import parameterized
+
 
 from mlx.coverity import SphinxCoverityConnector
 from mlx.coverity_services import CoverityDefectService
 import mlx.coverity_services
+from .filters import test_defect_filter_0, test_defect_filter_1
 
+
+def ordered(obj):
+    if isinstance(obj, dict):
+        return sorted((k, ordered(v)) for k, v in obj.items())
+    if isinstance(obj, list):
+        return sorted(ordered(x) for x in obj)
+    else:
+        return obj
 
 class TestCoverity(TestCase):
     def setUp(self):
@@ -74,25 +85,23 @@ class TestCoverity(TestCase):
         coverity_conf_service.retrieve_checkers()
         mock_get.assert_called_once()
 
-    def test_get_defects_call(self):
+    @parameterized.expand([
+        [test_defect_filter_0.filters, test_defect_filter_0.column_names, test_defect_filter_0.request_data],
+        [test_defect_filter_1.filters, test_defect_filter_1.column_names, test_defect_filter_1.request_data]
+    ])
+    def test_get_defects(self, filters, column_names, request_data):
         with open("tests/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
-
-        self.filters = {
-            "checker": None,
-            "impact": None,
-            "kind": None,
-            "classification": None,
-            "action": None,
-            "component": None,
-            "cwe": None,
-            "cid": None,
-        }
         self.fake_checkers = {
             "checkerAttribute": {"name": "checker", "displayName": "Checker"},
-            "checkerAttributedata": [{"key": "checker_key", "value": "checker_value"}],
+            "checkerAttributedata": [
+                {"key": "MISRA 1", "value": "MISRA 1"},
+                {"key": "MISRA 2", "value": "MISRA 2"},
+                {"key": "MISRA 3", "value": "MISRA 3"},
+                {"key": "CHECKER 1", "value": "CHECKER 1"},
+                {"key": "CHECKER 2", "value": "CHECKER 2"}
+            ],
         }
-
         self.fake_stream = "test_stream"
         # initialize what needed for the REST API
         coverity_service = self.initialize_coverity_service(login=True)
@@ -100,36 +109,16 @@ class TestCoverity(TestCase):
         with requests_mock.mock() as mocker:
             mocker.get(self.column_keys_url, json=column_keys)
             mocker.get(self.checkers_url, json=self.fake_checkers)
-            mocker.get(self.stream_url, json={"stream": "valid"})
-            mocker.post(self.issues_url, json={})
-
-            # Validate stream name
-            coverity_service.validate_stream(self.fake_stream)
-            # Retrieve column keys
-            coverity_service.retrieve_column_keys()
-            assert coverity_service.columns["Issue Kind"] == "displayIssueKind"
-            assert coverity_service.columns["CID"] == "cid"
-            # Retrieve checkers
+            # Retrieve checkers; required for get_defects()
             coverity_service.retrieve_checkers()
-            assert coverity_service.checkers == ["checker_key"]
+            # Retreive columns; required for get_defects()
+            coverity_service.retrieve_column_keys()
             # Get defects
             with patch.object(CoverityDefectService, "retrieve_issues") as mock_method:
-                coverity_service.get_defects(self.fake_stream, self.filters, column_names=["CID"])
-                mock_method.assert_called_once_with('hi')
-            # Total amount of request are 4 => column keys, checkers, stream and defects/issues
-            assert mocker.call_count == 4
-
-            # check get requests
-            get_urls = [self.stream_url, self.column_keys_url, self.checkers_url]
-            for index in range(len(get_urls)):
-                mock_req = mocker.request_history[index]
-                assert mock_req.url == get_urls[index]
-                assert mock_req.verify
-                assert mock_req.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
-            # check post request (last request)
-            assert mocker.last_request.url == self.issues_url
-            assert mocker.last_request.verify
-            assert mocker.last_request.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
+                coverity_service.get_defects(self.fake_stream, filters, column_names)
+                data = mock_method.call_args[0][0]
+                mock_method.assert_called_once()
+                assert ordered(data) == ordered(request_data)
 
     def test_get_filtered_defects(self):
         with open("tests/columns_keys.json", "r") as content:
