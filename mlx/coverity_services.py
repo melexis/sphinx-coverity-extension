@@ -129,7 +129,7 @@ class CoverityDefectService:
         """Retrieve issues from the server (Coverity Connect).
 
         Args:
-            filters (json): The filters as json
+            filters (dict): The filters for the query
 
         Returns:
             dict: The response
