@@ -186,7 +186,7 @@ class TestCoverity(TestCase):
             fake_node = {"col": column_names,
                          "filters": node_filters}
             defects = sphinx_coverity_connector.get_filtered_defects(fake_node)
-            breakpoint()
+
             assert defects == self.fake_json
 
     def test_failed_login(self):
