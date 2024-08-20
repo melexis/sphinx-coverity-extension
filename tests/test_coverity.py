@@ -71,7 +71,21 @@ class TestCoverity(TestCase):
         self.assertEqual("https://scan.coverity.com/api/v2", coverity_conf_service.api_endpoint)
 
         # Login to Coverity
-        coverity_conf_service.login("user", "password")
+
+    @patch("mlx.coverity_services.requests")
+    def test_stream_validation(self, mock_requests):
+        mock_requests.return_value = MagicMock(spec=requests)
+
+        self.fake_stream = "test_stream"
+        # Get the base url
+        coverity_service = CoverityDefectService("scan.coverity.com/")
+        # Login to Coverity
+        coverity_service.login("user", "password")
+        with patch.object(CoverityDefectService, "_request") as mock_method:
+            # Validate stream name
+            coverity_service.validate_stream(self.fake_stream)
+            mock_method.assert_called_once()
+            mock_method.assert_called_with("https://scan.coverity.com/api/v2/streams/test_stream")
 
     def test_retrieve_columns(self):
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
