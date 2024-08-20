@@ -15,6 +15,7 @@ from .filters import test_defect_filter_0, test_defect_filter_1, test_defect_fil
 
 TEST_FOLDER = Path(__file__).parent
 
+
 def ordered(obj):
     if isinstance(obj, dict):
         return sorted((k, ordered(v)) for k, v in obj.items())
