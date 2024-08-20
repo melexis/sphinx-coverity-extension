@@ -12,7 +12,7 @@ from parameterized import parameterized
 from mlx.coverity import SphinxCoverityConnector
 from mlx.coverity_services import CoverityDefectService
 import mlx.coverity_services
-from .filters import test_defect_filter_0, test_defect_filter_1
+from .filters import test_defect_filter_0, test_defect_filter_1, test_defect_filter_2, test_defect_filter_3
 
 TEST_FOLDER = Path(__file__).parent
 
@@ -129,7 +129,9 @@ class TestCoverity(TestCase):
 
     @parameterized.expand([
         [test_defect_filter_0.filters, test_defect_filter_0.column_names, test_defect_filter_0.request_data],
-        [test_defect_filter_1.filters, test_defect_filter_1.column_names, test_defect_filter_1.request_data]
+        [test_defect_filter_1.filters, test_defect_filter_1.column_names, test_defect_filter_1.request_data],
+        [test_defect_filter_2.filters, test_defect_filter_2.column_names, test_defect_filter_2.request_data],
+        [test_defect_filter_3.filters, test_defect_filter_3.column_names, test_defect_filter_3.request_data]
     ])
     def test_get_defects(self, filters, column_names, request_data):
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:

@@ -70,3 +70,55 @@ test_defect_filter_1 = Filter(
         "compareTo": {"scope": "last()", "includeOutdatedSnapshots": False}
     }}
 )
+
+test_defect_filter_2 = Filter(
+    {
+        "checker": None,
+        "impact": None,
+        "kind": None,
+        "classification": None,
+        "action": None,
+        "component": None,
+        "cwe": None,
+        "cid": None,
+    },
+    ["CID", "Checker", "Status", "Comment"],
+    {'filters': [
+        {'columnKey': 'streams', 'matchMode': 'oneOrMoreMatch', 'matchers': [
+            {'class': 'Stream', 'name': 'test_stream', 'type': 'nameMatcher'}
+            ]
+        }],
+     'columns': ['status', 'cid', 'checker', 'lastTriageComment'],
+     'snapshotScope': {
+        'show': {'scope': 'last()', 'includeOutdatedSnapshots': False},
+        'compareTo': {'scope': 'last()', 'includeOutdatedSnapshots': False}
+    }}
+)
+
+test_defect_filter_3 = Filter(
+    {
+        "checker": None,
+        "impact": None,
+        "kind": None,
+        "classification": "Unclassified",
+        "action": None,
+        "component": None,
+        "cwe": None,
+        "cid": None,
+    },
+    ["CID", "Classification", "Action"],
+    {'filters': [
+        {'columnKey': 'streams', 'matchMode': 'oneOrMoreMatch', 'matchers': [
+            {'class': 'Stream', 'name': 'test_stream', 'type': 'nameMatcher'}
+            ]
+        },
+        {'columnKey': 'classification', 'matchMode': 'oneOrMoreMatch', 'matchers': [
+            {'type': 'keyMatcher', 'key': 'Unclassified'}
+            ]
+        }],
+     'columns': ['cid', 'classification', 'action'],
+     'snapshotScope': {
+        'show': {'scope': 'last()', 'includeOutdatedSnapshots': False},
+        'compareTo': {'scope': 'last()', 'includeOutdatedSnapshots': False}
+    }}
+)
