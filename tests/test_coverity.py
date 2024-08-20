@@ -98,9 +98,10 @@ class TestCoverity(TestCase):
             coverity_service.retrieve_column_keys()
             history = mocker.request_history
             assert mocker.call_count == 1
-            assert history[0].method == "GET"
-            assert history[0].url == self.column_keys_url
-            assert history[0].verify
+            mock_request = mocker.last_request
+            assert mock_request.method == "GET"
+            assert mock_request.url == self.column_keys_url
+            assert mock_request.verify
             assert coverity_service.columns["Issue Kind"] == "displayIssueKind"
             assert coverity_service.columns["CID"] == "cid"
 
