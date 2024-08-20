@@ -61,16 +61,16 @@ class TestCoverity(TestCase):
 
         return coverity_service
 
-    @patch("mlx.coverity_services.requests")
-    def test_session_login(self, mock_requests):
-        """Test login function of CoverityDefectService"""
-        mock_requests.return_value = MagicMock(spec=requests)
-
-        # Get the base url
-        coverity_conf_service = CoverityDefectService("scan.coverity.com/")
-        self.assertEqual("https://scan.coverity.com/api/v2", coverity_conf_service.api_endpoint)
-
-        # Login to Coverity
+    def test_session_by_stream_validation(self):
+        self.fake_stream = "test_stream"
+        coverity_service = self.initialize_coverity_service(login=False)
+        with requests_mock.mock() as mocker:
+            mocker.get(self.stream_url, json={})
+            # Login to Coverity
+            coverity_service.login("user", "password")
+            coverity_service.validate_stream(self.fake_stream)
+            stream_request = mocker.last_request
+            assert stream_request.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
 
     @patch("mlx.coverity_services.requests")
     def test_stream_validation(self, mock_requests):
