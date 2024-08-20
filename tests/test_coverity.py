@@ -85,6 +85,26 @@ class TestCoverity(TestCase):
         coverity_conf_service.retrieve_checkers()
         mock_get.assert_called_once()
 
+    def test_retrieve_checkers(self):
+        self.fake_stream = "test_stream"
+        self.fake_checkers = {
+            "checkerAttribute": {"name": "checker", "displayName": "Checker"},
+            "checkerAttributedata": [
+                {"key": "MISRA", "value": "MISRA"},
+                {"key": "CHECKER", "value": "CHECKER"}
+            ],
+        }
+        # initialize what needed for the REST API
+        coverity_service = self.initialize_coverity_service(login=True)
+
+        with requests_mock.mock() as mocker:
+            mocker.get(self.checkers_url, json=self.fake_checkers)
+            with patch.object(CoverityDefectService, "_request") as mock_method:
+                # Retrieve column keys
+                coverity_service.retrieve_checkers()
+                mock_method.assert_called_once()
+                assert coverity_service.checkers == ["MISRA", "CHECKERS"]
+
     @parameterized.expand([
         [test_defect_filter_0.filters, test_defect_filter_0.column_names, test_defect_filter_0.request_data],
         [test_defect_filter_1.filters, test_defect_filter_1.column_names, test_defect_filter_1.request_data]
