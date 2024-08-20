@@ -35,14 +35,14 @@ class TestCoverity(TestCase):
         Returns:
             CoverityDefectService: The coverity defect service
         """
-        coverity_conf_service = CoverityDefectService("scan.coverity.com/")
+        coverity_service = CoverityDefectService("scan.coverity.com/")
 
         if login:
             # Login to Coverity
-            coverity_conf_service.login("user", "password")
+            coverity_service.login("user", "password")
 
         # urls that are used in GET or POST requests
-        endpoint = coverity_conf_service.api_endpoint
+        endpoint = coverity_service.api_endpoint
         params = {
             "queryType": "bySnapshot",
             "retrieveGroupByColumns": "false"
@@ -59,7 +59,7 @@ class TestCoverity(TestCase):
         }
         self.issues_url = f"{endpoint}/issues/search?{urlencode(params)}"
 
-        return coverity_conf_service
+        return coverity_service
 
     @patch("mlx.coverity_services.requests")
     def test_session_login(self, mock_requests):
