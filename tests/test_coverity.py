@@ -96,7 +96,6 @@ class TestCoverity(TestCase):
         with requests_mock.mock() as mocker:
             mocker.get(self.column_keys_url, json=column_keys)
             coverity_service.retrieve_column_keys()
-            history = mocker.request_history
             assert mocker.call_count == 1
             mock_request = mocker.last_request
             assert mock_request.method == "GET"
