@@ -72,21 +72,23 @@ class TestCoverity(TestCase):
 
         # Login to Coverity
         coverity_conf_service.login("user", "password")
-        mock_requests.Session.assert_called_once()
 
-    @patch.object(mlx.coverity_services.requests.Session, "get")
-    def test_retrieve_checkers(self, mock_get):
-        """Test retrieving checkers (CoverityDefectService)"""
-        coverity_conf_service = CoverityDefectService("scan.coverity.com/")
-
-        # Login to Coverity
-        coverity_conf_service.login("user", "password")
-
-        with open("tests/columns_keys.json", "rb") as content:
-            mock_get.return_value.content = content.read()
-        mock_get.return_value.ok = True
-        coverity_conf_service.retrieve_checkers()
-        mock_get.assert_called_once()
+    def test_retrieve_columns(self):
+        with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
+            column_keys = json.loads(content.read())
+        self.fake_stream = "test_stream"
+        # initialize what needed for the REST API
+        coverity_service = self.initialize_coverity_service(login=True)
+        with requests_mock.mock() as mocker:
+            mocker.get(self.column_keys_url, json=column_keys)
+            coverity_service.retrieve_column_keys()
+            history = mocker.request_history
+            assert mocker.call_count == 1
+            assert history[0].method == "GET"
+            assert history[0].url == self.column_keys_url
+            assert history[0].verify
+            assert coverity_service.columns["Issue Kind"] == "displayIssueKind"
+            assert coverity_service.columns["CID"] == "cid"
 
     def test_retrieve_checkers(self):
         self.fake_stream = "test_stream"
