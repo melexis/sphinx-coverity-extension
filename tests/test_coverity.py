@@ -104,11 +104,13 @@ class TestCoverity(TestCase):
 
         with requests_mock.mock() as mocker:
             mocker.get(self.checkers_url, json=self.fake_checkers)
-            with patch.object(CoverityDefectService, "_request") as mock_method:
-                # Retrieve column keys
-                coverity_service.retrieve_checkers()
-                mock_method.assert_called_once()
-                assert coverity_service.checkers == ["MISRA", "CHECKERS"]
+            coverity_service.retrieve_checkers()
+            history = mocker.request_history
+            assert mocker.call_count == 1
+            assert history[0].method == "GET"
+            assert history[0].url == self.checkers_url
+            assert history[0].verify
+            assert coverity_service.checkers == ["MISRA", "CHECKER"]
 
     @parameterized.expand([
         [test_defect_filter_0.filters, test_defect_filter_0.column_names, test_defect_filter_0.request_data],
