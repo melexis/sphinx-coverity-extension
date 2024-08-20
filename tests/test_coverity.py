@@ -5,6 +5,7 @@ import json
 import requests
 import requests_mock
 from urllib.parse import urlencode
+from pathlib import Path
 from parameterized import parameterized
 
 
@@ -13,6 +14,7 @@ from mlx.coverity_services import CoverityDefectService
 import mlx.coverity_services
 from .filters import test_defect_filter_0, test_defect_filter_1
 
+TEST_FOLDER = Path(__file__).parent
 
 def ordered(obj):
     if isinstance(obj, dict):
@@ -21,6 +23,7 @@ def ordered(obj):
         return sorted(ordered(x) for x in obj)
     else:
         return obj
+
 
 class TestCoverity(TestCase):
     def setUp(self):
@@ -110,7 +113,7 @@ class TestCoverity(TestCase):
         [test_defect_filter_1.filters, test_defect_filter_1.column_names, test_defect_filter_1.request_data]
     ])
     def test_get_defects(self, filters, column_names, request_data):
-        with open("tests/columns_keys.json", "r") as content:
+        with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
         self.fake_checkers = {
             "checkerAttribute": {"name": "checker", "displayName": "Checker"},
@@ -141,11 +144,8 @@ class TestCoverity(TestCase):
                 assert ordered(data) == ordered(request_data)
 
     def test_get_filtered_defects(self):
-        with open("tests/columns_keys.json", "r") as content:
+        with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
-
-        with open("tests/fake_json.json", "r") as content:
-            self.fake_json = json.loads(content.read())
 
         self.fake_checkers = {
             "checkerAttribute": {
