@@ -159,8 +159,7 @@ class TestCoverity(TestCase):
         with requests_mock.mock() as mocker:
             mocker.get(self.column_keys_url, json=column_keys)
             mocker.get(self.checkers_url, json=self.fake_checkers)
-            mocker.get(self.stream_url, json={"stream": "valid"})
-            mocker.post(self.issues_url, json=self.fake_json)
+            mocker.post(self.issues_url, json={})
 
             coverity_service.retrieve_checkers()
             coverity_service.retrieve_column_keys()
@@ -169,15 +168,18 @@ class TestCoverity(TestCase):
             sphinx_coverity_connector.coverity_service = coverity_service
             sphinx_coverity_connector.stream = self.fake_stream
             node_filters = {
-                'checker': 'MISRA', 'impact': None, 'kind': None,
-                'classification': 'Intentional,Bug,Pending,Unclassified', 'action': None, 'component': None,
-                'cwe': None, 'cid': None
+                "checker": "MISRA", "impact": None, "kind": None,
+                "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
+                "cwe": None, "cid": None
             }
-            column_names = {'Comment', 'Checker', 'Classification', 'CID'}
+            column_names = {"Comment", "Checker", "Classification", "CID"}
+            fake_node = CoverityDefect
             fake_node = {"col": column_names,
                          "filters": node_filters}
-            defects = sphinx_coverity_connector.get_filtered_defects(fake_node)
-            assert defects == self.fake_json
+
+            with patch.object(CoverityDefectService, "get_defects") as mock_method:
+                sphinx_coverity_connector.get_filtered_defects(fake_node)
+                mock_method.assert_called_once_with(self.fake_stream, fake_node["filters"], column_names)
 
     def test_failed_login(self):
         fake_stream = "test_stream"
