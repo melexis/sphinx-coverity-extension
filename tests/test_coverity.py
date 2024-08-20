@@ -173,7 +173,6 @@ class TestCoverity(TestCase):
                 "cwe": None, "cid": None
             }
             column_names = {"Comment", "Checker", "Classification", "CID"}
-            fake_node = CoverityDefect
             fake_node = {"col": column_names,
                          "filters": node_filters}
 
