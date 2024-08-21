@@ -28,6 +28,7 @@ def ordered(obj):
 class TestCoverity(TestCase):
     def setUp(self):
         """SetUp to be run before each test to provide clean working env"""
+        self.fake_stream = "test_stream"
 
     def initialize_coverity_service(self, login=False):
         """Logs in Coverity Service and initializes the urls used for REST API.
@@ -62,7 +63,6 @@ class TestCoverity(TestCase):
         return coverity_service
 
     def test_session_by_stream_validation(self):
-        self.fake_stream = "test_stream"
         coverity_service = self.initialize_coverity_service(login=False)
         with requests_mock.mock() as mocker:
             mocker.get(self.stream_url, json={})
@@ -76,7 +76,6 @@ class TestCoverity(TestCase):
     def test_stream_validation(self, mock_requests):
         mock_requests.return_value = MagicMock(spec=requests)
 
-        self.fake_stream = "test_stream"
         # Get the base url
         coverity_service = CoverityDefectService("scan.coverity.com/")
         # Login to Coverity
@@ -90,7 +89,6 @@ class TestCoverity(TestCase):
     def test_retrieve_columns(self):
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
-        self.fake_stream = "test_stream"
         # initialize what needed for the REST API
         coverity_service = self.initialize_coverity_service(login=True)
         with requests_mock.mock() as mocker:
@@ -105,7 +103,6 @@ class TestCoverity(TestCase):
             assert coverity_service.columns["CID"] == "cid"
 
     def test_retrieve_checkers(self):
-        self.fake_stream = "test_stream"
         self.fake_checkers = {
             "checkerAttribute": {"name": "checker", "displayName": "Checker"},
             "checkerAttributedata": [
@@ -145,7 +142,6 @@ class TestCoverity(TestCase):
                 {"key": "CHECKER 2", "value": "CHECKER 2"}
             ],
         }
-        self.fake_stream = "test_stream"
         # initialize what needed for the REST API
         coverity_service = self.initialize_coverity_service(login=True)
 
@@ -167,64 +163,25 @@ class TestCoverity(TestCase):
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
 
-        self.fake_checkers = {
-            "checkerAttribute": {
-                "name": "checker",
-                "displayName": "Checker"
-            },
-            "checkerAttributedata": [
-                {
-                    "key": "MISRA 1",
-                    "value": "MISRA 1"
-                },
-                {
-                    "key": "MISRA 2",
-                    "value": "MISRA 2"
-                },
-                {
-                    "key": "MISRA 3",
-                    "value": "MISRA 3"
-                },
-                {
-                    "key": "CHECK",
-                    "value": "CHECK"
-                }
-            ]
+        sphinx_coverity_connector = SphinxCoverityConnector()
+        sphinx_coverity_connector.coverity_service = self.initialize_coverity_service(login=False)
+        sphinx_coverity_connector.stream = self.fake_stream
+        node_filters = {
+            "checker": "MISRA", "impact": None, "kind": None,
+            "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
+            "cwe": None, "cid": None
         }
-        self.fake_stream = "test_stream"
+        column_names = {"Comment", "Checker", "Classification", "CID"}
+        fake_node = {"col": column_names,
+                     "filters": node_filters}
 
-        # initialize what needed for the REST API
-        coverity_service = self.initialize_coverity_service(login=True)
-
-        with requests_mock.mock() as mocker:
-            mocker.get(self.column_keys_url, json=column_keys)
-            mocker.get(self.checkers_url, json=self.fake_checkers)
-            mocker.post(self.issues_url, json={})
-
-            coverity_service.retrieve_checkers()
-            coverity_service.retrieve_column_keys()
-
-            sphinx_coverity_connector = SphinxCoverityConnector()
-            sphinx_coverity_connector.coverity_service = coverity_service
-            sphinx_coverity_connector.stream = self.fake_stream
-            node_filters = {
-                "checker": "MISRA", "impact": None, "kind": None,
-                "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
-                "cwe": None, "cid": None
-            }
-            column_names = {"Comment", "Checker", "Classification", "CID"}
-            fake_node = {"col": column_names,
-                         "filters": node_filters}
-
-            with patch.object(CoverityDefectService, "get_defects") as mock_method:
-                sphinx_coverity_connector.get_filtered_defects(fake_node)
-                mock_method.assert_called_once_with(self.fake_stream, fake_node["filters"], column_names)
+        with patch.object(CoverityDefectService, "get_defects") as mock_method:
+            sphinx_coverity_connector.get_filtered_defects(fake_node)
+            mock_method.assert_called_once_with(self.fake_stream, fake_node["filters"], column_names)
 
     def test_failed_login(self):
-        fake_stream = "test_stream"
-
         coverity_conf_service = CoverityDefectService("scan.coverity.com/")
-        stream_url = f"{coverity_conf_service.api_endpoint}/streams/{fake_stream}"
+        stream_url = f"{coverity_conf_service.api_endpoint}/streams/{self.fake_stream}"
 
         with requests_mock.mock() as mocker:
             mocker.get(stream_url, headers={"Authorization": "Basic fail"}, status_code=401)
@@ -232,5 +189,5 @@ class TestCoverity(TestCase):
             coverity_conf_service.login("user", "password")
             # Validate stream name
             with self.assertRaises(requests.HTTPError) as err:
-                coverity_conf_service.validate_stream(fake_stream)
+                coverity_conf_service.validate_stream(self.fake_stream)
             self.assertEqual(err.exception.response.status_code, 401)
