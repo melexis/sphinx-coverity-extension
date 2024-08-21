@@ -125,6 +125,16 @@ class CoverityDefectService:
         url = f"{self.api_endpoint}/streams/{stream}"
         self._request(url)
 
+    def validate_snapshot(self, snapshot):
+        """Validate snapshot by retrieving the specified snapshot.
+        When the request fails, the snapshot does not exist or the user does not have acces to it.
+
+        Args:
+            snapshot (str): The snapshot ID
+        """
+        url = f"{self.api_endpoint}/snapshots/{snapshot}"
+        self._request(url)
+
     def retrieve_issues(self, filters):
         """Retrieve issues from the server (Coverity Connect).
 
@@ -236,14 +246,16 @@ class CoverityDefectService:
             "matchers": matchers
         }
 
-    def get_defects(self, stream, filters, column_names):
-        """Gets a list of defects for given stream, filters and column names.
+    def get_defects(self, stream, snapshot, filters, column_names):
+        """Gets a list of defects for given stream, snapshot ID, filters and column names.
+        If the snapshot is empty, the last snapshot is taken.
         If a column name does not match the name of the `columns` property, the column can not be obtained because
         it need the correct corresponding column key.
         Column key `cid` is always obtained to use later in other functions.
 
         Args:
             stream (str): Name of the stream to query
+            snapshot (str): The snapshot ID; If empty the last snapshot is taken.
             filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
             column_names (list[str]): The column names
 
@@ -291,16 +303,15 @@ class CoverityDefectService:
         if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
             query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
+        scope = "last()"
+        if snapshot:
+            scope = snapshot
         data = {
             "filters": query_filters,
             "columns": list(self.column_keys(column_names)),
             "snapshotScope": {
                 "show": {
-                    "scope": "last()",
-                    "includeOutdatedSnapshots": False
-                },
-                "compareTo": {
-                    "scope": "last()",
+                    "scope": scope,
                     "includeOutdatedSnapshots": False
                 }
             }
