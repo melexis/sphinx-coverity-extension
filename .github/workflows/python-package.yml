@@ -6,6 +6,7 @@ env:
   COVERITY_PASSWORD: dummy
   COVERITY_STREAM: dummy
   COVERITY_USERNAME: dummy
+  COVERITY_SNAPSHOT: dummy
 
 jobs:
   test:
