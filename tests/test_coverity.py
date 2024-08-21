@@ -11,7 +11,11 @@ from parameterized import parameterized
 
 from mlx.coverity import SphinxCoverityConnector
 from mlx.coverity_services import CoverityDefectService
-from .filters import test_defect_filter_0, test_defect_filter_1, test_defect_filter_2, test_defect_filter_3
+from .filters import (test_defect_filter_0,
+                      test_defect_filter_1,
+                      test_defect_filter_2,
+                      test_defect_filter_3,
+                      test_snapshot)
 
 TEST_FOLDER = Path(__file__).parent
 
@@ -158,10 +162,42 @@ class TestCoverity(TestCase):
             coverity_service.retrieve_column_keys()
             # Get defects
             with patch.object(CoverityDefectService, "retrieve_issues") as mock_method:
-                coverity_service.get_defects(self.fake_stream, filters, column_names)
+                coverity_service.get_defects(self.fake_stream, "", filters, column_names)
                 data = mock_method.call_args[0][0]
                 mock_method.assert_called_once()
                 assert ordered(data) == ordered(request_data)
+
+    def test_get_defects_with_snapshot(self):
+        with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
+            column_keys = json.loads(content.read())
+        self.fake_checkers = {
+            "checkerAttribute": {"name": "checker", "displayName": "Checker"},
+            "checkerAttributedata": [
+                {"key": "MISRA 1", "value": "MISRA 1"},
+                {"key": "MISRA 2", "value": "MISRA 2"},
+                {"key": "MISRA 3", "value": "MISRA 3"},
+                {"key": "CHECKER 1", "value": "CHECKER 1"},
+                {"key": "CHECKER 2", "value": "CHECKER 2"}
+            ],
+        }
+        self.fake_stream = "test_stream"
+        # initialize what needed for the REST API
+        coverity_service = self.initialize_coverity_service(login=True)
+
+        with requests_mock.mock() as mocker:
+            mocker.get(self.column_keys_url, json=column_keys)
+            mocker.get(self.checkers_url, json=self.fake_checkers)
+            # Retrieve checkers; required for get_defects()
+            coverity_service.retrieve_checkers()
+            # Retreive columns; required for get_defects()
+            coverity_service.retrieve_column_keys()
+            # Get defects
+            with patch.object(CoverityDefectService, "retrieve_issues") as mock_method:
+                coverity_service.get_defects(self.fake_stream, "123", test_snapshot.filters, test_snapshot.column_names)
+                data = mock_method.call_args[0][0]
+                mock_method.assert_called_once()
+                assert ordered(data) == ordered(test_snapshot.request_data)
+
 
     def test_get_filtered_defects(self):
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
@@ -192,6 +228,7 @@ class TestCoverity(TestCase):
             ]
         }
         self.fake_stream = "test_stream"
+        self.fake_snapshot = "123"
 
         # initialize what needed for the REST API
         coverity_service = self.initialize_coverity_service(login=True)
@@ -207,6 +244,7 @@ class TestCoverity(TestCase):
             sphinx_coverity_connector = SphinxCoverityConnector()
             sphinx_coverity_connector.coverity_service = coverity_service
             sphinx_coverity_connector.stream = self.fake_stream
+            sphinx_coverity_connector.snaphsot = self.fake_snapshot
             node_filters = {
                 "checker": "MISRA", "impact": None, "kind": None,
                 "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
@@ -218,7 +256,9 @@ class TestCoverity(TestCase):
 
             with patch.object(CoverityDefectService, "get_defects") as mock_method:
                 sphinx_coverity_connector.get_filtered_defects(fake_node)
-                mock_method.assert_called_once_with(self.fake_stream, fake_node["filters"], column_names)
+                mock_method.assert_called_once_with(
+                    self.fake_stream, self.fake_snapshot, fake_node["filters"], column_names
+                )
 
     def test_failed_login(self):
         fake_stream = "test_stream"
