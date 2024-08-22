@@ -9,8 +9,7 @@ from pathlib import Path
 from parameterized import parameterized
 
 
-from mlx.coverity import SphinxCoverityConnector
-from mlx.coverity_services import CoverityDefectService
+from mlx.coverity import SphinxCoverityConnector, CoverityDefectService
 from .filters import test_defect_filter_0, test_defect_filter_1, test_defect_filter_2, test_defect_filter_3
 
 TEST_FOLDER = Path(__file__).parent
