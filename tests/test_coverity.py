@@ -8,8 +8,7 @@ from urllib.parse import urlencode
 from pathlib import Path
 from parameterized import parameterized
 
-
-from mlx.coverity import SphinxCoverityConnector
+from mlx.coverity import SphinxCoverityConnector, CoverityDefect
 from mlx.coverity_services import CoverityDefectService
 from .filters import test_defect_filter_0, test_defect_filter_1, test_defect_filter_2, test_defect_filter_3
 
@@ -181,12 +180,14 @@ class TestCoverity(TestCase):
             "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
             "cwe": None, "cid": None
         }
-        column_names = {"Comment", "Checker", "Classification", "CID"}
-        fake_node = {"col": column_names,
-                     "filters": node_filters}
-
+        column_names = {"Comment", "Classification", "CID"}
+        fake_node = CoverityDefect()
+        fake_node["col"] = column_names
+        fake_node["filters"] = node_filters
+        fake_node["chart_attribute"] = "Checker"
         with patch.object(CoverityDefectService, "get_defects") as mock_method:
             sphinx_coverity_connector.get_filtered_defects(fake_node)
+            column_names.add("Checker")
             mock_method.assert_called_once_with(self.fake_stream, fake_node["filters"], column_names)
 
     def test_failed_login(self):
