@@ -55,7 +55,7 @@ test_defect_filter_1 = Filter(
                 "columnKey": "checker",
                 "matchMode": "oneOrMoreMatch",
                 "matchers": [
-                    {"type": "keyMatcher", "key": "MISRA 2"},
+                    {"type": "keyMatcher", "key": "MISRA 2 KEY"},
                     {"type": "keyMatcher", "key": "MISRA 1"},
                     {"type": "keyMatcher", "key": "MISRA 3"},
                 ],
