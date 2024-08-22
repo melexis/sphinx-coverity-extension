@@ -135,11 +135,11 @@ class TestCoverity(TestCase):
         self.fake_checkers = {
             "checkerAttribute": {"name": "checker", "displayName": "Checker"},
             "checkerAttributedata": [
-                {"key": "MISRA 1", "value": "MISRA 1"},
-                {"key": "MISRA 2", "value": "MISRA 2"},
-                {"key": "MISRA 3", "value": "MISRA 3"},
-                {"key": "CHECKER 1", "value": "CHECKER 1"},
-                {"key": "CHECKER 2", "value": "CHECKER 2"}
+                {"key": "MISRA 1", "value": "M 1"},
+                {"key": "MISRA 2 KEY", "value": "MISRA 2 VALUE"},
+                {"key": "MISRA 3", "value": "M 3"},
+                {"key": "C 1", "value": "CHECKER 1"},
+                {"key": "C 2", "value": "CHECKER 2"}
             ],
         }
         # initialize what needed for the REST API
