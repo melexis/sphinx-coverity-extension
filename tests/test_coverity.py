@@ -119,11 +119,11 @@ class TestCoverity(TestCase):
         with requests_mock.mock() as mocker:
             mocker.get(self.checkers_url, json=self.fake_checkers)
             coverity_service.retrieve_checkers()
-            history = mocker.request_history
             assert mocker.call_count == 1
-            assert history[0].method == "GET"
-            assert history[0].url == self.checkers_url
-            assert history[0].verify
+            mock_request = mocker.last_request
+            assert mock_request.method == "GET"
+            assert mock_request.url == self.checkers_url
+            assert mock_request.verify
             assert coverity_service.checkers == ["MISRA", "CHECKER"]
 
     @parameterized.expand([
