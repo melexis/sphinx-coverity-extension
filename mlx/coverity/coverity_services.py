@@ -2,17 +2,14 @@
 
 """Services and other utilities for Coverity scripting"""
 
-# General
-from collections import namedtuple
 import csv
 import logging
 import re
+from collections import namedtuple
 from urllib.parse import urlencode
-import requests.structures
-from sphinx.util.logging import getLogger
 
-# For Coverity - REST API
 import requests
+from sphinx.util.logging import getLogger
 
 # Coverity built in Impact statuses
 IMPACT_LIST = ["High", "Medium", "Low"]
@@ -132,7 +129,7 @@ class CoverityDefectService:
         """Retrieve issues from the server (Coverity Connect).
 
         Args:
-            filters (json): The filters as json
+            filters (dict): The filters for the query
 
         Returns:
             dict: The response
@@ -206,36 +203,6 @@ class CoverityDefectService:
         self.logger.warning(err_msg)
         return response.raise_for_status()
 
-    @staticmethod
-    def validate_filter_option(name, req_csv, valid_attributes, allow_regex=False):
-        """Add filter when the attribute is valid. If `valid_attributes` is empty or falsy,
-        all attributes of the CSV list are valid.
-        The CSV list can allow regular expressions when `allow_regex` is set to True.
-
-        Args:
-            name (str): String representation of the attribute.
-            req_csv (str): A CSV list of attribute values to query.
-            valid_attributes (list/dict): The valid attributes.
-            allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
-
-        Returns:
-            list[str]: The list of valid attributes
-        """
-        logging.info("Validate required %s [%s]", name, req_csv)
-        filter_values = []
-        for field in req_csv.split(","):
-            if not valid_attributes or field in valid_attributes:
-                logging.info("Classification [%s] is valid", field)
-                filter_values.append(field)
-            elif allow_regex:
-                pattern = re.compile(field)
-                for element in valid_attributes:
-                    if pattern.search(element) and element not in filter_values:
-                        filter_values.append(element)
-            else:
-                logging.error("Invalid %s filter: %s", name, field)
-        return filter_values
-
     def assemble_query_filter(self, column_name, filter_values, matcher_type):
         """Assemble a filter for a specific column
 
@@ -259,6 +226,10 @@ class CoverityDefectService:
             else:
                 matcher["key"] = filter_
             matchers.append(matcher)
+
+        if column_name not in self.columns:
+            self.logger.warning(f"Invalid column name {column_name!r}; Retrieve column keys first.")
+
         return {
             "columnKey": self.columns[column_name],
             "matchMode": "oneOrMoreMatch",
@@ -300,7 +271,7 @@ class CoverityDefectService:
             }
         ]
 
-        Filter = namedtuple("Filter", "name matcher_type list allow_regex", defaults=[None, False])
+        Filter = namedtuple("Filter", "name matcher_type values allow_regex", defaults=[[], False])
         filter_options = {
             "checker": Filter("Checker", "keyMatcher", self.checkers, True),
             "impact": Filter("Impact", "keyMatcher", IMPACT_LIST),
@@ -312,17 +283,13 @@ class CoverityDefectService:
         }
 
         for option, filter in filter_options.items():
-            if filters[option]:
-                filter_values = self.handle_attribute_filter(
-                    filters[option], filter.name, filter.list, filter.allow_regex
-                )
+            if (filter_option := filters[option]) and (filter_values := self.handle_attribute_filter(
+                    filter_option, filter.name, filter.values, filter.allow_regex)):
                 if filter_values:
                     query_filters.append(self.assemble_query_filter(filter.name, filter_values, filter.matcher_type))
 
-        if filters["component"]:
-            filter_values = self.handle_component_filter(filters["component"])
-            if filter_values:
-                query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
+        if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
+            query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
         data = {
             "filters": query_filters,
@@ -342,18 +309,32 @@ class CoverityDefectService:
         logging.info("Running Coverity query...")
         return self.retrieve_issues(data)
 
-    def handle_attribute_filter(self, attribute_values, name, *args, **kwargs):
-        """Applies any filter on an attribute's values.
+    def handle_attribute_filter(self, attribute_values, name, valid_attributes, allow_regex=False):
+        """Process the given CSV list of attribute values by filtering out the invalid ones while logging an error.
+        The CSV list can allow regular expressions when `allow_regex` is set to True.
 
         Args:
             attribute_values (str): A CSV list of attribute values to query.
             name (str): String representation of the attribute.
+            valid_attributes (list/dict): All valid/possible attribute values.
+            allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
 
         Returns:
-            list[str]: The list of valid attributes
+            set[str]: The attributes values to query with
         """
         logging.info("Using %s filter [%s]", name, attribute_values)
-        filter_values = self.validate_filter_option(name, attribute_values, *args, **kwargs)
+        filter_values = set()
+        for field in attribute_values.split(","):
+            if not valid_attributes or field in valid_attributes:
+                logging.info("Classification [%s] is valid", field)
+                filter_values.add(field)
+            elif allow_regex:
+                pattern = re.compile(field)
+                for element in valid_attributes:
+                    if pattern.search(element):
+                        filter_values.add(element)
+            else:
+                logging.error("Invalid %s filter: %s", name, field)
         return filter_values
 
     def handle_component_filter(self, attribute_values):
