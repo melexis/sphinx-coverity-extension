@@ -198,7 +198,6 @@ class TestCoverity(TestCase):
                 mock_method.assert_called_once()
                 assert ordered(data) == ordered(test_snapshot.request_data)
 
-
     def test_get_filtered_defects(self):
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
