@@ -160,7 +160,7 @@ test_snapshot = Filter(
                 "columnKey": "checker",
                 "matchMode": "oneOrMoreMatch",
                 "matchers": [
-                    {"type": "keyMatcher", "key": "MISRA 2"},
+                    {"type": "keyMatcher", "key": "MISRA 2 KEY"},
                     {"type": "keyMatcher", "key": "MISRA 1"},
                     {"type": "keyMatcher", "key": "MISRA 3"},
                 ],
