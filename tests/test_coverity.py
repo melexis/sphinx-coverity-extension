@@ -160,9 +160,6 @@ class TestCoverity(TestCase):
                 assert ordered(data) == ordered(request_data)
 
     def test_get_filtered_defects(self):
-        with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
-            column_keys = json.loads(content.read())
-
         sphinx_coverity_connector = SphinxCoverityConnector()
         sphinx_coverity_connector.coverity_service = self.initialize_coverity_service(login=False)
         sphinx_coverity_connector.stream = self.fake_stream
