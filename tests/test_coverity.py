@@ -124,10 +124,10 @@ class TestCoverity(TestCase):
             assert coverity_service.checkers == ["MISRA", "CHECKER"]
 
     @parameterized.expand([
-        [test_defect_filter_0.filters, test_defect_filter_0.column_names, test_defect_filter_0.request_data],
-        [test_defect_filter_1.filters, test_defect_filter_1.column_names, test_defect_filter_1.request_data],
-        [test_defect_filter_2.filters, test_defect_filter_2.column_names, test_defect_filter_2.request_data],
-        [test_defect_filter_3.filters, test_defect_filter_3.column_names, test_defect_filter_3.request_data]
+        test_defect_filter_0,
+        test_defect_filter_1,
+        test_defect_filter_2,
+        test_defect_filter_3,
     ])
     def test_get_defects(self, filters, column_names, request_data):
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
