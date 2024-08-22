@@ -71,7 +71,7 @@ class TestCoverity(TestCase):
             stream_request = mocker.last_request
             assert stream_request.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
 
-    @patch("mlx.coverity_services.requests")
+    @patch("mlx.coverity.coverity_services.requests")
     def test_stream_validation(self, mock_requests):
         mock_requests.return_value = MagicMock(spec=requests)
 
