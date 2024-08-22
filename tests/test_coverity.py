@@ -171,7 +171,8 @@ class TestCoverity(TestCase):
 
     def test_get_filtered_defects(self):
         """Test `get_filtered_defects` of SphinxCoverityConnector. Check if `get_defects` is called once with the
-        correct arguments."""
+        correct arguments.
+        Tests also when `chart_attribute` of the node exists, the name will be added to column_names."""
         sphinx_coverity_connector = SphinxCoverityConnector()
         sphinx_coverity_connector.coverity_service = self.initialize_coverity_service(login=False)
         sphinx_coverity_connector.stream = self.fake_stream
@@ -184,11 +185,13 @@ class TestCoverity(TestCase):
         fake_node = CoverityDefect()
         fake_node["col"] = column_names
         fake_node["filters"] = node_filters
-        fake_node["chart_attribute"] = "Checker"
         with patch.object(CoverityDefectService, "get_defects") as mock_method:
             sphinx_coverity_connector.get_filtered_defects(fake_node)
-            column_names.add("Checker")
             mock_method.assert_called_once_with(self.fake_stream, fake_node["filters"], column_names)
+            fake_node["chart_attribute"] = "Checker"
+            column_names.add("Checker")
+            sphinx_coverity_connector.get_filtered_defects(fake_node)
+            mock_method.assert_called_with(self.fake_stream, fake_node["filters"], column_names)
 
     def test_failed_login(self):
         """Test a failed login by mocking the status code when validating the stream."""
