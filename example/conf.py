@@ -17,6 +17,7 @@ import sys
 import mlx.coverity
 import mlx.traceability
 from decouple import config
+import logging
 from pkg_resources import get_distribution
 
 pkg_version = get_distribution("mlx.coverity").version
@@ -318,3 +319,5 @@ coverity_credentials = {
 
 TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
 TRACEABILITY_ITEM_RELINK = {}
+
+logging.basicConfig(level=logging.WARNING)
