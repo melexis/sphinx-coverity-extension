@@ -211,9 +211,7 @@ class TestCoverity(TestCase):
 
         with patch.object(CoverityDefectService, "get_defects") as mock_method:
             sphinx_coverity_connector.get_filtered_defects(fake_node)
-            mock_method.assert_called_once_with(
-                    self.fake_stream, fake_snapshot, fake_node["filters"], column_names
-                )
+            mock_method.assert_called_once_with(self.fake_stream, fake_snapshot, fake_node["filters"], column_names)
 
     def test_failed_login(self):
         coverity_conf_service = CoverityDefectService("scan.coverity.com/")
