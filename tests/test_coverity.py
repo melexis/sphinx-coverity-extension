@@ -195,9 +195,11 @@ class TestCoverity(TestCase):
                 assert ordered(data) == ordered(test_snapshot.request_data)
 
     def test_get_filtered_defects(self):
+        fake_snapshot = "123"
         sphinx_coverity_connector = SphinxCoverityConnector()
         sphinx_coverity_connector.coverity_service = self.initialize_coverity_service(login=False)
         sphinx_coverity_connector.stream = self.fake_stream
+        sphinx_coverity_connector.snaphsot = fake_snapshot
         node_filters = {
             "checker": "MISRA", "impact": None, "kind": None,
             "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
@@ -210,7 +212,7 @@ class TestCoverity(TestCase):
         with patch.object(CoverityDefectService, "get_defects") as mock_method:
             sphinx_coverity_connector.get_filtered_defects(fake_node)
             mock_method.assert_called_once_with(
-                    self.fake_stream, self.fake_snapshot, fake_node["filters"], column_names
+                    self.fake_stream, fake_snapshot, fake_node["filters"], column_names
                 )
 
     def test_failed_login(self):
