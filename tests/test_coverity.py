@@ -8,8 +8,7 @@ from urllib.parse import urlencode
 from pathlib import Path
 from parameterized import parameterized
 
-
-from mlx.coverity import SphinxCoverityConnector
+from mlx.coverity import SphinxCoverityConnector, CoverityDefect
 from mlx.coverity_services import CoverityDefectService
 from .filters import (test_defect_filter_0,
                       test_defect_filter_1,
@@ -67,6 +66,7 @@ class TestCoverity(TestCase):
         return coverity_service
 
     def test_session_by_stream_validation(self):
+        """To test the session authentication, the function `validate_stream` is used."""
         coverity_service = self.initialize_coverity_service(login=False)
         with requests_mock.mock() as mocker:
             mocker.get(self.stream_url, json={})
@@ -78,6 +78,7 @@ class TestCoverity(TestCase):
 
     @patch("mlx.coverity_services.requests")
     def test_stream_validation(self, mock_requests):
+        """Test if the function `validate_stream` is called once with the correct url"""
         mock_requests.return_value = MagicMock(spec=requests)
 
         # Get the base url
@@ -91,6 +92,9 @@ class TestCoverity(TestCase):
             mock_method.assert_called_with("https://scan.coverity.com/api/v2/streams/test_stream")
 
     def test_retrieve_columns(self):
+        """Test the function `retrieve_column_keys`.
+        Check if the the columns property is correctly initialized by checking if the name of a column returns
+        the correct key."""
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
         # initialize what needed for the REST API
@@ -107,11 +111,13 @@ class TestCoverity(TestCase):
             assert coverity_service.columns["CID"] == "cid"
 
     def test_retrieve_checkers(self):
+        """Test the function `retrieve_checkers`. Check if the returned list of the checkers property is equal to the
+        keys of checkerAttributedata of the returned data of the request."""
         self.fake_checkers = {
             "checkerAttribute": {"name": "checker", "displayName": "Checker"},
             "checkerAttributedata": [
-                {"key": "MISRA", "value": "MISRA"},
-                {"key": "CHECKER", "value": "CHECKER"}
+                {"key": "MISRA", "value": "M"},
+                {"key": "CHECKER", "value": "C"}
             ],
         }
         # initialize what needed for the REST API
@@ -134,6 +140,10 @@ class TestCoverity(TestCase):
         test_defect_filter_3,
     ])
     def test_get_defects(self, filters, column_names, request_data):
+        """Check get defects with different filters. Check if the response of `get_defects` is the same as expected.
+        The data is obtained from the filters.py file.
+        Due to the usage of set in `get_defects` (column_keys), the function `ordered` is used to compare the returned
+        data of the request where order does not matter."""
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
         self.fake_checkers = {
@@ -195,6 +205,9 @@ class TestCoverity(TestCase):
                 assert ordered(data) == ordered(test_snapshot.request_data)
 
     def test_get_filtered_defects(self):
+        """Test `get_filtered_defects` of SphinxCoverityConnector. Check if `get_defects` is called once with the
+        correct arguments.
+        Tests also when `chart_attribute` of the node exists, the name will be added to column_names."""
         fake_snapshot = "123"
         sphinx_coverity_connector = SphinxCoverityConnector()
         sphinx_coverity_connector.coverity_service = self.initialize_coverity_service(login=False)
@@ -205,15 +218,20 @@ class TestCoverity(TestCase):
             "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
             "cwe": None, "cid": None
         }
-        column_names = {"Comment", "Checker", "Classification", "CID"}
-        fake_node = {"col": column_names,
-                     "filters": node_filters}
-
+        column_names = {"Comment", "Classification", "CID"}
+        fake_node = CoverityDefect()
+        fake_node["col"] = column_names
+        fake_node["filters"] = node_filters
         with patch.object(CoverityDefectService, "get_defects") as mock_method:
             sphinx_coverity_connector.get_filtered_defects(fake_node)
             mock_method.assert_called_once_with(self.fake_stream, fake_snapshot, fake_node["filters"], column_names)
+            fake_node["chart_attribute"] = "Checker"
+            column_names.add("Checker")
+            sphinx_coverity_connector.get_filtered_defects(fake_node)
+            mock_method.assert_called_with(self.fake_stream, fake_snapshot, fake_node["filters"], column_names)
 
     def test_failed_login(self):
+        """Test a failed login by mocking the status code when validating the stream."""
         coverity_conf_service = CoverityDefectService("scan.coverity.com/")
         stream_url = f"{coverity_conf_service.api_endpoint}/streams/{self.fake_stream}"
 

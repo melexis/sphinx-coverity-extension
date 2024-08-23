@@ -1,6 +1,10 @@
 """Module to provide functions that accommodate logging."""
 
 from sphinx.util.logging import getLogger
+from logging import WARNING
+
+LOGGER = getLogger(__name__)
+LOGGER.setLevel(WARNING)
 
 
 def report_warning(msg, docname, lineno=None):
@@ -11,11 +15,10 @@ def report_warning(msg, docname, lineno=None):
         docname (str): Name of the document in which the error occurred
         lineno (str): Line number in the document on which the error occurred
     """
-    logger = getLogger(__name__)
     if lineno is not None:
-        logger.warning(msg, location=(docname, lineno))
+        LOGGER.warning(msg, location=(docname, lineno))
     else:
-        logger.warning(msg, location=docname)
+        LOGGER.warning(msg, location=docname)
 
 
 def report_info(msg, nonl=False):
@@ -25,5 +28,4 @@ def report_info(msg, nonl=False):
         msg (str): Message of the warning
         nonl (bool): True when no new line at end
     """
-    logger = getLogger(__name__)
-    logger.info(msg, nonl=nonl)
+    LOGGER.info(msg, nonl=nonl)
