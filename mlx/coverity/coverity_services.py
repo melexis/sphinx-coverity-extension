@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 import requests
 from sphinx.util.logging import getLogger
 
-from mlx.coverity_logging import report_info
+from mlx.coverity import report_info
 
 # Coverity built in Impact statuses
 IMPACT_LIST = ["High", "Medium", "Low"]

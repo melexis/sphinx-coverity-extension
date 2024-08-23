@@ -11,11 +11,11 @@ from getpass import getpass
 from urllib.error import URLError, HTTPError
 
 from docutils import nodes
-import pkg_resources
 
-from mlx.coverity_logging import report_info, report_warning
-from mlx.coverity_services import CoverityDefectService
-from mlx.coverity_directives.coverity_defect_list import (
+from .__coverity_version__ import __version__
+from .coverity_logging import report_info, report_warning
+from .coverity_services import CoverityDefectService
+from .coverity_directives.coverity_defect_list import (
     CoverityDefect,
     CoverityDefectListDirective,
 )
@@ -185,7 +185,7 @@ def setup(app):
     app.connect("builder-inited", sphinx_coverity_connector.initialize_environment)
 
     try:
-        version = pkg_resources.require("mlx.coverity")[0].version
+        version = __version__
     except LookupError:
         version = "dev"
     return {

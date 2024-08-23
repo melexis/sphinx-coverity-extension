@@ -8,8 +8,7 @@ from urllib.parse import urlencode
 from pathlib import Path
 from parameterized import parameterized
 
-from mlx.coverity import SphinxCoverityConnector, CoverityDefect
-from mlx.coverity_services import CoverityDefectService
+from mlx.coverity import SphinxCoverityConnector, CoverityDefect, CoverityDefectService
 from .filters import (test_defect_filter_0,
                       test_defect_filter_1,
                       test_defect_filter_2,
@@ -76,7 +75,7 @@ class TestCoverity(TestCase):
             stream_request = mocker.last_request
             assert stream_request.headers["Authorization"] == requests.auth._basic_auth_str("user", "password")
 
-    @patch("mlx.coverity_services.requests")
+    @patch("mlx.coverity.coverity_services.requests")
     def test_stream_validation(self, mock_requests):
         """Test if the function `validate_stream` is called once with the correct url"""
         mock_requests.return_value = MagicMock(spec=requests)
