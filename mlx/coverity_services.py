@@ -246,7 +246,7 @@ class CoverityDefectService:
             "matchers": matchers
         }
 
-    def get_defects(self, stream, snapshot, filters, column_names):
+    def get_defects(self, stream, filters, column_names, snapshot):
         """Gets a list of defects for given stream, snapshot ID, filters and column names.
         If the snapshot is empty, the last snapshot is taken.
         If a column name does not match the name of the `columns` property, the column can not be obtained because
@@ -255,9 +255,9 @@ class CoverityDefectService:
 
         Args:
             stream (str): Name of the stream to query
-            snapshot (str): The snapshot ID; If empty the last snapshot is taken.
             filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
             column_names (list[str]): The column names
+            snapshot (str): The snapshot ID; If empty the last snapshot is taken.
 
         Returns:
             dict: The content of the request. This has a structure like:

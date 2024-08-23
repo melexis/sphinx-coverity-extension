@@ -168,7 +168,7 @@ class TestCoverity(TestCase):
             coverity_service.retrieve_column_keys()
             # Get defects
             with patch.object(CoverityDefectService, "retrieve_issues") as mock_method:
-                coverity_service.get_defects(self.fake_stream, "", filters, column_names)
+                coverity_service.get_defects(self.fake_stream, filters, column_names, "")
                 data = mock_method.call_args[0][0]
                 mock_method.assert_called_once()
                 assert ordered(data) == ordered(request_data)
@@ -199,7 +199,7 @@ class TestCoverity(TestCase):
             coverity_service.retrieve_column_keys()
             # Get defects
             with patch.object(CoverityDefectService, "retrieve_issues") as mock_method:
-                coverity_service.get_defects(self.fake_stream, "123", test_snapshot.filters, test_snapshot.column_names)
+                coverity_service.get_defects(self.fake_stream, test_snapshot.filters, test_snapshot.column_names, "123")
                 data = mock_method.call_args[0][0]
                 mock_method.assert_called_once()
                 assert ordered(data) == ordered(test_snapshot.request_data)
