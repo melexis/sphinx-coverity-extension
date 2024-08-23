@@ -303,9 +303,11 @@ class CoverityDefectService:
         if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
             query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
-        scope = "last()"
         if snapshot:
             scope = snapshot
+        else:
+            scope = "last()"
+
         data = {
             "filters": query_filters,
             "columns": list(self.column_keys(column_names)),
