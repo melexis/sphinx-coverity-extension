@@ -1,614 +1,377 @@
 #!/usr/bin/python
 
-'''Services and other utilities for Coverity scripting'''
+"""Services and other utilities for Coverity scripting"""
 
-# General
 import csv
-import logging
 import re
-from urllib.error import URLError
+from collections import namedtuple
+from urllib.parse import urlencode
+import requests
+from sphinx.util.logging import getLogger
 
-# For Coverity - SOAP
-from suds.client import Client
-from suds.wsse import Security, UsernameToken
-
-# -- Default values -- and global settings
-
-DEFAULT_WS_VERSION = 'v9'
+from mlx.coverity_logging import report_info
 
 # Coverity built in Impact statuses
-IMPACT_LIST = {'High', 'Medium', 'Low'}
+IMPACT_LIST = ["High", "Medium", "Low"]
 
-KIND_LIST = {'QUALITY', 'SECURITY', 'TEST'}
+KIND_LIST = ["QUALITY", "SECURITY", "TEST"]
 
 # Coverity built in Classifications
-CLASSIFICATION_LIST = {'Unclassified', 'Pending', 'False Positive', 'Intentional', 'Bug', 'Untested', 'No Test Needed'}
+CLASSIFICATION_LIST = [
+    "Unclassified",
+    "Pending",
+    "False Positive",
+    "Intentional",
+    "Bug",
+    "Untested",
+    "No Test Needed",
+]
 
 # Coverity built in Actions
-ACTION_LIST = {'Undecided', 'Fix Required', 'Fix Submitted', 'Modeling Required', 'Ignore', 'On hold',
-               'For Interest Only'}
-
-ISSUE_KIND_2_LABEL = {'QUALITY': 'Quality', 'SECURITY': 'Security', 'Various': 'Quality/Security', 'TEST': 'Testing'}
-
-
-# names of Coverity Triage/Attribute fields
-EXT_REFERENCE_ATTR_NAME = "Ext. Reference"
-DEFECT_STATUS_ATTR_NAME = "DefectStatus"
-CLASSIFICATION_ATTR_NAME = "Classification"
-ACTION_ATTR_NAME = "Action"
-COMMENT_ATTR_NAME = "Comment"
+ACTION_LIST = [
+    "Undecided",
+    "Fix Required",
+    "Fix Submitted",
+    "Modeling Required",
+    "Ignore",
+    "On hold",
+    "For Interest Only",
+]
 
 
-def parse_two_part_term(term, delim=','):
-    '''Parse a term assuming [ [part1],[part2] ]'''
-    valid = False
-    part1 = ""
-    part2 = ""
-    if term.find(delim) != -1:
-        valid = True
-        field1 = term.split(delim, 1)[0]
-        if bool(field1):
-            part1 = field1
-        field2 = term.rsplit(delim, 1)[-1]
-        if bool(field2):
-            part2 = field2
-    return valid, part1, part2
+class CoverityDefectService:
+    """
+    Convenience class for retrieving data from the Coverity REST API
+    """
 
+    _version = "v2"
 
-def compare_strings(str_a, str_b):
-    '''Compare strings for equivalence
+    def __init__(self, hostname):
+        hostname = hostname.strip('/')
+        self._base_url = f"https://{hostname}"
+        self._api_endpoint = f"https://{hostname}/api/{self.version}"
+        self._checkers = []
+        self._columns = {}
+        self.logger = getLogger("mlx.coverity_logging")
 
-    some leniency allowed such as spaces and casing
-    '''
-    if re.match(str_b, str_a, flags=re.IGNORECASE):
-        return True
-    # ignore embedded spaces and some odd punctuation characters ("todo" = "To-Do")
-    str_a2 = re.sub(r'[.:\-_ ]', '', str_a)
-    str_b2 = re.sub(r'[:\-_ ]', '', str_b)  # don't remove dot (part of regex?)
-    if re.match(str_b2, str_a2, flags=re.IGNORECASE):
-        return True
-    return False
+    @property
+    def base_url(self):
+        """str: The base URL of the service."""
+        return self._base_url
 
+    @property
+    def api_endpoint(self):
+        """str: The API endpoint of the service."""
+        return self._api_endpoint
 
-class Service:
-    '''
-    Basic endpoint Service
-    '''
+    @property
+    def version(self):
+        """str: The API version"""
+        return self._version
 
-    def __init__(self, transport, hostname, port, ws_version=DEFAULT_WS_VERSION):
-        self.set_transport(transport)
-        self.set_hostname(hostname)
-        self.set_port(port)
-        self.set_ws_version(ws_version)
-        self.client = None
+    @property
+    def checkers(self):
+        """list[str]: All valid checkers available"""
+        return self._checkers
 
-    def set_transport(self, transport):
-        '''Set transport protocol'''
-        self.transport = transport
+    @property
+    def columns(self):
+        """list[dict]: A list of dictionaries where the keys of each dictionary:
+        - columnKey: The key of the column
+        - name: The name of the column
+        """
+        return self._columns
 
-    def get_transport(self):
-        '''Get transport protocol'''
-        return self.transport
-
-    def set_hostname(self, hostname):
-        '''Set hostname for service'''
-        self.hostname = hostname
-
-    def get_hostname(self):
-        '''Get hostname for service'''
-        return self.hostname
-
-    def set_port(self, port):
-        '''Set port for service'''
-        self.port = port
-
-    def get_port(self):
-        '''Get port for service'''
-        return self.port
-
-    def set_ws_version(self, ws_version):
-        '''Set WS version for service'''
-        self.ws_version = ws_version
-
-    def get_ws_version(self):
-        '''Get WS version for service'''
-        return self.ws_version
-
-    def get_service_url(self, path='', add_port=True):
-        '''Get Service url with given path'''
-        url = self.transport + '://' + self.hostname
-        if self.port and add_port:
-            url += ':' + self.port
-        if path:
-            url += path
-        return url
-
-    def get_ws_url(self, service):
-        '''Get WS url with given service'''
-        return self.get_service_url('/ws/' + self.ws_version + '/' + service + '?wsdl')
-
-    def login(self, username, password):
-        '''Login to Coverity using given username and password'''
-        security = Security()
-        token = UsernameToken(username, password)
-        security.tokens.append(token)
-        self.client.set_options(wsse=security)
-
-    def validate_presence(self, url, service_name):
-        '''Initializes the client attribute while validating the presence of the service'''
-        try:
-            self.client = Client(url)
-            logging.info("Validated presence of %s [%s]", service_name, url)
-        except URLError:
-            self.client = None
-            logging.critical("No such %s [%s]", service_name, url)
-            raise
-
-
-class CoverityConfigurationService(Service):
-    '''
-    Coverity Configuration Service (WebServices)
-    '''
-
-    def __init__(self, transport, hostname, port, ws_version=DEFAULT_WS_VERSION):
-        super(CoverityConfigurationService, self).__init__(transport, hostname, port, ws_version)
-        self.checkers = None
-        url = self.get_ws_url('configurationservice')
-        logging.getLogger('suds.client').setLevel(logging.CRITICAL)
-        self.validate_presence(url, 'Coverity Configuration Service')
-
-    def login(self, username, password):
-        '''Login to Coverity Configuration service using given username and password'''
-        super(CoverityConfigurationService, self).login(username, password)
-        version = self.get_version()
-        if version is None:
-            raise RuntimeError("Authentication to [%s] FAILED for [%s] account - check password"
-                               % (self.get_service_url(), username))
-        else:
-            logging.info("Authentication to [%s] using [%s] account was OK - version [%s]",
-                         self.get_service_url(), username, version.externalVersion)
-
-    def get_version(self):
-        '''Get the version of the service, can be used as a means to validate access permissions'''
-        try:
-            return self.client.service.getVersion()
-        except URLError:
-            return None
-
-    @staticmethod
-    def get_project_name(stream):
-        '''Get the project name from the stream object'''
-        return stream.primaryProjectId.name
-
-    @staticmethod
-    def get_triage_store(stream):
-        '''Get the name of the triaging store from the stream object'''
-        return stream.triageStoreId.name
-
-    def get_stream(self, stream_name):
-        '''Get the stream object from the stream name'''
-        filter_spec = self.client.factory.create('streamFilterSpecDataObj')
-
-        # use stream name as an initial glob pattern
-        filter_spec.namePattern = stream_name
-
-        # get all the streams that match
-        streams = self.client.service.getStreams(filter_spec)
-
-        # find the one with a matching name
-        for stream in streams:
-            if compare_strings(stream.id.name, stream_name):
-                return stream
-        return None
-
-    # get a list of the snapshots in a named stream
-    def get_snapshot_for_stream(self, stream_name):
-        '''Get snapshot object for given stream name'''
-        stream_id = self.client.factory.create('streamIdDataObj')
-        stream_id.name = stream_name
-        # optional filter specification
-        filter_spec = self.client.factory.create('snapshotFilterSpecDataObj')
-        # return a list of snapshotDataObj
-        return self.client.service.getSnapshotsForStream(stream_id, filter_spec)
-
-    @staticmethod
-    def get_snapshot_id(snapshots, idx=1):
-        '''Get the nth snapshot (base 1) - minus numbers to count from the end backwards (-1 = last)'''
-        if bool(idx):
-            num_snapshots = len(snapshots)
-            if idx < 0:
-                required = num_snapshots + idx + 1
-            else:
-                required = idx
-
-            if abs(required) > 0 and abs(required) <= num_snapshots:
-                # base zero
-                return snapshots[required - 1].id
-        return 0
-
-    def get_snapshot_detail(self, snapshot_id):
-        '''Get detailed information about a single snapshot'''
-        snapshot = self.client.factory.create('snapshotIdDataObj')
-        snapshot.id = snapshot_id
-        # return a snapshotInfoDataObj
-        return self.client.service.getSnapshotInformation(snapshot)
-
-    def get_checkers(self):
-        '''Get a list of checkers from the service'''
-        if not self.checkers:
-            self.checkers = self.client.service.getCheckerNames()
-        return self.checkers
-
-    @staticmethod
-    def add_filter_rqt(name, req_csv, valid_list, filter_list, allow_regex=False):
-        '''Lookup the list of given filter possibility, add to filter spec and return a validated list'''
-        logging.info('Validate required %s [%s]', name, req_csv)
-        validated = ""
-        delim = ""
-        for field in req_csv.split(','):
-            if not valid_list or field in valid_list:
-                logging.info('Classification [%s] is valid', field)
-                filter_list.append(field)
-                validated += delim + field
-                delim = ","
-            elif allow_regex:
-                pattern = re.compile(field)
-                for element in valid_list:
-                    if pattern.search(element) and element not in filter_list:
-                        filter_list.append(element)
-                        validated += delim + element
-                        delim = ","
-            else:
-                logging.error('Invalid %s filter: %s', name, field)
-        return validated
-
-
-class CoverityDefectService(Service):
-    '''
-    Coverity Defect Service (WebServices)
-    '''
-
-    def __init__(self, config_service):
-        '''Create a Defect Service, bound to the given Configuration Service'''
-        super(CoverityDefectService, self).__init__(config_service.get_transport(),
-                                                    config_service.get_hostname(),
-                                                    config_service.get_port(),
-                                                    config_service.get_ws_version())
-        self.config_service = config_service
-        self.filters = ""
-        # logging.getLogger('suds.client').setLevel(logging.DEBUG)
-        url = self.get_ws_url('defectservice')
-        self.validate_presence(url, 'Coverity Defect Service')
-
-    def get_defects(self, project, stream, filters, custom=None):
-        """ Gets a list of defects for given stream, with some query criteria.
+    def column_keys(self, column_names):
+        """The column keys corresponding to the given column names in the `col` option
 
         Args:
-            project (str): Name of the project to query
-            stream (str): Name of the stream to query
-            filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
-            custom (str): A custom query
+            column_names (list[str]): The column names given by the `col` option
+        """
+        special_columns = {
+            "location": {"lineNumber", "displayFile"},
+            "comment": {"lastTriageComment"},
+            "reference": {"externalReference"}
+        }
+        column_keys = {"cid"}
+
+        for column_name in column_names:
+            column_name_lower = column_name.lower()
+            if column_name_lower in special_columns:
+                column_keys.update(special_columns[column_name_lower])
+            elif column_name_lower in self.columns:
+                column_keys.add(self.columns[column_name_lower])
+            else:
+                self.logger.warning(f"Invalid column name {column_name!r}")
+        return column_keys
+
+    def login(self, username, password):
+        """Authenticate a session using the given username and password .
+
+        Args:
+            username (str): Username to log in
+            password (str): Password to log in
+        """
+        self.session = requests.Session()
+        self.session.auth = (username, password)
+
+    def validate_stream(self, stream):
+        """Validate stream by retrieving the specified stream.
+        When the request fails, the stream does not exist or the user does not have acces to it.
+
+        Args:
+            stream (str): The stream name
+        """
+        url = f"{self.api_endpoint}/streams/{stream}"
+        self._request(url)
+
+    def retrieve_issues(self, filters):
+        """Retrieve issues from the server (Coverity Connect).
+
+        Args:
+            filters (dict): The filters for the query
 
         Returns:
-            (suds.sudsobject.mergedDefectsPageDataObj) Suds mergedDefectsPageDataObj object containing filtered defects
+            dict: The response
         """
-        logging.info('Querying Coverity for defects in project [%s] stream [%s] ...', project, stream)
+        params = {
+            "includeColumnLabels": "true",
+            "offset": 0,
+            "queryType": "bySnapshot",
+            "rowCount": -1,
+            "sortOrder": "asc",
+        }
+        url = f"{self.api_endpoint}/issues/search?{urlencode(params)}"
+        return self._request(url, filters)
 
-        # define the project
-        project_id = self.client.factory.create('projectIdDataObj')
-        project_id.name = project
+    def retrieve_column_keys(self):
+        """Retrieves the column keys and associated display names.
 
-        # and the stream
-        stream_id = self.client.factory.create('streamIdDataObj')
-        stream_id.name = stream
+        Returns:
+            dict: All available column names with respective column keys.
+        """
+        if not self._columns:
+            params = {
+                "queryType": "bySnapshot",
+                "retrieveGroupByColumns": "false"
+            }
+            url = f"{self.api_endpoint}/issues/columns?{urlencode(params)}"
+            columns = self._request(url)
+            if columns:
+                self._columns = requests.structures.CaseInsensitiveDict(
+                    ((column["name"], column["columnKey"]) for column in columns)
+                )
+        return self.columns
 
-        # create filter spec
-        filter_spec = self.client.factory.create('snapshotScopeDefectFilterSpecDataObj')
+    def retrieve_checkers(self):
+        """Retrieve the list of checkers from the server.
 
-        # only for this stream
-        filter_spec.streamIncludeNameList.append(stream_id)
+        Returns:
+            list[str]: The list of valid checkers
+        """
+        if not self.checkers:
+            url = f"{self.api_endpoint}/checkerAttributes/checker"
+            checkers = self._request(url)
+            if checkers and "checkerAttributedata" in checkers:
+                self._checkers = [checker["key"] for checker in checkers["checkerAttributedata"]]
+        return self.checkers
 
-        # apply any filter on checker names
-        if filters['checker']:
-            self.config_service.get_checkers()
-            self.handle_attribute_filter(filters['checker'],
-                                         'Checker',
-                                         self.config_service.checkers,
-                                         filter_spec.checkerList,
-                                         allow_regex=True)
+    def _request(self, url, data=None):
+        """Perform a POST or GET request to the specified url.
+        Uses a GET request when data is `None`, uses a POST request otherwise
 
-        # apply any filter on impact status
-        if filters['impact']:
-            self.handle_attribute_filter(filters['impact'], 'Impact', IMPACT_LIST, filter_spec.impactNameList)
+        Args:
+            url (str): The URL for the request
+            data (dict): Optional data to send
 
-        # apply any filter on issue kind
-        if filters['kind']:
-            self.handle_attribute_filter(filters['kind'], 'Kind', KIND_LIST, filter_spec.issueKindList)
+        Returns:
+            dict: the content of server's response
 
-        # apply any filter on classification
-        if filters['classification']:
-            self.handle_attribute_filter(filters['classification'],
-                                         'Classification',
-                                         CLASSIFICATION_LIST,
-                                         filter_spec.classificationNameList)
+        Raises:
+            requests.HTTPError
+        """
+        if data:
+            response = self.session.post(url, json=data)
+        else:
+            response = self.session.get(url)
+        if response.ok:
+            return response.json()
+        try:
+            err_msg = response.json()["message"]
+        except (requests.exceptions.JSONDecodeError, KeyError):
+            err_msg = response.content.decode()
+        self.logger.warning(err_msg)
+        return response.raise_for_status()
 
-        # apply any filter on action
-        if filters['action']:
-            self.handle_attribute_filter(filters['action'], 'Action', ACTION_LIST, filter_spec.actionNameList)
+    def assemble_query_filter(self, column_name, filter_values, matcher_type):
+        """Assemble a filter for a specific column
 
-        # apply any filter on Components
-        if filters['component']:
-            self.handle_component_filter(filters['component'], filter_spec)
+        Args:
+            column_name (str): The column name in lowercase
+            filter_values (list[str]): The list of valid values to filter on
+            matcher_type (str): The type of the matcher (nameMatcher, idMatcher or keyMatcher)
 
-        # apply any filter on CWE values
-        if filters['cwe']:
-            self.handle_attribute_filter(filters['cwe'], 'CWE', None, filter_spec.cweList)
+        Returns:
+            dict: New filter for API queries
+        """
+        matchers = []
+        for filter_ in filter_values:
+            matcher = {"type": matcher_type}
+            if matcher_type == "nameMatcher":
+                matcher["name"] = filter_
+                matcher["class"] = "Component"
+                assert column_name == "component"
+            elif matcher_type == "idMatcher":
+                matcher["id"] = filter_
+            else:
+                matcher["key"] = filter_
+            matchers.append(matcher)
 
-        # apply any filter on CID values
-        if filters['cid']:
-            self.handle_attribute_filter(filters['cid'], 'CID', None, filter_spec.cidList)
+        if column_name not in self.columns:
+            self.logger.warning(f"Invalid column name {column_name!r}; Retrieve column keys first.")
 
-        # if a special custom attribute value requirement
-        if custom:
-            self.handle_custom_filter_attribute(custom, filter_spec)
+        return {
+            "columnKey": self.columns[column_name],
+            "matchMode": "oneOrMoreMatch",
+            "matchers": matchers
+        }
 
-        # create page spec
-        page_spec = self.client.factory.create('pageSpecDataObj')
-        page_spec.pageSize = 9999
-        page_spec.sortAscending = True
-        page_spec.startIndex = 0
+    def get_defects(self, stream, filters, column_names):
+        """Gets a list of defects for given stream, filters and column names.
+        If a column name does not match the name of the `columns` property, the column can not be obtained because
+        it need the correct corresponding column key.
+        Column key `cid` is always obtained to use later in other functions.
 
-        # create snapshot scope
-        snapshot_scope = self.client.factory.create('snapshotScopeSpecDataObj')
+        Args:
+            stream (str): Name of the stream to query
+            filters (dict): Dictionary with attribute names as keys and CSV lists of attribute values to query as values
+            column_names (list[str]): The column names
 
-        snapshot_scope.showOutdatedStreams = False
-        snapshot_scope.compareOutdatedStreams = False
+        Returns:
+            dict: The content of the request. This has a structure like:
+                {
+                    "offset": 0,
+                    "totalRows": 2720,
+                    "columns": [list of column keys]
+                    "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
+                }
+        """
+        report_info(f"Querying Coverity for defects in stream [{stream}] ...",)
+        query_filters = [
+            {
+                "columnKey": "streams",
+                "matchMode": "oneOrMoreMatch",
+                "matchers": [
+                    {
+                        "class": "Stream",
+                        "name": stream,
+                        "type": "nameMatcher"
+                    }
+                ]
+            }
+        ]
 
-        snapshot_scope.showSelector = 'last()'
-        snapshot_scope.compareSelector = 'last()'
+        Filter = namedtuple("Filter", "name matcher_type values allow_regex", defaults=[[], False])
+        filter_options = {
+            "checker": Filter("Checker", "keyMatcher", self.checkers, True),
+            "impact": Filter("Impact", "keyMatcher", IMPACT_LIST),
+            "kind": Filter("Issue Kind", "keyMatcher", KIND_LIST),
+            "classification": Filter("Classification", "keyMatcher", CLASSIFICATION_LIST),
+            "action": Filter("Action", "keyMatcher", ACTION_LIST),
+            "cwe": Filter("CWE", "idMatcher"),
+            "cid": Filter("CID", "idMatcher")
+        }
 
-        logging.info('Running Coverity query...')
-        return self.client.service.getMergedDefectsForSnapshotScope(project_id, filter_spec,
-                                                                    page_spec, snapshot_scope)
+        for option, filter in filter_options.items():
+            if (filter_option := filters[option]) and (filter_values := self.handle_attribute_filter(
+                    filter_option, filter.name, filter.values, filter.allow_regex)):
+                if filter_values:
+                    query_filters.append(self.assemble_query_filter(filter.name, filter_values, filter.matcher_type))
 
-    def handle_attribute_filter(self, attribute_values, name, *args, **kwargs):
-        """ Applies any filter on an attribute's values.
+        if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
+            query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
+
+        data = {
+            "filters": query_filters,
+            "columns": list(self.column_keys(column_names)),
+            "snapshotScope": {
+                "show": {
+                    "scope": "last()",
+                    "includeOutdatedSnapshots": False
+                },
+                "compareTo": {
+                    "scope": "last()",
+                    "includeOutdatedSnapshots": False
+                }
+            }
+        }
+
+        report_info("Running Coverity query...")
+        return self.retrieve_issues(data)
+
+    def handle_attribute_filter(self, attribute_values, name, valid_attributes, allow_regex=False):
+        """Process the given CSV list of attribute values by filtering out the invalid ones while logging an error.
+        The CSV list can allow regular expressions when `allow_regex` is set to True.
 
         Args:
             attribute_values (str): A CSV list of attribute values to query.
             name (str): String representation of the attribute.
-        """
-        logging.info('Using %s filter [%s]', name, attribute_values)
-        validated = self.config_service.add_filter_rqt(name, attribute_values, *args, **kwargs)
-        logging.info('Resolves to [%s]', validated)
-        if validated:
-            self.filters += ("<%s(%s)> " % (name, validated))
+            valid_attributes (list/dict): All valid/possible attribute values.
+            allow_regex (bool): True to treat filter values as regular expressions, False to require exact matches
 
-    def handle_component_filter(self, attribute_values, filter_spec):
-        """ Applies any filter on the component attribute's values.
+        Returns:
+            set[str]: The attributes values to query with
+        """
+        report_info(f"Using {name} filter [{attribute_values}]")
+        filter_values = set()
+        for field in attribute_values.split(","):
+            if not valid_attributes or field in valid_attributes:
+                report_info("Classification [{field}] is valid")
+                filter_values.add(field)
+            elif allow_regex:
+                pattern = re.compile(field)
+                for element in valid_attributes:
+                    if pattern.search(element):
+                        filter_values.add(element)
+            else:
+                self.logger.error(f"Invalid {name} filter: {field}")
+        return filter_values
+
+    def handle_component_filter(self, attribute_values):
+        """Applies any filter on the component attribute's values.
 
         Args:
             attribute_values (str): A CSV list of attribute values to query.
-            filter_spec (sudsobject.Factory): Object to store filter attributes.
-        """
-        logging.info('Using Component filter [%s]', attribute_values)
-        parser = csv.reader([attribute_values])
 
+        Returns:
+            list[str]: The list of attributes
+        """
+        report_info(f"Using Component filter [{attribute_values}]")
+        parser = csv.reader([attribute_values])
+        filter_values = []
         for fields in parser:
             for _, field in enumerate(fields):
                 field = field.strip()
-                component_id = self.client.factory.create('componentIdDataObj')
-                component_id.name = field
-                filter_spec.componentIdList.append(component_id)
-        self.filters += ("<Components(%s)> " % (attribute_values))
+                filter_values.append(field)
+        return filter_values
 
-    def handle_custom_filter_attribute(self, custom, filter_spec):
-        """ Handles a custom attribute definition, and adds it to the filter spec if it's valid.
+    def defect_url(self, stream, cid):
+        """Get URL for given defect CID
+        https://machine1.eng.company.com/query/defects.htm?stream=StreamA&cid=1234
 
         Args:
-            custom (str): A custom query.
-            filter_spec (sudsobject.Factory): Object to store filter attributes.
+            stream (str): The name of the stream
+            cid (int): The CID of the given defect
 
-        Raises:
-            ValueError: Invalid custom attribute definition.
+        Returns:
+            str: The URL to the requested defect
         """
-        logging.info('Using attribute filter [%s]', custom)
-        # split the name:value[;name:value1[,value2]]
-        for fields in csv.reader([custom], delimiter=';'):
-            for i, name_value_pair in enumerate(fields):
-                name_value_pair = name_value_pair.strip()
-                valid, name, values = parse_two_part_term(name_value_pair, ':')
-                if valid:
-                    logging.info("attr (%d) [%s] = any of ...", i + 1, name)
-
-                    attribute_definition_id = self.client.factory.create('attributeDefinitionIdDataObj')
-                    attribute_definition_id.name = name
-
-                    filter_map = self.client.factory.create('attributeDefinitionValueFilterMapDataObj')
-                    filter_map.attributeDefinitionId = attribute_definition_id
-
-                    self._append_multiple_values(values, filter_map)
-
-                    filter_spec.attributeDefinitionValueFilterMap.append(filter_map)
-                else:
-                    raise ValueError('Invalid custom attribute definition [%s]' % name_value_pair)
-        self.filters += ("<Attrs(%s)> " % custom)
-
-    def _append_multiple_values(self, values, filter_map):
-        '''Append multiple values if there are multiple values delimited with comma'''
-        for value_fields in csv.reader([values], delimiter=','):
-            for value in value_fields:
-                logging.info("             [%s]", value)
-
-                attribute_value_id = self.client.factory.create('attributeValueIdDataObj')
-                attribute_value_id.name = value
-
-                filter_map.attributeValueIds.append(attribute_value_id)
-
-    def get_defect(self, cid, stream):
-        '''Get the details pertaining a specific CID - it may not have defect instance details if newly eliminated
-        (fixed)'''
-        logging.info('Fetching data for CID [%s] in stream [%s] ...', cid, stream)
-
-        merged_defect_id = self.client.factory.create('mergedDefectIdDataObj')
-        merged_defect_id.cid = cid
-
-        filter_spec = self.client.factory.create('streamDefectFilterSpecDataObj')
-        filter_spec.includeDefectInstances = True
-        filter_spec.includeHistory = True
-
-        stream_id = self.client.factory.create('streamIdDataObj')
-        stream_id.name = stream
-        filter_spec.streamIdList.append(stream_id)
-
-        return self.client.service.getStreamDefects(merged_defect_id, filter_spec)
-
-    def add_attribute_name_and_value(self, defect_state_spec, attr_name, attr_value):
-        '''Add attribute name and value to given defect state specification'''
-
-        # name value pair to update
-        attribute_definition_id = self.client.factory.create('attributeDefinitionIdDataObj')
-        attribute_definition_id.name = attr_name
-
-        attribute_value_id = self.client.factory.create('attributeValueIdDataObj')
-        attribute_value_id.name = attr_value
-
-        # wrap the name/value pair
-        defect_state_attr_value = self.client.factory.create('defectStateAttributeValueDataObj')
-        defect_state_attr_value.attributeDefinitionId = attribute_definition_id
-        defect_state_attr_value.attributeValueId = attribute_value_id
-
-        # add to our list
-        defect_state_spec.defectStateAttributeValues.append(defect_state_attr_value)
-
-    # update the external reference id to a third party
-    def update_ext_reference_attribute(self, cid, triage_store, ext_ref_id, ccomment=None):
-        '''Update external reference attribute for given CID'''
-        logging.info('Updating Coverity: CID [%s] in TS [%s] with Ext Ref [%s]', cid, triage_store, ext_ref_id)
-
-        # triage store identifier
-        triage_store_id = self.client.factory.create('triageStoreIdDataObj')
-        triage_store_id.name = triage_store
-
-        # CID to update
-        merged_defect_id = self.client.factory.create('mergedDefectIdDataObj')
-        merged_defect_id.cid = cid
-
-        # if an ext ref id value supplied
-        if bool(ext_ref_id):
-            attr_value = ext_ref_id
-            comment_value = 'Automatically recorded reference to new JIRA ticket.'
-        else:
-            # set to a space - which works as a blank without the WS complaining :-)
-            attr_value = " "
-            comment_value = 'Automatically cleared former JIRA ticket reference.'
-
-        # if a Coverity comment to tag on the end
-        if bool(ccomment):
-            comment_value += " " + ccomment
-        logging.info('Comment = [%s]', comment_value)
-
-        defect_state_spec = self.client.factory.create('defectStateSpecDataObj')
-
-        # name value pairs to add to this update
-        self.add_attribute_name_and_value(defect_state_spec, EXT_REFERENCE_ATTR_NAME, attr_value)
-        self.add_attribute_name_and_value(defect_state_spec, COMMENT_ATTR_NAME, comment_value)
-
-        # apply the update
-        return self.client.service.updateTriageForCIDsInTriageStore(triage_store_id, merged_defect_id,
-                                                                    defect_state_spec)
-
-    @staticmethod
-    def get_instance_impact(stream_defect, instance_number=1):
-        '''Get the current impact of the 'nth' incident of this issue (High/Medium/Low)'''
-        counter = instance_number
-        for instance in stream_defect.defectInstances:
-            counter -= 1
-            if counter == 0:
-                return instance.impact.name
-        return ""
-
-    @staticmethod
-    def get_value_for_named_attribute(stream_defect, attr_name):
-        '''Lookup the value of a named attribute'''
-        logging.info('Get value for cov attribute [%s]', attr_name)
-        for attr_value in stream_defect.defectStateAttributeValues:
-            if compare_strings(attr_value.attributeDefinitionId.name, attr_name):
-                logging.info('Resolves to [%s]', attr_value.attributeValueId.name)
-                return str(attr_value.attributeValueId.name)
-        logging.warning('Value for attribute [%s] not found', attr_name)
-        return ""
-
-    @staticmethod
-    def get_event_attribute_value(defect_state, name, value=None):
-        '''Get specified attribute was set to given matching value'''
-        if bool(value):
-            logging.info('Searching for attribute [%s] with value [%s]', name, value)
-        else:
-            logging.info('Searching for attribute [%s]', name)
-
-        for attr_value in defect_state.defectStateAttributeValues:
-            # check if we have the named attribute
-            if compare_strings(attr_value.attributeDefinitionId.name, name):
-                # if any value supplied or it matches requirement
-                if bool(attr_value.attributeValueId.name) and\
-                   (not value or compare_strings(attr_value.attributeValueId.name, value)):
-                    logging.info('Found [%s] = [%s]',
-                                 attr_value.attributeDefinitionId.name, attr_value.attributeValueId.name)
-                    return True, attr_value.attributeValueId.name
-                # break attribute name search - either no value or it doesn't match
-                break
-        logging.warning('Event for attribute [%s] not found', name)
-        return False, None
-
-    def seek_nth_match(self, event_history, nth_event, attr_name, attr_value):
-        '''Seek for a given attribute name-value pair in the triaging history'''
-        num_match = 0
-        for defect_state in event_history:
-            # look for the attribute name-value pair in this triage event
-            req_event_found, req_attr_value = self.get_event_attribute_value(defect_state, attr_name, attr_value)
-            if req_event_found:
-                num_match += 1
-                # correct one?
-                if num_match == nth_event:
-                    return True, defect_state, req_attr_value
-        return False, None, None
-
-    def get_event_for_attribute_change(self, stream_defect, nth_term, attr_name, attr_value=None):
-        '''Get event when specified attribute was set to given matching value'''
-        logging.info('Searching for triage event n=[%d] where attribute [%s] is set to [%s]',
-                     nth_term, attr_name, attr_value)
-
-        if nth_term > 0:
-            found, defect_state, value = self.seek_nth_match(stream_defect.history, nth_term, attr_name, attr_value)
-        else:
-            found, defect_state, value = self.seek_nth_match(reversed(stream_defect.history), abs(int(nth_term)),
-                                                             attr_name, attr_value)
-
-        return found, defect_state, value
-
-    def get_ext_reference_id(self, stream_defect):
-        '''Get external reference ID attribute value for given defect'''
-        return self.get_value_for_named_attribute(stream_defect, EXT_REFERENCE_ATTR_NAME)
-
-    def get_defect_status(self, stream_defect):
-        '''Get defect status attribute value for given defect'''
-        return self.get_value_for_named_attribute(stream_defect, DEFECT_STATUS_ATTR_NAME)
-
-    def get_classification(self, stream_defect):
-        '''Get classification attribute value for given defect'''
-        return self.get_value_for_named_attribute(stream_defect, CLASSIFICATION_ATTR_NAME)
-
-    def get_action(self, stream_defect):
-        '''Get action attribute value for given defect'''
-        return self.get_value_for_named_attribute(stream_defect, ACTION_ATTR_NAME)
-
-    def get_defect_url(self, stream, cid):
-        '''Get URL for given defect CID
-        http://machine1.eng.company.com/query/defects.htm?stream=StreamA&cid=1234
-        '''
-        return self.get_service_url('/query/defects.htm?stream=%s&cid=%s' % (stream, str(cid)), add_port=False)
+        params = {
+            'stream': stream,
+            'cid': cid
+        }
+        return f"{self.base_url}/query/defects.htm?{urlencode(params)}"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Sorry, no main here")

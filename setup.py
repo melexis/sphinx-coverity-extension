@@ -2,23 +2,28 @@
 
 from setuptools import setup, find_packages
 
-project_url = 'https://github.com/melexis/sphinx-coverity-extension'
+project_url = "https://github.com/melexis/sphinx-coverity-extension"
 
-requires = ['Sphinx>=2.1', 'docutils', 'setuptools_scm', 'matplotlib', 'mlx.traceability', 'suds-py3',
-            'urlextract']
+requires = [
+    "Sphinx>=2.1",
+    "docutils",
+    "setuptools_scm",
+    "matplotlib",
+    "mlx.traceability",
+    "urlextract",
+]
 
 
 setup(
-    name='mlx.coverity',
-    setup_requires=['setuptools-scm'],
+    name="mlx.coverity",
     use_scm_version=True,
     url=project_url,
-    license='GNU General Public License v3 (GPLv3)',
-    author='Crt Mori',
-    author_email='cmo@melexis.com',
-    description='Sphinx coverity extension from Melexis',
+    license="GNU General Public License v3 (GPLv3)",
+    author="Crt Mori",
+    author_email="cmo@melexis.com",
+    description="Sphinx coverity extension from Melexis",
     long_description=open("README.rst").read(),
-    long_description_content_type='text/x-rst',
+    long_description_content_type="text/x-rst",
     zip_safe=False,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -38,19 +43,19 @@ setup(
         'Topic :: Documentation :: Sphinx',
         'Topic :: Utilities',
     ],
-    platforms='any',
-    packages=find_packages(exclude=['tests', 'example']),
+    platforms="any",
+    packages=find_packages(exclude=["tests", "example"]),
     include_package_data=True,
     install_requires=requires,
     python_requires='>=3.8',
     namespace_packages=['mlx'],
     keywords=[
-        'coverity',
-        'reporting',
-        'reStructuredText coverity report',
-        'sphinx',
-        'ASPICE',
-        'ISO26262',
-        'ASIL',
+        "coverity",
+        "reporting",
+        "reStructuredText coverity report",
+        "sphinx",
+        "ASPICE",
+        "ISO26262",
+        "ASIL",
     ],
 )

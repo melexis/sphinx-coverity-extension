@@ -17,14 +17,16 @@ import sys
 import mlx.coverity
 import mlx.traceability
 from decouple import config
+import logging
+from sphinx.util.logging import getLogger
 from pkg_resources import get_distribution
 
-pkg_version = get_distribution('mlx.coverity').version
+pkg_version = get_distribution("mlx.coverity").version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../mlx'))
+sys.path.insert(0, os.path.abspath("../mlx"))
 
 # -- General configuration -----------------------------------------------------
 
@@ -34,34 +36,34 @@ sys.path.insert(0, os.path.abspath('../mlx'))
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.coverage',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.graphviz',
-    'mlx.traceability',
-    'mlx.coverity',
-    'sphinx_selective_exclude.eager_only',
-    'sphinx_selective_exclude.modindex_exclude',
-    'sphinx_selective_exclude.search_auto_exclude'
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.coverage",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.graphviz",
+    "mlx.traceability",
+    "mlx.coverity",
+    "sphinx_selective_exclude.eager_only",
+    "sphinx_selective_exclude.modindex_exclude",
+    "sphinx_selective_exclude.search_auto_exclude",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = u'Example'
-copyright = u'2017, Stein Heselmans'
+project = "Example"
+copyright = "2017, Stein Heselmans"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -84,7 +86,7 @@ release = version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ["_build"]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -101,7 +103,7 @@ exclude_patterns = ['_build']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -111,7 +113,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -140,8 +142,8 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-html_static_path.append(os.path.join(os.path.dirname(mlx.traceability.__file__), 'assets'))
+html_static_path = ["_static"]
+html_static_path.append(os.path.join(os.path.dirname(mlx.traceability.__file__), "assets"))
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -185,25 +187,22 @@ html_static_path.append(os.path.join(os.path.dirname(mlx.traceability.__file__),
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Exampledoc'
+htmlhelp_basename = "Exampledoc"
 
 # -- Options for LaTeX output --------------------------------------------------
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    'papersize': 'a4paper',
-
+    "papersize": "a4paper",
     # The font size ('10pt', '11pt' or '12pt').
-    'pointsize': '10pt',
-
+    "pointsize": "10pt",
     # Additional stuff for the LaTeX preamble.
-    'preamble': r'\setcounter{tocdepth}{3}\usepackage{pdflscape}',
+    "preamble": r"\setcounter{tocdepth}{3}\usepackage{pdflscape}",
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'Example.tex', u'Example Documentation',
-     u'Crt Mori', 'manual'),
+    ("index", "Example.tex", "Example Documentation", "Crt Mori", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -231,10 +230,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'example', u'Example Documentation',
-     [u'Crt Mori'], 1)
-]
+man_pages = [("index", "example", "Example Documentation", ["Crt Mori"], 1)]
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
@@ -246,9 +242,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'Example', u'Example Documentation',
-     u'Crt Mori', 'Example', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        "index",
+        "Example",
+        "Example Documentation",
+        "Crt Mori",
+        "Example",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -264,10 +266,10 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'Example'
-epub_author = u'Crt Mori'
-epub_publisher = u'Melexis'
-epub_copyright = u'2018, Crt Mori'
+epub_title = "Example"
+epub_author = "Crt Mori"
+epub_publisher = "Melexis"
+epub_copyright = "2018, Crt Mori"
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.
@@ -305,17 +307,25 @@ epub_copyright = u'2018, Crt Mori'
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {"http://docs.python.org/": None}
 
 # -- Options for coverity extension ----------------------------------------
 coverity_credentials = {
-    'transport': 'http',
-    'port': '8080',
-    'hostname': 'coverity.melexis.com',
-    'username': config('COVERITY_USERNAME'),
-    'password': config('COVERITY_PASSWORD'),
-    'stream': config('COVERITY_STREAM'),
+    "hostname": "coverity.melexis.com",
+    "username": config("COVERITY_USERNAME"),
+    "password": config("COVERITY_PASSWORD"),
+    "stream": config("COVERITY_STREAM"),
 }
 
 TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
 TRACEABILITY_ITEM_RELINK = {}
+
+log_level = os.environ.get('LOGLEVEL', None)
+if log_level:
+    try:
+        numeric_level = getattr(logging, log_level.upper(), None)
+        logger = getLogger("mlx.coverity_logging")
+        logger.setLevel(level=numeric_level)
+    except:
+        raise ValueError(f"Invalid log level: {log_level}")
+
