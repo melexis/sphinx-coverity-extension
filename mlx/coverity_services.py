@@ -3,13 +3,13 @@
 """Services and other utilities for Coverity scripting"""
 
 import csv
-import logging
 import re
 from collections import namedtuple
 from urllib.parse import urlencode
-
 import requests
 from sphinx.util.logging import getLogger
+
+from mlx.coverity_logging import report_info
 
 # Coverity built in Impact statuses
 IMPACT_LIST = ["High", "Medium", "Low"]
@@ -52,7 +52,7 @@ class CoverityDefectService:
         self._api_endpoint = f"https://{hostname}/api/{self.version}"
         self._checkers = []
         self._columns = {}
-        self.logger = getLogger("coverity_logging")
+        self.logger = getLogger("mlx.coverity_logging")
 
     @property
     def base_url(self):
@@ -256,7 +256,7 @@ class CoverityDefectService:
                     "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
-        logging.info("Querying Coverity for defects in stream [%s] ...", stream)
+        report_info(f"Querying Coverity for defects in stream [{stream}] ...",)
         query_filters = [
             {
                 "columnKey": "streams",
@@ -306,7 +306,7 @@ class CoverityDefectService:
             }
         }
 
-        logging.info("Running Coverity query...")
+        report_info("Running Coverity query...")
         return self.retrieve_issues(data)
 
     def handle_attribute_filter(self, attribute_values, name, valid_attributes, allow_regex=False):
@@ -322,11 +322,11 @@ class CoverityDefectService:
         Returns:
             set[str]: The attributes values to query with
         """
-        logging.info("Using %s filter [%s]", name, attribute_values)
+        report_info(f"Using {name} filter [{attribute_values}]")
         filter_values = set()
         for field in attribute_values.split(","):
             if not valid_attributes or field in valid_attributes:
-                logging.info("Classification [%s] is valid", field)
+                report_info("Classification [{field}] is valid")
                 filter_values.add(field)
             elif allow_regex:
                 pattern = re.compile(field)
@@ -334,7 +334,7 @@ class CoverityDefectService:
                     if pattern.search(element):
                         filter_values.add(element)
             else:
-                logging.error("Invalid %s filter: %s", name, field)
+                self.logger.error(f"Invalid {name} filter: {field}")
         return filter_values
 
     def handle_component_filter(self, attribute_values):
@@ -346,7 +346,7 @@ class CoverityDefectService:
         Returns:
             list[str]: The list of attributes
         """
-        logging.info("Using Component filter [%s]", attribute_values)
+        report_info(f"Using Component filter [{attribute_values}]")
         parser = csv.reader([attribute_values])
         filter_values = []
         for fields in parser:

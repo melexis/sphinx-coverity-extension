@@ -8,6 +8,10 @@ PYTHONWARNINGS?= default::DeprecationWarning
 PAPER         ?=
 BUILDDIR      ?= _build
 
+# logging variables
+LOGLEVEL =? WARNING
+export LOGLEVEL=${LOGLEVEL}
+
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
