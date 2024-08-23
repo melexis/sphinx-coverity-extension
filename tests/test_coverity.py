@@ -224,11 +224,11 @@ class TestCoverity(TestCase):
         fake_node["filters"] = node_filters
         with patch.object(CoverityDefectService, "get_defects") as mock_method:
             sphinx_coverity_connector.get_filtered_defects(fake_node)
-            mock_method.assert_called_once_with(self.fake_stream, fake_snapshot, fake_node["filters"], column_names)
+            mock_method.assert_called_once_with(self.fake_stream, fake_node["filters"], column_names, fake_snapshot)
             fake_node["chart_attribute"] = "Checker"
             column_names.add("Checker")
             sphinx_coverity_connector.get_filtered_defects(fake_node)
-            mock_method.assert_called_with(self.fake_stream, fake_snapshot, fake_node["filters"], column_names)
+            mock_method.assert_called_with(self.fake_stream, fake_node["filters"], column_names, fake_snapshot)
 
     def test_failed_login(self):
         """Test a failed login by mocking the status code when validating the stream."""
