@@ -336,7 +336,7 @@ class CoverityDefectService:
         filter_values = set()
         for field in attribute_values.split(","):
             if not valid_attributes or field in valid_attributes:
-                report_info("Classification [{field}] is valid")
+                report_info(f"Classification [{field}] is valid")
                 filter_values.add(field)
             elif allow_regex:
                 pattern = re.compile(field)
