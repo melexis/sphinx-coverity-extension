@@ -211,7 +211,7 @@ class TestCoverity(TestCase):
         sphinx_coverity_connector = SphinxCoverityConnector()
         sphinx_coverity_connector.coverity_service = self.initialize_coverity_service(login=False)
         sphinx_coverity_connector.stream = self.fake_stream
-        sphinx_coverity_connector.snaphsot = fake_snapshot
+        sphinx_coverity_connector.snapshot = fake_snapshot
         node_filters = {
             "checker": "MISRA", "impact": None, "kind": None,
             "classification": "Intentional,Bug,Pending,Unclassified", "action": None, "component": None,
