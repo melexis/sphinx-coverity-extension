@@ -46,7 +46,7 @@ class SphinxCoverityConnector:
     \\makeatother"""
 
         self.stream = app.config.coverity_credentials["stream"]
-        self.snaphsot = app.config.coverity_credentials["snapshot"]
+        self.snapshot = app.config.coverity_credentials["snapshot"]
         # Login to Coverity and obtain stream information
         try:
             self.input_credentials(app.config.coverity_credentials)
@@ -61,9 +61,9 @@ class SphinxCoverityConnector:
             report_info("Verify the given stream name... ", True)
             self.coverity_service.validate_stream(self.stream)
             report_info("done")
-            if self.snaphsot:
+            if self.snapshot:
                 report_info("Verify the given snapshot ID and obtain all enabled checkers... ", True)
-                self.coverity_service.validate_snapshot(self.snaphsot)
+                self.coverity_service.validate_snapshot(self.snapshot)
                 report_info("done")
             # Get all column keys
             report_info("obtaining all column keys... ", True)
@@ -150,7 +150,7 @@ class SphinxCoverityConnector:
         column_names = set(node["col"])
         if "chart_attribute" in node and node["chart_attribute"].upper() in node.column_map:
             column_names.add(node["chart_attribute"])
-        defects = self.coverity_service.get_defects(self.stream, node["filters"], column_names, self.snaphsot)
+        defects = self.coverity_service.get_defects(self.stream, node["filters"], column_names, self.snapshot)
         report_info("%d received" % (defects["totalRows"]))
         report_info("building defects table and/or chart... ", True)
         return defects
