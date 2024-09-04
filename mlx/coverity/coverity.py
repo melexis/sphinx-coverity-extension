@@ -10,7 +10,6 @@ See README.rst for more details.
 from getpass import getpass
 import logging
 import os
-from sphinx.util.logging import getLogger
 from urllib.error import URLError, HTTPError
 
 from docutils import nodes
