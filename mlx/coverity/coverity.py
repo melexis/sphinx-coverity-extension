@@ -165,8 +165,8 @@ def setup(app):
     try:
         numeric_level = getattr(logging, log_level.upper())
         LOGGER.setLevel(numeric_level)
-    except:
-        raise ValueError(f"Invalid log level: {log_level}")
+    except AttributeError:
+        raise ValueError(f"Invalid LOGLEVEL: {log_level}")
 
     # Create default configuration. Can be customized in conf.py
     app.add_config_value(
