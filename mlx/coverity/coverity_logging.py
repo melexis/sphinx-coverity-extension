@@ -1,10 +1,8 @@
 """Module to provide functions that accommodate logging."""
 
 from sphinx.util.logging import getLogger
-from logging import WARNING
 
 LOGGER = getLogger(__name__)
-LOGGER.setLevel(WARNING)
 
 
 def report_warning(msg, docname, lineno=None):

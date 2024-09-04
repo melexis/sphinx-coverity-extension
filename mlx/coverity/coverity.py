@@ -8,12 +8,15 @@ See README.rst for more details.
 """
 
 from getpass import getpass
+import logging
+import os
+from sphinx.util.logging import getLogger
 from urllib.error import URLError, HTTPError
 
 from docutils import nodes
 
 from .__coverity_version__ import __version__
-from .coverity_logging import report_info, report_warning
+from .coverity_logging import report_info, report_warning, LOGGER
 from .coverity_services import CoverityDefectService
 from .coverity_directives.coverity_defect_list import (
     CoverityDefect,
@@ -159,6 +162,13 @@ class SphinxCoverityConnector:
 # Extension setup
 def setup(app):
     """Extension setup"""
+    log_level = os.environ.get('LOGLEVEL', "WARNING")
+    try:
+        numeric_level = getattr(logging, log_level.upper())
+        LOGGER.setLevel(numeric_level)
+    except:
+        raise ValueError(f"Invalid log level: {log_level}")
+
     # Create default configuration. Can be customized in conf.py
     app.add_config_value(
         "coverity_credentials",

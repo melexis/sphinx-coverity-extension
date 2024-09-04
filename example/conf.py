@@ -15,10 +15,9 @@ import os
 import sys
 
 import mlx.coverity
-from mlx.coverity import __version__, coverity_logging
+from mlx.coverity import __version__
 import mlx.traceability
 from decouple import config
-import logging
 
 pkg_version = __version__
 
@@ -319,12 +318,4 @@ coverity_credentials = {
 
 TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
 TRACEABILITY_ITEM_RELINK = {}
-
-log_level = os.environ.get('LOGLEVEL', None)
-if log_level:
-    try:
-        numeric_level = getattr(logging, log_level.upper(), None)
-        coverity_logging.LOGGER.setLevel(level=numeric_level)
-    except:
-        raise ValueError(f"Invalid log level: {log_level}")
 
