@@ -218,7 +218,7 @@ class CoverityDefectService:
             err_msg = response.json()["message"]
         except (requests.exceptions.JSONDecodeError, KeyError):
             err_msg = response.content.decode()
-        self.logger.warning(err_msg)
+        self.logger.error(err_msg)
         return response.raise_for_status()
 
     def assemble_query_filter(self, column_name, filter_values, matcher_type):
@@ -277,7 +277,7 @@ class CoverityDefectService:
                     "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
-        report_info(f"Querying Coverity for defects in stream [{stream}] ...",)
+        report_info(f"Querying Coverity for defects in stream [{stream}] ...")
         query_filters = [
             {
                 "columnKey": "streams",
@@ -325,8 +325,10 @@ class CoverityDefectService:
             }
         }
 
-        report_info("Running Coverity query...")
-        return self.retrieve_issues(data)
+        defects_data = self.retrieve_issues(data)
+        report_info("done")
+
+        return defects_data
 
     def handle_attribute_filter(self, attribute_values, name, valid_attributes, allow_regex=False):
         """Process the given CSV list of attribute values by filtering out the invalid ones while logging an error.
@@ -341,7 +343,7 @@ class CoverityDefectService:
         Returns:
             set[str]: The attributes values to query with
         """
-        report_info(f"Using {name} filter [{attribute_values}]")
+        report_info(f"Using {name!r} filter [{attribute_values}]")
         filter_values = set()
         for field in attribute_values.split(","):
             if not valid_attributes or field in valid_attributes:
@@ -365,7 +367,7 @@ class CoverityDefectService:
         Returns:
             list[str]: The list of attributes
         """
-        report_info(f"Using Component filter [{attribute_values}]")
+        report_info(f"Using 'Component' filter [{attribute_values}]")
         parser = csv.reader([attribute_values])
         filter_values = []
         for fields in parser:
