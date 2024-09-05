@@ -158,6 +158,15 @@ class SphinxCoverityConnector:
         report_info("%d received" % (defects["totalRows"]))
         return defects
 
+def validate_coverity_credentials(app):
+    """Validate the configuration of coverity_credentials.
+
+    Args:
+        app (sphinx.application.Sphinx): Sphinx' application object.
+    """
+    for required_element in ["hostname", "username", "password", "stream"]:
+        if required_element not in app.config.coverity_credentials:
+            LOGGER.error(f"{required_element} is a required configuration in 'coverity_credentials' in conf.py")
 
 # Extension setup
 def setup(app):
@@ -172,14 +181,12 @@ def setup(app):
     # Create default configuration. Can be customized in conf.py
     app.add_config_value(
         "coverity_credentials",
-        {
-            "hostname": "scan.coverity.com",
-            "username": "reporter",
-            "password": "coverity",
-            "stream": "some_stream",
-        },
+        {},
         "env",
+        dict,
     )
+
+    validate_coverity_credentials(app)
 
     app.add_config_value("TRACEABILITY_ITEM_ID_REGEX", r"([A-Z_]+-[A-Z0-9_]+)", "env")
     app.add_config_value("TRACEABILITY_ITEM_RELINK", {}, "env")
