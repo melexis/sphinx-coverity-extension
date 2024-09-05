@@ -247,8 +247,9 @@ class CoverityDefectService:
         }
 
     def get_defects(self, stream, filters, column_names, snapshot):
-        """Gets a list of defects for given stream, snapshot ID, filters and column names.
-        If the snapshot is empty, the last snapshot is taken.
+        """Gets a list of defects for the given stream, filters and column names.
+
+        If no snapshot ID is given, the last snapshot is taken.
         If a column name does not match the name of the `columns` property, the column can not be obtained because
         it need the correct corresponding column key.
         Column key `cid` is always obtained to use later in other functions.
