@@ -46,7 +46,7 @@ class SphinxCoverityConnector:
     \\makeatother"""
 
         self.stream = app.config.coverity_credentials["stream"]
-        self.snapshot = app.config.coverity_credentials["snapshot"]
+        self.snapshot = app.config.coverity_credentials.get("snapshot", "")
         # Login to Coverity and obtain stream information
         try:
             self.input_credentials(app.config.coverity_credentials)
