@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 import requests
 from sphinx.util.logging import getLogger
 
-from mlx.coverity import report_info
+from mlx.coverity import report_info, report_warning
 
 # Coverity built in Impact statuses
 IMPACT_LIST = ["High", "Medium", "Low"]
@@ -53,6 +53,7 @@ class CoverityDefectService:
         self._checkers = []
         self._columns = {}
         self.logger = getLogger("mlx.coverity_logging")
+        self.valid_snapshot = False
 
     @property
     def base_url(self):
@@ -128,12 +129,19 @@ class CoverityDefectService:
     def validate_snapshot(self, snapshot):
         """Validate snapshot by retrieving the specified snapshot.
         When the request fails, the snapshot does not exist or the user does not have acces to it.
+        In this case a warning is logged and continues with the latest snapshot.
 
         Args:
             snapshot (str): The snapshot ID
         """
         url = f"{self.api_endpoint}/snapshots/{snapshot}"
-        self._request(url)
+        response = self.session.get(url)
+        if response.ok:
+            self.valid_snapshot = True
+            report_info(f"Snapshot ID {snapshot} is valid")
+        else:
+            report_warning(f"No snapshot found for ID {snapshot}; Continue with using the latest snapshot.", "")
+            self.valid_snapshot = False
 
     def retrieve_issues(self, filters):
         """Retrieve issues from the server (Coverity Connect).
@@ -210,7 +218,7 @@ class CoverityDefectService:
             err_msg = response.json()["message"]
         except (requests.exceptions.JSONDecodeError, KeyError):
             err_msg = response.content.decode()
-        self.logger.warning(err_msg)
+        self.logger.error(err_msg)
         return response.raise_for_status()
 
     def assemble_query_filter(self, column_name, filter_values, matcher_type):
@@ -247,8 +255,9 @@ class CoverityDefectService:
         }
 
     def get_defects(self, stream, filters, column_names, snapshot):
-        """Gets a list of defects for given stream, snapshot ID, filters and column names.
-        If the snapshot is empty, the last snapshot is taken.
+        """Gets a list of defects for the given stream, filters and column names.
+
+        If no snapshot ID is given, the last snapshot is taken.
         If a column name does not match the name of the `columns` property, the column can not be obtained because
         it need the correct corresponding column key.
         Column key `cid` is always obtained to use later in other functions.
@@ -268,7 +277,7 @@ class CoverityDefectService:
                     "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
-        report_info(f"Querying Coverity for defects in stream [{stream}] ...",)
+        report_info(f"Querying Coverity for defects in stream [{stream}] ...")
         query_filters = [
             {
                 "columnKey": "streams",
@@ -303,7 +312,7 @@ class CoverityDefectService:
         if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
             query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
-        scope = snapshot if snapshot else "last()"
+        scope = snapshot if snapshot and self.valid_snapshot else "last()"
 
         data = {
             "filters": query_filters,
@@ -316,8 +325,10 @@ class CoverityDefectService:
             }
         }
 
-        report_info("Running Coverity query...")
-        return self.retrieve_issues(data)
+        defects_data = self.retrieve_issues(data)
+        report_info("done")
+
+        return defects_data
 
     def handle_attribute_filter(self, attribute_values, name, valid_attributes, allow_regex=False):
         """Process the given CSV list of attribute values by filtering out the invalid ones while logging an error.
@@ -332,7 +343,7 @@ class CoverityDefectService:
         Returns:
             set[str]: The attributes values to query with
         """
-        report_info(f"Using {name} filter [{attribute_values}]")
+        report_info(f"Using {name!r} filter [{attribute_values}]")
         filter_values = set()
         for field in attribute_values.split(","):
             if not valid_attributes or field in valid_attributes:
@@ -356,7 +367,7 @@ class CoverityDefectService:
         Returns:
             list[str]: The list of attributes
         """
-        report_info(f"Using Component filter [{attribute_values}]")
+        report_info(f"Using 'Component' filter [{attribute_values}]")
         parser = csv.reader([attribute_values])
         filter_values = []
         for fields in parser:
