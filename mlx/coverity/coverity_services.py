@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 import requests
 from sphinx.util.logging import getLogger
 
-from mlx.coverity import report_info
+from mlx.coverity import report_info, report_warning
 
 # Coverity built in Impact statuses
 IMPACT_LIST = ["High", "Medium", "Low"]
@@ -53,6 +53,7 @@ class CoverityDefectService:
         self._checkers = []
         self._columns = {}
         self.logger = getLogger("mlx.coverity_logging")
+        self.valid_snapshot = False
 
     @property
     def base_url(self):
@@ -128,12 +129,19 @@ class CoverityDefectService:
     def validate_snapshot(self, snapshot):
         """Validate snapshot by retrieving the specified snapshot.
         When the request fails, the snapshot does not exist or the user does not have acces to it.
+        In this case a warning is logged and continues with the latest snapshot.
 
         Args:
             snapshot (str): The snapshot ID
         """
         url = f"{self.api_endpoint}/snapshots/{snapshot}"
-        self._request(url)
+        response = self.session.get(url)
+        if response.ok:
+            self.valid_snapshot = True
+            report_info(f"Snapshot ID {snapshot} is valid")
+        else:
+            report_warning(f"No snapshot found for ID {snapshot}; Continue with using the latest snapshot.", "")
+            self.valid_snapshot = False
 
     def retrieve_issues(self, filters):
         """Retrieve issues from the server (Coverity Connect).
@@ -304,7 +312,7 @@ class CoverityDefectService:
         if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
             query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
-        scope = snapshot if snapshot else "last()"
+        scope = snapshot if snapshot and self.valid_snapshot else "last()"
 
         data = {
             "filters": query_filters,
