@@ -45,7 +45,7 @@ setup(
     platforms="any",
     packages=find_namespace_packages(where="."),
     package_dir={"": "."},
-    include_package_data=True,
+    include_package_data=False,
     install_requires=requires,
     python_requires='>=3.8',
     namespace_packages=['mlx'],
