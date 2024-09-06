@@ -5,11 +5,10 @@ include README.rst
 include LICENSE
 include NOTICE
 exclude tox.ini
+exclude .pylintrc
 
 recursive-include mlx/coverity *.py
 exclude mlx/coverity/__coverity_version__.py
-exclude .pylintrc
-recursive-exclude example *
 recursive-exclude build *
 recursive-exclude example *
 recursive-exclude tests *
