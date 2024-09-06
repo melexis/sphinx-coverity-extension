@@ -4,7 +4,7 @@ include README.rst
 # added by check_manifest.py
 include LICENSE
 include NOTICE
-include tox.ini
+exclude tox.ini
 
 recursive-include mlx/coverity *.py
 exclude mlx/coverity/__coverity_version__.py
@@ -13,3 +13,4 @@ recursive-exclude example *
 recursive-exclude build *
 recursive-exclude example *
 recursive-exclude tests *
+global-exclude *.py[co]
