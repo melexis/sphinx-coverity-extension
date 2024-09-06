@@ -95,7 +95,10 @@ Example of custom credentials for the plugin:
         'username': 'reporter',
         'password': 'coverity',
         'stream': 'some_coverity_stream',
+        'snapshot': '1',
     }
+
+Snapshot is optional. When an empty string is given, the last snapshot is used.
 
 Link to traceability items
 ==========================
