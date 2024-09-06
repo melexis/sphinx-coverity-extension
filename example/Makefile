@@ -10,7 +10,6 @@ BUILDDIR      ?= _build
 
 # logging variables
 DEBUG ?= 0
-LOGLEVEL ?= WARNING
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -50,7 +49,6 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 html:
-	export LOGLEVEL=$(LOGLEVEL)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

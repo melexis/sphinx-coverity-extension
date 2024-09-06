@@ -9,7 +9,8 @@ from urllib.parse import urlencode
 import requests
 from sphinx.util.logging import getLogger
 
-from mlx.coverity import report_info, report_warning
+
+LOGGER = getLogger("mlx.coverity")
 
 # Coverity built in Impact statuses
 IMPACT_LIST = ["High", "Medium", "Low"]
@@ -52,7 +53,6 @@ class CoverityDefectService:
         self._api_endpoint = f"https://{hostname}/api/{self.version}"
         self._checkers = []
         self._columns = {}
-        self.logger = getLogger("mlx.coverity_logging")
         self.valid_snapshot = False
 
     @property
@@ -103,7 +103,7 @@ class CoverityDefectService:
             elif column_name_lower in self.columns:
                 column_keys.add(self.columns[column_name_lower])
             else:
-                self.logger.warning(f"Invalid column name {column_name!r}")
+                LOGGER.warning(f"Invalid column name {column_name!r}")
         return column_keys
 
     def login(self, username, password):
@@ -138,9 +138,9 @@ class CoverityDefectService:
         response = self.session.get(url)
         if response.ok:
             self.valid_snapshot = True
-            report_info(f"Snapshot ID {snapshot} is valid")
+            LOGGER.info(f"Snapshot ID {snapshot} is valid")
         else:
-            report_warning(f"No snapshot found for ID {snapshot}; Continue with using the latest snapshot.", "")
+            LOGGER.warning(f"No snapshot found for ID {snapshot}; Continue with using the latest snapshot.")
             self.valid_snapshot = False
 
     def retrieve_issues(self, filters):
@@ -218,7 +218,7 @@ class CoverityDefectService:
             err_msg = response.json()["message"]
         except (requests.exceptions.JSONDecodeError, KeyError):
             err_msg = response.content.decode()
-        self.logger.error(err_msg)
+        LOGGER.error(err_msg)
         return response.raise_for_status()
 
     def assemble_query_filter(self, column_name, filter_values, matcher_type):
@@ -246,7 +246,7 @@ class CoverityDefectService:
             matchers.append(matcher)
 
         if column_name not in self.columns:
-            self.logger.warning(f"Invalid column name {column_name!r}; Retrieve column keys first.")
+            LOGGER.warning(f"Invalid column name {column_name!r}; Retrieve column keys first.")
 
         return {
             "columnKey": self.columns[column_name],
@@ -277,7 +277,7 @@ class CoverityDefectService:
                     "rows": list of [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
-        report_info(f"Querying Coverity for defects in stream [{stream}] ...")
+        LOGGER.info(f"Querying Coverity for defects in stream [{stream}] ...")
         query_filters = [
             {
                 "columnKey": "streams",
@@ -326,7 +326,7 @@ class CoverityDefectService:
         }
 
         defects_data = self.retrieve_issues(data)
-        report_info("done")
+        LOGGER.info("done")
 
         return defects_data
 
@@ -343,11 +343,11 @@ class CoverityDefectService:
         Returns:
             set[str]: The attributes values to query with
         """
-        report_info(f"Using {name!r} filter [{attribute_values}]")
+        LOGGER.info(f"Using {name!r} filter [{attribute_values}]")
         filter_values = set()
         for field in attribute_values.split(","):
             if not valid_attributes or field in valid_attributes:
-                report_info(f"Classification [{field}] is valid")
+                LOGGER.info(f"Classification [{field}] is valid")
                 filter_values.add(field)
             elif allow_regex:
                 pattern = re.compile(field)
@@ -355,7 +355,7 @@ class CoverityDefectService:
                     if pattern.search(element):
                         filter_values.add(element)
             else:
-                self.logger.error(f"Invalid {name} filter: {field}")
+                LOGGER.error(f"Invalid {name} filter: {field}")
         return filter_values
 
     def handle_component_filter(self, attribute_values):
@@ -367,7 +367,7 @@ class CoverityDefectService:
         Returns:
             list[str]: The list of attributes
         """
-        report_info(f"Using 'Component' filter [{attribute_values}]")
+        LOGGER.info(f"Using 'Component' filter [{attribute_values}]")
         parser = csv.reader([attribute_values])
         filter_values = []
         for fields in parser:
