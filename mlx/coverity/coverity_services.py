@@ -139,7 +139,7 @@ class CoverityDefectService:
             LOGGER.info(f"Snapshot ID {snapshot} is valid")
             valid_snapshot = snapshot
         else:
-            LOGGER.warning(f"No snapshot found for ID {snapshot}; Continue with using the latest snapshot.")
+            LOGGER.warning(f"No snapshot found for ID {snapshot}, using the latest snapshot instead")
             valid_snapshot = "last()"
 
         return valid_snapshot
