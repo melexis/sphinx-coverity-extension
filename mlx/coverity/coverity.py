@@ -22,6 +22,7 @@ from .coverity_directives.coverity_defect_list import (
 
 LOGGER = getLogger("mlx.coverity")
 
+
 def validate_coverity_credentials(config):
     """Validate the configuration of coverity_credentials.
 
