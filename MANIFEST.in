@@ -6,9 +6,14 @@ include LICENSE
 include NOTICE
 exclude tox.ini
 exclude .pylintrc
+exclude .gitignore
+exclude .codeclimate.yml
+exclude codecov.yml
+exclude warnings_config.yml
 
 recursive-include mlx/coverity *.py
 exclude mlx/coverity/__coverity_version__.py
+recursive-exclude .github *
 recursive-exclude build *
 recursive-exclude example *
 recursive-exclude tests *
