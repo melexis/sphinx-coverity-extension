@@ -46,7 +46,7 @@ class SphinxCoverityConnector:
     \\makeatother"""
 
         self.stream = app.config.coverity_credentials["stream"]
-
+        self.snapshot = app.config.coverity_credentials.get("snapshot", "")
         # Login to Coverity and obtain stream information
         try:
             self.input_credentials(app.config.coverity_credentials)
@@ -58,15 +58,21 @@ class SphinxCoverityConnector:
                 app.config.coverity_credentials["username"], app.config.coverity_credentials["password"]
             )
             report_info("done")
-            report_info("Verify the given stream name... ", True)
+            report_info("Verify the given stream name... ")
             self.coverity_service.validate_stream(self.stream)
             report_info("done")
+            if self.snapshot:
+                report_info("Verify the given snapshot ID and obtain all enabled checkers... ")
+                self.snapshot = self.coverity_service.validate_snapshot(self.snapshot)
+                report_info("done")
+            else:
+                self.snapshot = "last()"
             # Get all column keys
-            report_info("obtaining all column keys... ", True)
+            report_info("obtaining all column keys... ")
             self.coverity_service.retrieve_column_keys()
             report_info("done")
             # Get all checkers
-            report_info("obtaining all checkers... ", True)
+            report_info("obtaining all checkers... ")
             self.coverity_service.retrieve_checkers()
             report_info("done")
         except (URLError, HTTPError, Exception, ValueError) as error_info:  # pylint: disable=broad-except
@@ -100,7 +106,13 @@ class SphinxCoverityConnector:
             # Get items from server
             try:
                 defects = self.get_filtered_defects(node)
-                node.perform_replacement(defects, self, app, fromdocname)
+                if defects["totalRows"] == -1:
+                    error_message = "There are no defects with the specified filters"
+                    report_warning(error_message, fromdocname, lineno=node["line"])
+                else:
+                    report_info("building defects table and/or chart... ", True)
+                    node.perform_replacement(defects, self, app, fromdocname)
+                    report_info("done")
             except (URLError, AttributeError, Exception) as err:  # pylint: disable=broad-except
                 error_message = f"failed to process coverity-list with {err!r}"
                 report_warning(error_message, fromdocname, lineno=node["line"])
@@ -138,13 +150,12 @@ class SphinxCoverityConnector:
                     "rows": [list of dictionaries {"key": <key>, "value": <value>}]
                 }
         """
-        report_info("obtaining defects... ", True)
+        report_info("obtaining defects... ")
         column_names = set(node["col"])
         if "chart_attribute" in node and node["chart_attribute"].upper() in node.column_map:
             column_names.add(node["chart_attribute"])
-        defects = self.coverity_service.get_defects(self.stream, node["filters"], column_names)
+        defects = self.coverity_service.get_defects(self.stream, node["filters"], column_names, self.snapshot)
         report_info("%d received" % (defects["totalRows"]))
-        report_info("building defects table and/or chart... ", True)
         return defects
 
 

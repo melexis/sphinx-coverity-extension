@@ -15,11 +15,10 @@ import os
 import sys
 
 import mlx.coverity
-from mlx.coverity import __version__
+from mlx.coverity import __version__, coverity_logging
 import mlx.traceability
 from decouple import config
 import logging
-from sphinx.util.logging import getLogger
 
 pkg_version = __version__
 
@@ -315,6 +314,7 @@ coverity_credentials = {
     "username": config("COVERITY_USERNAME"),
     "password": config("COVERITY_PASSWORD"),
     "stream": config("COVERITY_STREAM"),
+    "snapshot": config("COVERITY_SNAPSHOT"),
 }
 
 TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
@@ -324,8 +324,7 @@ log_level = os.environ.get('LOGLEVEL', None)
 if log_level:
     try:
         numeric_level = getattr(logging, log_level.upper(), None)
-        logger = getLogger("mlx.coverity_logging")
-        logger.setLevel(level=numeric_level)
+        coverity_logging.LOGGER.setLevel(level=numeric_level)
     except:
         raise ValueError(f"Invalid log level: {log_level}")
 

@@ -101,7 +101,6 @@ class CoverityDefect(ItemElement):
             self._prepare_labels_and_values(combined_labels, defects["totalRows"])
             top_node += self.build_pie_chart(env)
 
-        report_info("done")
         self.replace_self(top_node)
 
     def initialize_table(self):
