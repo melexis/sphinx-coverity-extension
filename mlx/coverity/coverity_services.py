@@ -53,7 +53,6 @@ class CoverityDefectService:
         self._checkers = []
         self._columns = {}
         self.logger = getLogger("mlx.coverity_logging")
-        self.valid_snapshot = False
 
     @property
     def base_url(self):
@@ -137,11 +136,13 @@ class CoverityDefectService:
         url = f"{self.api_endpoint}/snapshots/{snapshot}"
         response = self.session.get(url)
         if response.ok:
-            self.valid_snapshot = True
             report_info(f"Snapshot ID {snapshot} is valid")
+            valid_snapshot = snapshot
         else:
             report_warning(f"No snapshot found for ID {snapshot}; Continue with using the latest snapshot.", "")
-            self.valid_snapshot = False
+            valid_snapshot = "last()"
+
+        return valid_snapshot
 
     def retrieve_issues(self, filters):
         """Retrieve issues from the server (Coverity Connect).
@@ -312,14 +313,12 @@ class CoverityDefectService:
         if (filter := filters["component"]) and (filter_values := self.handle_component_filter(filter)):
             query_filters.append(self.assemble_query_filter("Component", filter_values, "nameMatcher"))
 
-        scope = snapshot if snapshot and self.valid_snapshot else "last()"
-
         data = {
             "filters": query_filters,
             "columns": list(self.column_keys(column_names)),
             "snapshotScope": {
                 "show": {
-                    "scope": scope,
+                    "scope": snapshot,
                     "includeOutdatedSnapshots": False
                 }
             }
