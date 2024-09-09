@@ -4,27 +4,17 @@ include README.rst
 # added by check_manifest.py
 include LICENSE
 include NOTICE
-include tox.ini
+exclude tox.ini
+exclude .pylintrc
+exclude .gitignore
+exclude .codeclimate.yml
+exclude codecov.yml
+exclude warnings_config.yml
+
 recursive-include mlx/coverity *.py
 exclude mlx/coverity/__coverity_version__.py
-recursive-include example *.bat
-recursive-include example *.py
-recursive-include example *.rst
-recursive-include example Makefile
-recursive-include tests *.py
-recursive-include tests *.rst
-recursive-include tests *.txt
-recursive-include tests *.json
-
-exclude example/.env.example
-exclude .pylintrc
-recursive-exclude example _build *
-
-# added by check_manifest.py
-recursive-include example *.css
-
-# added by check_manifest.py
-recursive-include tests *.xml
-
-# added by check-manifest
-include *.json
+recursive-exclude .github *
+recursive-exclude build *
+recursive-exclude example *
+recursive-exclude tests *
+global-exclude *.py[co]
