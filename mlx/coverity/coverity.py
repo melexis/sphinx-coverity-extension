@@ -162,7 +162,7 @@ class SphinxCoverityConnector:
         return defects
 
 
-def validate_coverity_credentials(app):
+def validate_coverity_credentials(config):
     """Validate the configuration of coverity_credentials.
 
     Args:
