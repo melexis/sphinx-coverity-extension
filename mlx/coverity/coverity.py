@@ -166,7 +166,7 @@ def validate_coverity_credentials(config):
     """Validate the configuration of coverity_credentials.
 
     Args:
-        app (sphinx.application.Sphinx): Sphinx' application object.
+        config (dict): The configuration `coverity_credentials`.
     """
     for required_element in ["hostname", "username", "password", "stream"]:
         if required_element not in config:
