@@ -67,8 +67,10 @@ class SphinxCoverityConnector:
             LOGGER.info("done")
             if self.snapshot:
                 LOGGER.info("Verify the given snapshot ID and obtain all enabled checkers... ")
-                self.coverity_service.validate_snapshot(self.snapshot)
+                self.snapshot = self.coverity_service.validate_snapshot(self.snapshot)
                 LOGGER.info("done")
+            else:
+                self.snapshot = "last()"
             # Get all column keys
             LOGGER.info("obtaining all column keys... ")
             self.coverity_service.retrieve_column_keys()

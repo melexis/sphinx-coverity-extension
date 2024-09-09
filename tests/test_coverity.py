@@ -142,7 +142,8 @@ class TestCoverity(TestCase):
         """Check get defects with different filters. Check if the response of `get_defects` is the same as expected.
         The data is obtained from the filters.py file.
         Due to the usage of set in `get_defects` (column_keys), the function `ordered` is used to compare the returned
-        data of the request where order does not matter."""
+        data of the request where order does not matter.
+        """
         with open(f"{TEST_FOLDER}/columns_keys.json", "r") as content:
             column_keys = json.loads(content.read())
         self.fake_checkers = {
@@ -167,7 +168,7 @@ class TestCoverity(TestCase):
             coverity_service.retrieve_column_keys()
             # Get defects
             with patch.object(CoverityDefectService, "retrieve_issues") as mock_method:
-                coverity_service.get_defects(self.fake_stream, filters, column_names, "")
+                coverity_service.get_defects(self.fake_stream, filters, column_names, "last()")
                 data = mock_method.call_args[0][0]
                 mock_method.assert_called_once()
                 assert ordered(data) == ordered(request_data)

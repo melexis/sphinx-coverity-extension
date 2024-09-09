@@ -313,7 +313,7 @@ coverity_credentials = {
     "username": config("COVERITY_USERNAME"),
     "password": config("COVERITY_PASSWORD"),
     "stream": config("COVERITY_STREAM"),
-    "snapshot": config("COVERITY_SNAPSHOT")
+    "snapshot": config("COVERITY_SNAPSHOT"),
 }
 
 TRACEABILITY_ITEM_ID_REGEX = r"([A-Z_]+-[A-Z0-9_]+)"
