@@ -43,7 +43,7 @@ setup(
         'Topic :: Utilities',
     ],
     platforms="any",
-    packages=find_namespace_packages(where=".", exclude=["example", "tests"]),
+    packages=find_namespace_packages(where=".", exclude=("example.*", "example", "tests.*", "tests", "build*")),
     package_dir={"": "."},
     include_package_data=False,
     install_requires=requires,
