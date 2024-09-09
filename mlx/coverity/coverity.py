@@ -169,7 +169,7 @@ def validate_coverity_credentials(config):
         app (sphinx.application.Sphinx): Sphinx' application object.
     """
     for required_element in ["hostname", "username", "password", "stream"]:
-        if required_element not in app.config.coverity_credentials:
+        if required_element not in config:
             LOGGER.error(f"{required_element} is a required configuration in 'coverity_credentials' in conf.py")
 
 
@@ -189,7 +189,7 @@ def setup(app):
         dict,
     )
 
-    validate_coverity_credentials(app)
+    validate_coverity_credentials(app.config.coverity_credentials)
 
     app.add_config_value("TRACEABILITY_ITEM_ID_REGEX", r"([A-Z_]+-[A-Z0-9_]+)", "env")
     app.add_config_value("TRACEABILITY_ITEM_RELINK", {}, "env")
