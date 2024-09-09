@@ -22,6 +22,15 @@ from .coverity_directives.coverity_defect_list import (
 
 LOGGER = getLogger("mlx.coverity")
 
+def validate_coverity_credentials(config):
+    """Validate the configuration of coverity_credentials.
+
+    Args:
+        config (dict): The configuration `coverity_credentials`.
+    """
+    if missing := {"hostname", "username", "password", "stream"}.difference(config):
+        LOGGER.error(f"Missing mandatory keys from configuration variable 'coverity_credentials' in conf.py: {missing}")
+
 
 class SphinxCoverityConnector:
     """
@@ -47,6 +56,7 @@ class SphinxCoverityConnector:
     \\let\@noitemerr\\relax
     \\makeatother"""
 
+        validate_coverity_credentials(app.config.coverity_credentials)
         self.stream = app.config.coverity_credentials["stream"]
         self.snapshot = app.config.coverity_credentials.get("snapshot", "")
         # Login to Coverity and obtain stream information
@@ -162,17 +172,6 @@ class SphinxCoverityConnector:
         return defects
 
 
-def validate_coverity_credentials(config):
-    """Validate the configuration of coverity_credentials.
-
-    Args:
-        config (dict): The configuration `coverity_credentials`.
-    """
-    for required_element in ["hostname", "username", "password", "stream"]:
-        if required_element not in config:
-            LOGGER.error(f"{required_element} is a required configuration in 'coverity_credentials' in conf.py")
-
-
 # Extension setup
 def setup(app):
     """Extension setup"""
@@ -188,8 +187,6 @@ def setup(app):
         "env",
         dict,
     )
-
-    validate_coverity_credentials(app.config.coverity_credentials)
 
     app.add_config_value("TRACEABILITY_ITEM_ID_REGEX", r"([A-Z_]+-[A-Z0-9_]+)", "env")
     app.add_config_value("TRACEABILITY_ITEM_RELINK", {}, "env")
