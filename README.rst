@@ -92,8 +92,8 @@ Example of custom credentials for the plugin:
 
     coverity_credentials = {
         'hostname': 'scan.coverity.com',
-        'username': 'reporter',
-        'password': 'coverity',
+        'username': 'myusername',
+        'password': 'mypassword',
         'stream': 'some_coverity_stream',
     }
 
@@ -287,7 +287,10 @@ nice gesture and considered as contribution, even if you do not have development
 Development setup
 -----------------
 
-To run tests and checks we use tox.
+To contribute to the code or documentation, you may want to run tests and build the documentation. Firstly, clone
+the repository.
+
+To run tests and checks we use tox_.
 
 .. code-block:: bash
 
@@ -297,18 +300,23 @@ To run tests and checks we use tox.
     # to run tests
     tox
 
-To build example locally you will need to install some dependencies and set your environment.
+To build the example documentation locally, you will need to install the package and set your environment, see help_.
 
 .. code-block:: bash
 
     # install current package locally and its dependencies
-    pip3 install -e .
+    pip3 install --editable .
 
-    # copy example .env to your .env
-    cp example/.env.example .env
+    # define environment variables, needed by example/conf.py
+    # or store them in a .env file for a more permanent solution
+    export COVERITY_USERNAME='yourusername'
+    export COVERITY_PASSWORD='yourpassword'
+    export COVERITY_STREAM='yourstream'
+    export COVERITY_SNAPSHOT=''
 
-    # add env variables, adjust the values in .env
-    # build
-    make -C example/ html
+    # build documentation with Sphinx in a Tox environment
+    tox -e html
 
 .. _`Traceability extension`: https://github.com/melexis/sphinx-traceability-extension/
+.. _tox: https://tox.wiki/
+.. _help: https://pypi.org/project/python-decouple/#where-is-the-settings-data-stored
