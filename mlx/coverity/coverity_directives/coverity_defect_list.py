@@ -17,6 +17,7 @@ from ..coverity_item_element import ItemElement
 
 LOGGER = getLogger("mlx.coverity")
 
+
 def pct_wrapper(sizes):
     """Helper function for matplotlib which returns the percentage and the absolute size of the slice.
 

@@ -8,8 +8,6 @@ See README.rst for more details.
 """
 
 from getpass import getpass
-import logging
-import os
 from urllib.error import URLError, HTTPError
 from sphinx.util.logging import getLogger, VERBOSITY_MAP
 
@@ -126,7 +124,6 @@ class SphinxCoverityConnector:
                     node.perform_replacement(defects, self, app, fromdocname)
                     LOGGER.info("done")
 
-
     # -----------------------------------------------------------------------------
     # Helper functions of event handlers
     @staticmethod
@@ -164,6 +161,7 @@ class SphinxCoverityConnector:
         LOGGER.info("%d received" % (defects["totalRows"]))
         return defects
 
+
 def validate_coverity_credentials(app):
     """Validate the configuration of coverity_credentials.
 
@@ -173,6 +171,7 @@ def validate_coverity_credentials(app):
     for required_element in ["hostname", "username", "password", "stream"]:
         if required_element not in app.config.coverity_credentials:
             LOGGER.error(f"{required_element} is a required configuration in 'coverity_credentials' in conf.py")
+
 
 # Extension setup
 def setup(app):
