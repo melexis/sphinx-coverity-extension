@@ -3,6 +3,7 @@
 from hashlib import sha256
 from os import environ, path
 from pathlib import Path
+from sphinx.util.logging import getLogger
 
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
@@ -12,8 +13,9 @@ if not environ.get("DISPLAY"):
     mpl.use("Agg")
 import matplotlib.pyplot as plt
 
-from ..coverity_logging import report_info, report_warning
 from ..coverity_item_element import ItemElement
+
+LOGGER = getLogger("mlx.coverity")
 
 
 def pct_wrapper(sizes):
@@ -88,7 +90,7 @@ class CoverityDefect(ItemElement):
         try:
             self.fill_table_and_count_attributes(defects["rows"], self.coverity_service.columns, app, fromdocname)
         except AttributeError as err:
-            report_info("No issues matching your query or empty stream. %s" % err)
+            LOGGER.info(f"No issues matching your query or empty stream. {err}")
             top_node += nodes.paragraph(text="No issues matching your query or empty stream")
             # don't generate empty pie chart image
             self.replace_self(top_node)
@@ -150,9 +152,9 @@ class CoverityDefect(ItemElement):
             attr_values = label.split("+")
             for attr_val in attr_values:
                 if attr_val in self.chart_labels:
-                    report_warning(
-                        "Attribute value '%s' should be unique in chart option." % attr_val,
-                        docname,
+                    LOGGER.warning(
+                        f"Attribute value {attr_val!r} should be unique in chart option.",
+                        location=docname,
                     )
                 self.chart_labels[attr_val] = 0
             if len(attr_values) > 1:

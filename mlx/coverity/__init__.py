@@ -5,13 +5,10 @@ __all__ = [
     "CoverityDefectListDirective",
     "CoverityDefectService",
     "ItemElement",
-    "report_info",
-    "report_warning",
     "SphinxCoverityConnector",
 ]
 
 from .__coverity_version__ import __version__
-from .coverity_logging import report_info, report_warning
 from .coverity import SphinxCoverityConnector
 from .coverity_services import CoverityDefectService
 from .coverity_item_element import ItemElement
