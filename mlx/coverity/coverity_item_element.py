@@ -5,8 +5,10 @@ from re import findall
 from docutils import nodes
 from sphinx.errors import NoUri
 from urlextract import URLExtract
+from sphinx.util.logging import getLogger
 
-from .coverity_logging import report_warning
+
+LOGGER = getLogger("mlx.coverity")
 
 
 class ItemElement(nodes.General, nodes.Element):
@@ -197,7 +199,10 @@ def make_internal_item_ref(app, fromdocname, item_id, cid):
         return None
     item_info = env.traceability_collection.get_item(item_id)
     if not item_info:
-        report_warning("CID %s: Could not find item ID '%s' in traceability collection." % (cid, item_id), fromdocname)
+        LOGGER.warning(
+            f"CID {cid}: Could not find item ID {item_id!r} in traceability collection.",
+            location=fromdocname
+        )
         return None
     ref_node = nodes.reference("", "")
     ref_node["refdocname"] = item_info.docname
