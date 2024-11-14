@@ -3,6 +3,8 @@ sphinx:
   min: 0
   max: 0
   exclude:
+    - "WARNING: the mlx.traceability extension is not safe for parallel reading"
+    - "WARNING: doing serial read"
     - 'WARNING: Connection failed: HTTPSConnectionPool\(host=.+, port=\d+\): Max retries exceeded with url: /api/v2/[\w/?=&\\]+ \(Caused by NameResolutionError\(\"<urllib3\.connection\.HTTPSConnection object at [0-9a-z]+>: Failed to resolve .+ \(\[Errno -2\] Name or service not known\)\"\)\)'
     - 'WARNING: Connection failed: HTTPSConnectionPool\(host=.+, port=\d+\): Max retries exceeded with url: /api/v2/[\w/?=&\\]+ \(Caused by NameResolutionError\(\"<urllib3\.connection\.HTTPSConnection object at [0-9a-z]+>: Failed to resolve .+ \(\[Errno -3\] Temporary failure in name resolution\)\"\)\)'
     - 'WARNING: CID \d+: Could not find item ID .+ in traceability collection.'
